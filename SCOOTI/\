@@ -1,0 +1,317 @@
+#%load_ext autoreload
+#%autoreload 2
+# import essential packages
+import numpy as np
+import pandas as pd
+import anndata as ad
+import os
+import scanpy as sc
+from scipy.sparse import coo_matrix
+from scipy.io import mmwrite, mmread
+import gzip
+from tqdm import tqdm
+
+# class for single-cell datasets
+class findRegulators:
+    """
+    A class used to identify up- and down-regulated genes from single-cell datasets
+
+    ...
+
+    Attributes
+    ----------
+    folder_path : str
+        the path to access the single-cell datasets
+    adata : anndata format
+        the data table with the format of anndata
+    genedf : pandas DataFrame
+        the data table of genes by cells with expression levels as values
+
+    Methods
+    -------
+    read_scRNAseq()
+        read single-cell data with the function of read_10x_mtx function which requires a .mtx, a gene list, and a barcode list
+    merge_adata()
+        pass
+    get_genedf()
+    get_genes_from_processed_data(csv_suffix, metadata_suffix)
+        read single-cell data from attributes and output class attribute genedf
+    get_transition_genes()
+        convert the attribute genedf to two lists, up- and down-regulated genes and save into .csv files
+    """    
+    def __init__(self, folder_path):
+
+        self.folder_path = folder_path
+        self.adata = []
+        self.genedf = []
+    
+    def rename_scFiles(self):
+        # get mother folder path
+        fpath = self.folder_path
+        for folder in os.listdir(fpath):
+            if os.path.isdir(fpath+folder):
+                files = os.listdir(fpath+folder)
+                for file in files:
+                    print('Processing...')
+                    print(file)
+                    # process the expression table
+                    if '.mtx.gz' in file:
+                        try:
+                            os.rename(fpath+folder+'/'+file, fpath+folder+'/matrix.mtx.gz')
+                            with gzip.open(fpath+folder+'/matrix.mtx.gz', 'rb') as fmtx:
+                                mtx = mmread(fmtx)
+                                mmwrite(fpath+folder+'/matrix.mtx', mtx)
+                        except:
+                            print('No change for mtx.gz file')
+                    # process the list of genes
+                    if 'genes' and '.tsv.gz' in file:
+                        try:
+                            os.rename(fpath+folder+'/'+file, fpath+folder+'/genes.tsv.gz')
+                            gdf = pd.read_csv(
+                                    fpath+folder+'/genes.tsv.gz',
+                                    sep='\t'
+                                    )
+                            gdf.to_csv(fpath+folder+'/genes.tsv', index=0, sep='\t')
+                        except:
+                            print('No change for gene file...')
+                    # process the list of barcodes
+                    if 'barcodes' and '.tsv.gz' in file:
+                        try:
+                            os.rename(fpath+folder+'/'+file, fpath+folder+'/barcodes.tsv.gz')
+                            gdf = pd.read_csv(
+                                    fpath+folder+'/barcodes.tsv.gz',
+                                    sep='\t'
+                                    )
+                            gdf.to_csv(fpath+folder+'/barcodes.tsv', index=0, sep='\t')
+                    # not processing
+                        except:
+                            print('No change for barcode files...')
+    
+    # convert a table to a single-cell folder
+    def table_to_10xformat(self, gene_cols=[], barcode_cols=[], suffix='', sep='\t'):
+        fpath = self.folder_path
+        gene_cols = np.arange(gene_cols[0], gene_cols[1])
+        # iterate thru all the files under the path
+        for file in os.listdir(fpath):
+            if os.path.isdir(fpath+file)==0 and '.tar' not in file:
+                print('Processing...')
+                print(file)
+                subfolder = file.split('.')[0]
+                print(subfolder)
+                if not os.path.exists(fpath+subfolder):
+                   os.makedirs(fpath+subfolder)
+                df = pd.read_csv(fpath+file, sep=sep)
+                print(df.head(5))
+                genes = df.iloc[:, gene_cols]
+                #if len(genes_cols)==1:
+                #    # convert ensemble ids to symbols
+                #    import mygene
+                #    mg = mygene.MyGeneInfo()
+                #    mg.getgenes(['ENSG00000260972.1'], scopes='entrezgene', fields='symbol')
+
+                #    mg.query('ENSG00000260972')#, scopes='entrezgene', fields='symbol')
+                #    mg.querymany(['ENSG00000185070.10'], scopes='entrezgene', fields='symbol')
+
+
+                #    from pyensembl import EnsemblRelease
+                #    data = EnsemblRelease(75, species='human')
+                #    geneids = genes.iloc[:,0].to_numpy()
+                #    symbols = []
+                #    for gene_id in tqdm(geneids):
+                #        try:
+                #            symbols.append(data.gene_by_id(gene_id).gene_name)
+                #        except:
+                #            symbols.append(gene_id)
+                #    # replace ids with symbols
+                #    genes['gene_symbols'] = symbols
+
+                barcode_sel = np.arange(barcode_cols[0], len(df.columns)+barcode_cols[1])
+                barcodes = pd.DataFrame(df.iloc[:, barcode_sel].columns)
+                exp = df.iloc[:, barcode_sel].values
+                print(genes.shape, barcodes.shape, exp.shape)
+                # process the expression table
+                mtx = coo_matrix(exp)
+                mmwrite(fpath+subfolder+'/matrix.mtx', mtx)
+                # save genes into a dataframe and a .tsv file
+                genes.to_csv(fpath+subfolder+'/genes.tsv', index=0, header=False, sep='\t')
+                # save barcodes into a dataframe and a .tsv file
+                barcodes.to_csv(fpath+subfolder+'/barcodes.tsv', index=0, header=False, sep='\t')
+
+
+    # function to read single scRNAseq data
+    def read_scRNAseq(self, folder='', batch_name=''):
+    
+        import scanpy as sc
+
+        if folder=='':
+            access_path = self.folder_path
+        else:
+            access_path = folder
+        # loading
+        adata = sc.read_10x_mtx(
+            access_path,  # the directory with the `.mtx` file
+            var_names='gene_symbols',                # use gene symbols for the variable names (variables-axis index)
+            cache=True,
+            )                              # write a cache file for faster subsequent reading
+        print(adata)
+        adata.var_names_make_unique()  # this is unnecessary if using `var_names='gene_ids'` in `sc.read_10x_mtx`
+        
+        # 1st filtering
+        sc.pp.filter_cells(adata, min_genes=200)
+        sc.pp.filter_genes(adata, min_cells=3)
+        
+        adata.var['mt'] = adata.var_names.str.startswith('MT-')  # annotate the group of mitochondrial genes as 'mt'
+        sc.pp.calculate_qc_metrics(adata, qc_vars=['mt'], percent_top=None, log1p=False, inplace=True)
+        
+        # 2nd filtering
+        #adata = adata[adata.obs.n_genes_by_counts < 50000, :]
+        adata = adata[adata.obs.pct_counts_mt < 5, :]
+        
+        # normalize data
+        sc.pp.normalize_total(adata, target_sum=1e4)
+    
+        # Logarithmize the data
+        sc.pp.log1p(adata)
+            
+        # update
+        adata.obs['batch'] = [batch_name]*adata.shape[0]
+        self.adata = adata
+        print('Batch name assigned')
+
+        return adata
+    
+    # read multiple rna seq datasets
+    def batch_read_scRNAseq(self, folders, batch_names):
+        # get the path from class attribute
+        #folders = os.listdir(self.folder_path)
+        # read files
+        for folder, batch_name in zip(folders, batch_names):
+            yield (
+                    self.read_scRNAseq(folder+'/', batch_name=batch_name)
+                    )
+
+        
+    # merge adata
+    def merge_adata(self):
+        # get files from the path
+        folders = [
+                self.folder_path+f for f in os.listdir(self.folder_path) if os.path.isdir(self.folder_path+f)
+                ]
+        print(folders)
+        batches = [folder.split('/')[-1] for folder in folders]
+        print(len(batches), len(folders))
+        # concatenate anndata
+        self.batch_read_scRNAseq(folders[0], batch_names=batches[0])
+        print('done')
+        scRes = ad.concat(
+                self.batch_read_scRNAseq(folders, batch_names=batches),
+                axis=0,
+                join='inner'
+                )
+        print(batches)
+        display(scRes.to_df())
+        print('pass!')
+        sc.pp.combat(scRes)
+        self.genedf = scRes.to_df()
+
+    # convert adata to table (gene by cells)
+    def get_genedf(self):
+
+        # load data 
+        res = self.adata
+
+        marker_genes = res.var.index.to_numpy()
+        genedf = sc.get.obs_df(
+                res,
+                keys=[*marker_genes]
+            )
+        genedf = genedf.T
+        
+        return genedf
+
+    def get_genes_from_processed_data(self, csv_suffix, metadata_suffix):
+
+        """
+        Parameters
+        ----------
+        csv_suffix (str): like '_magic_imputed.csv'
+        metadata_suffix (str): like '_prep_metadata.csv' paired with csv_suffix
+        """
+
+        # get path
+        path = self.folder_path
+        # get files under the path
+        files = os.listdir(path)
+        df_collect = [] # empty list for collecting anndata
+        batches = [] # empty list for collecting batch names
+        # iterate thru the files
+        for file in files:
+            if csv_suffix in file:
+                fname = file.split(csv_suffix)[0]
+                # read metadata 
+                metadata = pd.read_csv(path+fname+metadata_suffix, index_col=0)
+                id_map = dict(zip(metadata.index, np.arange(len(metadata.index))))
+                induction_map = dict(zip(metadata.index, metadata.Time))
+                # read csv files
+                exp = pd.read_csv(path+file, index_col=0)
+                exp.columns = pd.Series(exp.columns).apply(
+                        lambda x: '{0}_{1}_{2}'.format(fname, id_map[x], induction_map[x])
+                        )
+                # convert dataframe into anndata
+                adata = ad.AnnData(exp.T) 
+                batches = batches+[fname]*len(exp.columns)
+                #adata = sc.AnnData(exp, exp.index.to_frame(), exp.columns.to_frame())
+                #display(adata.obs)
+                df_collect.append(adata)
+
+
+        # ![issue] inner-join drops genes that are not cross-listed in different cells
+        # Think of imputation in the future
+        scRes = ad.concat(df_collect, axis=0, join='inner')
+        scRes.obs['batch'] = batches
+        sc.pp.combat(scRes)
+        self.genedf = scRes.to_df()
+
+        return scRes
+
+    
+    # methods to get sig genes during transitions
+    def get_transition_genes(self, alpha=0.95):
+        
+        import scipy.stats as st
+        # get expression table
+        genedf = self.genedf
+        # create 95% confidence interval for population mean weight
+        ub, lb = st.t.interval(
+                    alpha=alpha,
+                    df=len(genedf)-1,
+                    loc=np.mean(genedf),
+                    scale=st.sem(genedf)
+                )
+        # get up- or down-regulated genes for each cells
+        dwgenedf = genedf.apply(lambda x: x<lb, axis=1)
+        upgenedf = genedf.apply(lambda x: x>ub, axis=1)
+        
+        # save files
+        for i in range(len(upgenedf)):
+            # get cell names
+            prefix = upgenedf.index[i]
+            cell_dir = self.folder_path+'sigGenes/'+prefix.split('_')[0]+'/'
+            isExist = os.path.exists(cell_dir)
+            if not isExist:
+                # create a new dir if not existing
+                os.makedirs(cell_dir)
+                print(f'Create a folder for {prefix.split("_")[0]}')
+            # save up-/down-regulated genes for each cells
+            pd.DataFrame({
+                'upgenes':upgenedf.iloc[i,:][upgenedf.iloc[i, :]==True].index.to_numpy()
+                }).to_csv(cell_dir+prefix+'_upgenes.csv')
+
+            pd.DataFrame({
+                'dwgenes':dwgenedf.iloc[i,:][dwgenedf.iloc[i, :]==True].index.to_numpy()
+                }).to_csv(cell_dir+prefix+'_dwgenes.csv')
+
+
+        return genedf
+
+

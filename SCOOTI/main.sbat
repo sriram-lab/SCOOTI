@@ -1,0 +1,62 @@
+#!/bin/bash
+#SBATCH --job-name=para_scan
+#SBATCH --mail-user=daweilin@umich.edu
+#SBATCH --mail-type=BEGIN,END
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=36
+#SBATCH --mem-per-cpu=5G
+#SBATCH --time=2-00:00:00
+#SBATCH --account=csriram99
+#SBATCH --partition=standard
+#SBATCH --output=./%x-%j.log
+
+
+
+
+declare -a commands
+
+
+# load essential module
+module load matlab gurobi
+
+# input settings
+# path to access your matlab-version cobratoolbox
+COBRA_path=./cobratoolbox/ 
+# path to access the metabolic model
+GEM_path=./models/Shen2019.mat 
+# name of the model
+model_name="Recon1" 
+# leave it blank if no user-defined objectives
+obj_candidate_list_file='./obj52_metabolites_shen2019.csv' 
+# objective values
+input_obj_tb='' 
+
+# parameter settings
+paraLen=5 # how many kappa/rho used for scanning
+random_para=0 # bool, 1 to enable random sampling
+init_objective=1 # 1 for none, 2 for biomass objective
+genekoflag=0 # bool
+rxnkoflag=0 # bool
+FVAflag=0 # bool
+pfba=1 # 0 for fba and 1 for pfba (minimize sum of fluxes)
+medium_perturbation=0 # 1 for depletion or excess of metabolites in medium
+data_dir=./sigGenes/sc1C2C/ # path to access the significant genes data
+prefix_name='sc1C2C' # name of the experiment
+medium='KSOM' # KSOM for embryos and DMEMF12 for cell culture
+late_stage='upgenes' # suffix of the file names of significant up-genes
+early_stage='dwgenes' # suffix of the file names of significant down-genes
+simulation='CFR' # CFR for transcriptomics and proteomics; DFA for metabolomics
+constraint=1 # apply constraints to the model
+save_root_path=./tutorial/result_figs/ # path to save predicted fluxes
+
+# for-loop settings
+# if scanning kappa from 1E-3 to 1E1 and rho from 1E-3 to 1E1,
+# there will be 25 combinations in total. 
+START_NUM=1
+END_NUM=25
+
+# execute parameter scanning
+for (( run=$START_NUM; run<=END_NUM; run++ )); do
+  matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $cobra_path, $model_path, $genekoflag, $rxnkoflag, $media_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $save_path, $computation_source)"
+done
+

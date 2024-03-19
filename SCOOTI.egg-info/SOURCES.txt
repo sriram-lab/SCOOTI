@@ -1,0 +1,15 @@
+setup.py
+SCOOTI/MatplotProp.py
+SCOOTI/RegulatorsFromDatasets.py
+SCOOTI/SCOOTI_trainer.py
+SCOOTI/__init__.py
+SCOOTI/metObjAnalyzer.py
+SCOOTI/regressionAnalyzer.py
+SCOOTI/regressorCollection.py
+SCOOTI/regressorMetaLearner.py
+SCOOTI/regressorTraining.py
+SCOOTI/stat_tests.py
+SCOOTI.egg-info/PKG-INFO
+SCOOTI.egg-info/SOURCES.txt
+SCOOTI.egg-info/dependency_links.txt
+SCOOTI.egg-info/top_level.txt
