@@ -1,155 +1,197 @@
-function multiObj_CBM(jj)
-
+function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, model_name, obj_candidate_list_file, input_obj_tb, paraLen, random_para, init_objective, genekoflag, rxnkoflag, FVAflag, pfba, medium_perturbation, data_dir, prefix_name, medium, late_stage, early_stage, simulation, constraint, save_root_path, CFR_model_path, pairwise_CFR_model, extraWeight, algorithm)
+  % multiObj_CBM.m calls CFRinterface/DFAinterface to run CFR/DFA modeling and generate flux prediction based on transcriptomics/metabolomics data.
+  %   This code is capable of predicting fluxes with GEMs Recon1/Recon2.2/Recon3D, multi-objectives, gene knockouts, and with/without pFBA.
+  % Inputs:
+  %   jj : integer, index number that is used to scan parameters
+  %   COBRA_path : string, path to access the openCOBRA toolbox
+  %   GEM_path : string, path to access the genome-scale metabolic models like Recon1
+  %   model_name : string, name of the GEM, options including Recon1, Recon2.2, and Recon3D
+  %   obj_candidate_list_file : string, path to access the candidate of multi-objectives, only applicable for single-objective models
+  %   input_obj_tb : string, path to access the file of objective coefficients, only applicable for multiobjective models
+  %   paraLen : integer, number to indicate how how many parameters that will be selected for scanning
+  %   random_para : bool, enable random sampling of parameters in defined ranges
+  %   init_objective : integer, the number is the index of objective list. In the default settings, 1 is no objective and 2 is biomass
+  %   genekoflag : bool, enable in silico single-gene knock
+  %   rxnkoflag : bool, enable in silico reaction knockout
+  %   FVAflag : bool, output a range of flux solution
+  %   pfba : bool, minimizing sum of reaction fluxes or not
+  %   medium_perturbation : bool, enable in silico single-metabolite depletion
+  %   data_dir : string, path to access significant genes/proteins/metabolites as constraints
+  %   prefix_name : string, name of experiment. it will be used for 
+  %   medium : string, name of sources of extracellular metabolites. options including DMEMF12 and KSOM
+  %   late_stage : string, name of late stage which also indicates the suffix of constraint files
+  %   early_stage : string, name of early stage which also indicates the suffix of constraint files
+  %   simulation : string, indicate which type of modeling method. options including CFR and DFA
+  %   constraint : bool, enable adding constraints or not
+  %   save_root_path : string, path to save the results of predicted fluxes
+  %   CFR_model_path : 
+  %   pairwise_CFR_model :
+  %   extraWeight :
+  % Output: 
+  %   None; however, the predicted fluxes will be saved
+ 
+%% Part 0. default settings for DFA and CFR parameters
+  if (~exist('DFA_kappa','var')) || (isempty(DFA_kappa))
+      dkappa = 1;
+  else,
+      dkappa = DFA_kappa;
+  end
+  
+  if (~exist('CFR_kappa','var')) || (isempty(CFR_kappa))
+      ckappa = 1;
+  else,
+      ckappa = CFR_kappa;
+  end
+  if (~exist('CFR_rho','var')) || (isempty(CFR_rho))
+      crho = 1;
+  else,
+      crho = CFR_rho;
+  end
+  if (~exist('extraWeight','var')) || (isempty(extraWeight))
+      extraWeight = 0;
+  end
+  if (~exist('algorithm','var')) || (isempty(algorithm))
+      algorithm = 'iMAT';
+  end
 %% Part 1: metabolic model
   % initialize COBRA toolbox
-  addpath('/home/daweilin/cobratoolbox/')
+  addpath(COBRA_path)
   run initCobraToolbox(false)
+  changeCobraSolver('gurobi')
   % INPUT files
-  model_path = '~/StemCell/model_MGSA.mat';
-  %model_path = '/nfs/turbo/umms-csriram/daweilin/data/models/Recon3D.mat';
-
-  %model_path = '/nfs/turbo/umms-csriram/daweilin/data/models/Recon2.2.mat';
   % Load metabolic network model
-  model = load(model_path); % or model_human_duarte.mat
+  model = load(GEM_path);
   fn = fieldnames(model);
   model = getfield(model, fn{1});
-  model_name = 'Recon1';
-
-  %% get all compartments and metabolites from the model
-  %compartments = {};
-  %metabolites = {};
-  %for i=1:length(model.mets),
-  %  s = strsplit(model.mets{i}, '_');
-  %  metabolites{i, 1} = s{1};
-  %  %ss = strsplit(s{2}, '_');
-  %  compartments{i, 1} = s{end};
-  %end
-
-  %% get all compartments and metabolites from the model
-  %compartments = {};
-  %metabolites = {};
-  %for i=1:length(model.mets),
-  %  s = strsplit(model.mets{i}, '[');
-  %  metabolites{i, 1} = s{1};
-  %  ss = strsplit(s{2}, ']');
-  %  compartments{i, 1} = ss{1};
-  %end
-
-%% Part 2: Input data
-  % parameter-related settings
-  paraLen = 1 % 5 for normal scanning
+  % fix the model for the default objective
+  if strcmp(model_name, 'Recon1'),
+    model.c(find(contains(model.rxns, 'biomass_objective'))) = 1;
+  end
+  % objective candidates
+  if length(obj_candidate_list_file)==0,
+    obj_candidate_list_file = './obj52_metabolites_shen2019.csv';
+  end
+% Part 2: Input data
+  % random sampling
   reind = randsample(paraLen*paraLen, paraLen);
-  random_para = 0 % 0 for not random sampling
-  % KO settings
-  init_objective = 1 %1 for none, 2 for biomass objective
-  genekoflag = 0
-  rxnkoflag = 0
-  FVAflag = 0
-  pfba = 1 % 1 for minimization of sum of fluxes
-  media_perturbation = 0; % set to 0 if you dont want to change the media condition
-  input_data_choose = 'model'%'CFR_QuiProlif';%'CFR_scCellCycle'%'model'%'model' % edit here for choosing dataset
+  input_data_choose = prefix_name;
 
   % additional input for objectives and corresponding weights
-  %input_obj_tb = readtable('/home/daweilin/StemCell/Project_mESC_JinZhang/regression_models/parascan_models/flux_sl_cellminer_k0.01r1.0.csv')
-  input_obj_tb = readtable('/nfs/turbo/umms-csriram/daweilin/regression_models/scEmbryo_paraScan/flux_sl_sc2CBC_input_norm_outcome_nonorm_k0.1_r0.01.csv');
-  %input_obj_tb = readtable('/nfs/turbo/umms-csriram/daweilin/regression_models/BulkRNAseq_paraScan/flux_sl_BulkRNAseq_NCI60_CI068_paraScan_new.csv');
-  %input_obj_tb = readtable('/home/daweilin/StemCell/samplingObjCoef_cellcycle_0percent.csv')
-  %input_obj_tb = readtable('/nfs/turbo/umms-csriram/daweilin/regression_models/BulkRNAseq_paraScan/flux_sl_BulkRNAseq_NCI60_k10_r0.1.csv');
-  input_objective_weights = 0; % set to 1 if giving existing objective weights
-
-  %cols = input_obj_tb.Properties.VariableNames
-  [data_series, prefix_name, prefix_series, root_path, late_stage, early_stage, simulation, ctrl, medium_series, prefix_pattern_func] = CBM_dataInput(input_data_choose);
-
-
-%% Part 3: Parameter settings for CBM
+  if length(input_obj_tb)==0,
+    input_obj_file = './buffer_objective_coefficients.csv';
+    input_objective_weights = 0; % set to 1 if giving existing objective weights
+  else,
+    input_obj_file = input_obj_tb;
+    input_objective_weights = 1;
+  end
   
+  % read coefficients for objectives
+  input_obj_tb = readtable(input_obj_file);
+
+  %% Significant genes/proteins/metabolites
+  if constraint==1,
+    % data input setting
+    [data_series, prefix_series, medium_series] = batch_input_preprocess(data_dir, prefix_name, medium);
+    ctrl = 1 %set to 1 if we want to apply constraints
+  else, % CFR without constraint
+    data_series = {'./metabolicModel/buffer_constraint.xlsx'};
+    prefix_name = 'unconstraint';
+    prefix_series = {'2CBC_Israel'};
+    ctrl = 0; % remove constraint
+    medium_series = {medium};
+  end
+
+
+  % reuse models with previous constraints
+  CFR_models = {}
+  if length(CFR_model_path)>0,
+    CFR_model_dir = dir(CFR_model_path)
+    for n=3:length(CFR_model_dir),
+      if contains(CFR_model_dir(n).name, '.mat'),
+        CFR_models{size(CFR_models, 1)+1, 1} = sprintf('%s/%s', CFR_model_path, CFR_model_dir(n).name);
+      end
+    end
+  end
+
+%% Part 3: Parameter settings for CBM 
   if strcmp(simulation, 'DFA')==1, % optimize reactions/new demand reactions
 %% settings for parameter space for DFA kappa
-    DFA_para_space = logspace(1, -3, paraLen);
-    disp('Parameter settings for DFA...')
-    if random_para==1,
-      DFA_para_space = logspace(1, -3, paraLen*paraLen);
-      DFA_para_space = DFA_para_space(reind);
+    if dkappa==-1,
+      DFA_para_space = logspace(1, -3, paraLen);
+      disp('Parameter settings for DFA...')
+      if random_para==1,
+        DFA_para_space = logspace(1, -3, paraLen*paraLen);
+        DFA_para_space = DFA_para_space(reind);
+      end
+      kappa = DFA_para_space(jj)
+      rho = 0; % for bugs in DFA (unnecessary parameter)
+    else,
+      kappa = dkappa;
+      rho = 0;
     end
-    kappa = DFA_para_space(jj)
-    rho = 0; % for bugs in DFA (unnecessary parameter)
   else, % CFR or model
 %% settings for parameter space of CFR kappa and rho
-    CFR_para_space = logspace(1, -3, paraLen);
-    [Y, Z] = meshgrid(CFR_para_space, CFR_para_space);
-    CFR_para_pack = [Y(:), Z(:)];
-    disp('Parameter settings for CFR...')
-    if random_para==1,
-      CFR_para_pack = CFR_para_pack(reind, :);
+    if ckappa==-1,
+      CFR_para_space = logspace(1, -3, paraLen);
+      [Y, Z] = meshgrid(CFR_para_space, CFR_para_space);
+      CFR_para_pack = [Y(:), Z(:)];
+      disp('Parameter settings for CFR...')
+      if random_para==1,
+        CFR_para_pack = CFR_para_pack(reind, :);
+      end
+      kappa = CFR_para_pack(jj, 1);
+      rho = CFR_para_pack(jj, 2);
+    else,
+      kappa = ckappa;
+      rho = crho;
     end
-    kappa = 1%CFR_para_pack(jj, 1)%1E-1 1E0
-    rho = 1%CFR_para_pack(jj, 2)%1E0 1E-2
-    for coli=2:length(input_obj_tb.Properties.VariableNames),
-      input_obj_tb.Properties.VariableNames{coli} = sprintf('%s_', input_obj_tb.Properties.VariableNames{coli});
-    end
-    paraComb = sprintf('k%g_r%g_', kappa, rho);
-    paraComb = strrep(paraComb, '.', '_');
-    input_obj_tb = input_obj_tb(:, [logical(1) contains(input_obj_tb.Properties.VariableNames(2:end), paraComb)]);
   end
 
 %% Part4: Iterate through all different input datasets
   % setups for parallel computing
   %delete(gcp('nocreate'));
-  %parpool(30);
+  %parpool(32);
   %disp(length(data_series))
 %% Parfor...
-  %parfor data_index=1:length(data_series),
+  %for data_index=1:length(data_series),
   for data_index=1:length(data_series),
     %data_index = 1;
-    size(data_series)
-    size(medium_series)
-    data_path = data_series{data_index}
-    disp('Read file...')
-    disp(data_path)
+    %size(data_series)
+    %size(medium_series)
+    data_path = data_series{data_index};
+    %disp('Read file...')
+    %disp(data_path)
     % info of the data/simulation
-    prefix = prefix_series{data_index}
+    prefix = prefix_series{data_index};
     % get cell-specific objective with corresponding cell names
-    if input_objective_weights & strcmp(input_data_choose, 'model')==0,
-      prefix_str = prefix_pattern_func(prefix);
-      input_obj_tb_ind = find([logical(1) contains(input_obj_tb.Properties.VariableNames(2:end), prefix_str)]);
-    end
+    %if input_objective_weights & strcmp(input_data_choose, 'model')==0,
+    %  prefix_str = prefix_pattern_func(prefix);
+    %  input_obj_tb_ind = find([logical(1) contains(input_obj_tb.Properties.VariableNames(2:end), prefix_str)]);
+    %end
     % change culture medium KSOM_AA_Jin or DMEMF12_MGSA
     medium = medium_series{data_index};
     
-    % parameters
-    % objs =  {'';'gh';'atp';'nadh';'nadph';'amet';'gthox';'gthrd';'nmn'}
-    % obj_c = [1, 1, 1, 1, 1, 1, 1, 1, 1];
     % candidate objectives
-    %obj =  {'gh';'atp';'nadh';'nadph';'amet';'gthox';'gthrd';'nmn';'accoa'};
-    
-    if strcmp(model_name, 'Recon3D'),
-      % candidate objectives for Recon3D
-      single_obj =  {'';'gh';'atp';'nadh';'nadph';'amet';'gthox';'gthrd';'nmn';'accoa';'ala__L';'amp';'arg__L';'asn__L';'asp__L';'chsterol';'clpn_hs';'cmp';'cys__L';'dag_hs';'damp';'dcmp';'dgmp';'dtmp';'gln__L';'glu__L';'gly';'glygn1';'gmp';'h2o';'his__L';'ile__L';'leu__L';'lpchol_hs';'lys__L';'mag_hs';'met__L';'pa_hs';'pail_hs';'pchol_hs';'pe_hs';'phe__L';'pro__L';'ps_hs';'ser__L';'sphmyln_hs';'tag_hs';'thr__L';'trp__L';'tyr__L';'ump';'val__L';'xolest_hs'};
-    elseif strcmp(model_name, 'Recon2.2'),
-      single_obj =  {'';'gh';'atp';'nadh';'nadph';'amet';'gthox';'gthrd';'nmn';'accoa';'ala_L';'amp';'arg_L';'asn_L';'asp_L';'chsterol';'clpn_hs';'cmp';'cys_L';'dag_hs';'damp';'dcmp';'dgmp';'dtmp';'gln_L';'glu_L';'gly';'glygn1';'gmp';'h2o';'his_L';'ile_L';'leu_L';'lpchol_hs';'lys_L';'mag_hs';'met_L';'pa_hs';'pail_hs';'pchol_hs';'pe_hs';'phe_L';'pro_L';'ps_hs';'ser_L';'sphmyln_hs';'tag_hs';'thr_L';'trp_L';'tyr_L';'ump';'val_L';'xolest_hs'};
-    else,
-      % candidate objectives for Recon1/Shen2019 model
-      single_obj =  {'';'gh';'atp';'nadh';'nadph';'amet';'gthox';'gthrd';'nmn';'accoa';'ala-L';'amp';'arg-L';'asn-L';'asp-L';'chsterol';'clpn_hs';'cmp';'cys-L';'dag_hs';'damp';'dcmp';'dgmp';'dtmp';'gln-L';'glu-L';'gly';'glygn1';'gmp';'h2o';'his-L';'ile-L';'leu-L';'lpchol_hs';'lys-L';'mag_hs';'met-L';'pa_hs';'pail_hs';'pchol_hs';'pe_hs';'phe-L';'pro-L';'ps_hs';'ser-L';'sphmyln_hs';'tag_hs';'thr-L';'trp-L';'tyr-L';'ump';'val-L';'xolest_hs'};
+    single_obj = {};
+    single_obj{1, 1} = '';
+    candidates = readtable(obj_candidate_list_file);
+    candidate_size = size(candidates);
+    for l=1:candidate_size,
+      single_obj(l+1, 1) = candidates{l, 2};
     end
     
-    %single_obj = {'gh'}
-
-   % no objective
-    %single_obj = {''};
-    %single_obj = unique(metabolites);
     % objective weights for single objectives
     para_pack = eye(length(single_obj));
    
-    % init_for = 1+(jj-1)*32;
-    % end_for = 32+(jj-1)*32;
 %% CFR simulations with different objective weights
     % parallel computing settings
     %init_for = 1;
-    disp('input_obj_check')
-    disp(input_objective_weights)
+    %disp('input_obj_check')
+    %disp(input_objective_weights)
     if input_objective_weights==0, % single objective
       init_for = init_objective;
       if strcmp(input_data_choose, 'model')==1, % iterate thru all obj
+        init_for = 2; % change the initial index to start with 'gh' instead of '' (unconstrained models)
         end_for = length(single_obj);
       else, % without obj for constraint models
         end_for = init_for;%length(single_obj);%1
@@ -157,25 +199,26 @@ function multiObj_CBM(jj)
     elseif strcmp(input_data_choose, 'model')==1,
       % use new objectives without constraint
       init_for = 2;
-      ss = size(input_obj_tb)
+      ss = size(input_obj_tb);
       end_for = ss(2);
     else,
       % use new objective WITH constraint
       init_for = 2;%init_for;
-      ss = size(input_obj_tb(1:end, input_obj_tb_ind))
+      %ss = size(input_obj_tb(1:end, input_obj_tb_ind));
+      ss = size(input_obj_tb(1:end, 1:end));
       end_for = ss(2);
     end
     %delete(gcp('nocreate'))
-    %parpool(30);
+    %parpool(36);
+    %for ii=init_for:end_for,
     for ii=init_for:end_for,
-    %parfor ii=init_for:end_for,
 
       % use single objective functions
       if input_objective_weights==0,
         % for single objective
         obj = single_obj; % comment out this one if you to model
         % objective weights
-        disp('Weights for objectives:')
+        %disp('Weights for objectives:')
         obj_c = [];
         for d=1:length(obj),
           obj_c = [obj_c, para_pack(ii, d)];
@@ -190,29 +233,15 @@ function multiObj_CBM(jj)
 
       % use multiobjective function from files WITH corresponding constraint
       else,
-        %cols = input_obj_tb.Properties.VariableNames
-
-        %for kk=1:length(cols),
-        %    cols{kk} = regexprep(cols{kk}, '[^a-zA-Z0-9\s]', '')
-        %end
-        %disp(prefix_name)
-        %split_term = sprintf('%s_', prefix_name);
-        %celltype = strsplit(prefix, split_term);
-        %tmp = celltype;
-        %disp(split_term)
-        %disp(celltype)
-        %celltype = regexprep(celltype{2}, '[^a-zA-Z0-9\s]', '');
-        %matched = find(strcmp(cols, celltype))
-        
-        obj = input_obj_tb{2:ss(1), 1}
-        obj_c = input_obj_tb{2:ss(1), ii}
-        get_late_stage = late_stage
+        obj = input_obj_tb{2:ss(1), 1};
+        obj_c = input_obj_tb{2:ss(1), ii};
+        get_late_stage = late_stage;
 
       end
       % DO NOT CHANGE ANYTHING BELOW
       % Running exps for all conditions
-      disp('Optimizing the demand reaction:')
-      disp(obj)
+      %disp('Optimizing the demand reaction:')
+      %disp(obj)
       if strcmp(obj, ''),
           obj_type = '';
       else,
@@ -229,7 +258,7 @@ function multiObj_CBM(jj)
       % 1: '[datetime]Project_simulation_fluxes.csv'
       % 2: '[datetime]Project_simulation_metadata.json'
       % 3: Other outputs
-      out_name = sprintf('%s_ct%d_obj%d_data%d', simulation, jj, ii, data_index)
+      out_name = sprintf('%s_ct%d_obj%d_data%d', simulation, jj, ii, data_index);
       disp('Results will be saved in:')
       disp(out_name)
       
@@ -237,25 +266,47 @@ function multiObj_CBM(jj)
         disp('DFA...')
         %rho = 0
         % change culture medium KSOM_AA_Jin or DMEMF12_MGSA
-        DFAinterface(model_path, obj, obj_type, obj_c, root_path, data_path, prefix, early_stage, late_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, media_perturbation, FVAflag, model_name);
+        DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, prefix, early_stage, late_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FVAflag, model_name);
       else,
       %simulation=='CFR' | simulation=='model',
         % CFR with fluxes
         if input_objective_weights==0,
-          CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_path, out_name, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, media_perturbation, FVAflag, model_name);
-        else,
-          CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_path, out_name, get_late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, media_perturbation, FVAflag, model_name);
-        end
-        % % earlier stages
-        %out_name = sprintf('Jin_%s_%d', simulation, ii);
-        %disp('Results will be saved in:')
-        %disp(out_name)
-        % % CFR with fluxes
-        % CFRinterface(model_path, obj, obj_type, obj_c, data_path, out_name, early_stage, late_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, media_perturbation);
-      end
-
-    end
-  end
+          if length(CFR_models)==0,
+            CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, '', 0, algorithm);
+          else, % multiple CFR_models
+            %for iii=1:length(CFR_models),
+            %delete(gcp('nocreate'));
+            %parpool(36);
+            %parfor iii=1:length(CFR_models),
+            for iii=1:length(CFR_models),
+              out_name_mod = sprintf('%s_recon%d', out_name, iii);
+              if pairwise_CFR_model==1,
+                % match sample names
+                cfr_model = CFR_models{iii, 1};
+                fprefix = strsplit(cfr_model, '_model_CFR');
+                fname = sprintf('%s_metadata.json', fprefix{1});
+                fid = fopen(fname); 
+                raw = fread(fid, inf); 
+                str = char(raw'); 
+                fclose(fid); 
+                val = jsondecode(str);
+                ftar = strsplit(val.input_path, '/');
+                fsample = strsplit(data_path, '/');
+                % run CFR only when the names are matched
+                if strcmp(ftar{end}, fsample{end}),
+                  CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name_mod, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
+                end % else skip the model
+              else, % run all the model without pairing the samples
+                CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name_mod, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
+              end % end if pairwise_CFR_model
+            end % end for the for loop of CFR models
+            end % end for using CFR_models or not
+        else, % with input obj weight
+          CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name, get_late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, '', 0, algorithm);
+        end % end for using input obj weight or not
+      end % end for DFA or CFR
+    end % end for the for-loop of data_series
+  end % end for the function
 
 
 

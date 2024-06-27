@@ -23,15 +23,18 @@ module load matlab gurobi
 # path to access your matlab-version cobratoolbox
 COBRA_path=./cobratoolbox/ 
 # path to access the metabolic model
-GEM_path=./models/Shen2019.mat 
+GEM_path=./models/Shen2019.mat
 # name of the model
 model_name="Recon1" 
 # leave it blank if no user-defined objectives
-obj_candidate_list_file='./obj52_metabolites_shen2019.csv' 
+obj_candidate_list_file=./obj52_metabolites_shen2019.csv
 # objective values
 input_obj_tb='' 
 
 # parameter settings
+DFA_kappa=-1
+CFR_kappa=-1
+CFR_rho=-1
 paraLen=5 # how many kappa/rho used for scanning
 random_para=0 # bool, 1 to enable random sampling
 init_objective=1 # 1 for none, 2 for biomass objective
@@ -55,8 +58,9 @@ save_root_path=./tutorial/result_figs/ # path to save predicted fluxes
 START_NUM=1
 END_NUM=25
 
+function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, model_name, obj_candidate_list_file, input_obj_tb, paraLen, random_para, init_objective, genekoflag, rxnkoflag, FVAflag, pfba, medium_perturbation, data_dir, prefix_name, medium, late_stage, early_stage, simulation, constraint, save_root_path)
 # execute parameter scanning
 for (( run=$START_NUM; run<=END_NUM; run++ )); do
-  matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $cobra_path, $model_path, $genekoflag, $rxnkoflag, $media_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $save_path, $computation_source)"
+  matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $cobra_path, $model_path, $genekoflag, $rxnkoflag, $media_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $save_path, $computation_source)"
 done
 

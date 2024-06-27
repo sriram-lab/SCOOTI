@@ -1,0 +1,1138 @@
+"""
+
+███████╗████████╗ ██████╗  ██████╗██╗  ██╗                      
+██╔════╝╚══██╔══╝██╔═══██╗██╔════╝██║ ██╔╝                      
+███████╗   ██║   ██║   ██║██║     █████╔╝                       
+╚════██║   ██║   ██║   ██║██║     ██╔═██╗                       
+███████║   ██║   ╚██████╔╝╚██████╗██║  ██╗                      
+╚══════╝   ╚═╝    ╚═════╝  ╚═════╝╚═╝  ╚═╝                      
+                                                                
+ █████╗ ███╗   ██╗ █████╗ ██╗  ██╗   ██╗███████╗███████╗██████╗ 
+██╔══██╗████╗  ██║██╔══██╗██║  ╚██╗ ██╔╝╚══███╔╝██╔════╝██╔══██╗
+███████║██╔██╗ ██║███████║██║   ╚████╔╝   ███╔╝ █████╗  ██████╔╝
+██╔══██║██║╚██╗██║██╔══██║██║    ╚██╔╝   ███╔╝  ██╔══╝  ██╔══██╗
+██║  ██║██║ ╚████║██║  ██║███████╗██║   ███████╗███████╗██║  ██║
+╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝
+
+-----------
+Description
+-----------
+- The collection of functions/objects to process stock datasets
+- The collection of visualization methods
+- Different builds of predictive models
+
+
+"""
+
+
+# import packages
+import pandas as pd
+import numpy as np
+from tqdm import tqdm
+import os
+from random import choice
+import pickle
+import matplotlib.pyplot as plt
+import seaborn as sns
+from datetime import datetime, date
+import finnhub
+import yfinance as yf
+import sys
+sys.path.append('/home/daweilin/StemCell/GeneralMethods/')
+
+import glob
+import nasdaqdatalink
+
+#from regressionAnalyzer import *
+from MatplotProp import CanvasStyle, PltProps
+PltProps()
+
+class dataCollection:
+    
+
+    def __init__(
+            self,
+            finnhub_key="c6pg3oiad3ieo63k52u0",
+            root_path='/nfs/turbo/umms-csriram/daweilin/data/'
+            ):
+        # Access to finnhub with the api key# Access to finnhub with the api key
+        # Setup client
+        self.finnhub_client = finnhub.Client(api_key=finnhub_key)
+        self.root_path = root_path
+    
+    def get_tickers_from_index(self, source='yahoo'):
+        # request for ticker prices by finnhub
+        # we here select tickers that are listed in s&p500 (.gspc), nasdaq 100 (.ndx), dow jones 30 (.dji)
+        # the list of interested indices
+        #stock_indices = ['^gspc', '^ndx', '^dji']
+        stock_indices = ['^ndx']
+        #search the compositions of each index and save into a dictionary
+        tickers_index = {}
+        for index in tqdm(stock_indices):
+            tickers_index[index] = finnhub_client.indices_const(symbol = index)['constituents']
+        
+        # collect all tickers together without repeats
+        all_tickers = []
+        for k, v in tickers_index.items():
+            all_tickers += v
+        all_tickers = np.unique(all_tickers)
+        # show the number of tickers we got
+        print('total number of tickers:', len(all_tickers))
+        
+        # ++++++++++++++++++++++++++++++
+        # + ndx 100 tickers from yahoo +
+        # ++++++++++++++++++++++++++++++
+        import json
+        with open('/home/daweilin/stock_project/ndx100.json') as f:
+            all_tickers = json.load(f)
+        # make it a list
+        all_tickers = [ele for ele in all_tickers.keys()]
+
+        return all_tickers
+    
+    def get_quotes(self, all_tickers=[], source='yahoo', time_range=[], clean_and_update=False):
+        # request for the historical daily prices of tickers
+        # to get the daily quotes/prices for 10 years, we separate 
+        import os
+        folder = 'stock_quotes/'
+        stock_files = [
+            f for f in os.listdir(self.root_path+folder) if os.path.isfile(os.path.join(self.root_path+folder, f))
+        ]
+        saved_tickers = [filename.split('_')[0] for filename in stock_files]
+        if clean_and_update:
+            os.remove(f"{self.root_path}stock_quotes/")
+        # Specify unix timestamps
+        if len(time_range)>0:
+            init_time = time_range[0] #946702800 # Jan 01, 2000
+            end_time = time_range[1] #1688184000 # May 01, 2023
+        else:
+            init_time = 946702800 # Jan 01, 2000
+            end_time = 1688184000 # May 01, 2023
+
+        # Iterate through all the tickers of interest
+        for ticker in all_tickers:
+            if ticker not in saved_tickers:
+                if source=='finnhub':
+                    try:
+                        # Stock candles (unix timestamp)
+                        res = finnhub_client.stock_candles(
+                                ticker, 'D', init_time, end_time
+                                )
+                        # Convert to Pandas Dataframe
+                        quote_df = pd.DataFrame(res)
+                        # Save all data to csv.gz
+                        quote_df.to_csv(f"{self.root_path}stock_quotes/{ticker}_quote.csv.gz", 
+                               index=False, 
+                               compression="gzip")
+                    except:
+                        print(f'Requests for getting quote of ticker {ticker} are failed.')
+                        print('Requests may have reached the limit of the free API. Try again later.')
+                        break
+                else: # yahoo
+                    # get quotes
+                    res = yf.Ticker(ticker)
+                    res_Data = res.history(period="max")
+                    # Save all data to csv.gz
+                    res_Data.to_csv(
+                            f"{self.root_path}stock_quotes/{ticker}_quote.csv.gz", 
+                            index=False, 
+                            compression="gzip"
+                            )
+    
+    def get_financial(self):
+        # Financial
+        import os
+        folder = 'stock_financials/'
+        stock_files = [
+            f for f in os.listdir(self.root_path+folder) if os.path.isfile(os.path.join(self.root_path+folder, f))
+        ]
+        saved_tickers = [filename.split('_')[0] for filename in stock_files]
+        
+        # iterate thru all the tickers
+        for ticker in all_tickers:
+            if ticker not in saved_tickers:
+                try:
+                    financial = finnhub_client.company_basic_financials(ticker, 'all')
+                    with open(f'{self.root_path}stock_financials/{ticker}_financial.pkl', 'wb') as f:
+                        # write the python object (dict) to pickle file
+                        pickle.dump(financial, f)
+                except:
+                    print(f'Requests for getting financials of ticker {ticker} are failed.')
+                    print('Requests may have reached the limit of the free API. Try again later.')
+                    break
+    
+    
+    def get_news(self):
+        # News
+        today = date.today()
+        # Month abbreviation, day and year	
+        dd = today.strftime("%m%d%Y")
+        # pickle
+        general_news = finnhub_client.general_news('general', min_id=0)
+        # set limit to get limited number of EPS
+        with open(f'{self.root_path}stock_news/[{dd}]general_news.pkl', 'wb') as f:
+            # write the python object (dict) to pickle file
+            pickle.dump(general_news, f)
+        
+        import os
+        folder = 'stock_news/'
+        stock_files = [
+            f for f in os.listdir(self.root_path+folder) if os.path.isfile(os.path.join(self.root_path+folder, f))
+        ]
+        saved_tickers = [filename.split('_')[0] for filename in stock_files]
+        # Specify unix timestamps
+        init_time = "2000-01-01" # Jan 01, 2000
+        end_time = "2022-01-01" # Jan 01, 2022
+        
+        # Iterate through all the tickers of interest
+        for ticker in all_tickers:
+            if ticker not in saved_tickers:
+                try:
+                    # Stock candles (unix timestamp)
+                    news = finnhub_client.company_news(
+                        ticker,
+                        _from=init_time,
+                        to=end_time
+                    )
+                    with open(f'{root_path}stock_news/{ticker}_news.pkl', 'wb') as f:
+                        # write the python object (dict) to pickle file
+                        pickle.dump(news, f)
+                        
+                except:
+                    print(f'Requests for getting quote of ticker {ticker} are failed.')
+                    print('Requests may have reached the limit of the free API. Try again later.')
+                    break
+    
+
+
+
+"""
+
+[STATUS] Functioning!
+[PLANS]
+- make the entire object automatically process data without calling functions
+- request sliced dataset based on ticker name
+- confirm the methods used to merge datasets and remove NaNs
+- collect stock NEWS
+- collect option data
+
+"""
+class DataMerging:
+
+    def __init__(
+            self,
+            ticker_name_path='/home/daweilin/stock_project/ndx100.json',
+            quote_path='/nfs/turbo/umms-csriram/daweilin/data/stock_quotes/',
+            financial_path='/nfs/turbo/umms-csriram/daweilin/data/stock_financials/',
+            macroecon_path='/nfs/turbo/umms-csriram/daweilin/data/macroEcon/',
+            ):
+
+        # get all tickers
+        import json
+        with open(ticker_name_path) as f:
+            all_tickers = json.load(f)
+
+        # make it a list
+        self.all_tickers = [ele for ele in all_tickers.keys()]
+        print('The number of ndx 100:', len(self.all_tickers))
+
+        # save paths to access datasets
+        self.quote_path = quote_path
+        self.financial_path = financial_path
+        self.macroecon_path = macroecon_path
+        # save organized data
+        self.quote_data = self.get_quotes()
+        self.fin_data = pd.DataFrame()
+        # if path provided
+        if macroecon_path!='' and financial_path!='':
+            self.macroecon_data = self.get_macroEcon()
+            self.set_mergedData(tickers=all_tickers)
+
+
+    # data loading function generating python generators
+    @staticmethod
+    def load_stock_files(filenames, root):
+        # add stock name
+        def add_tickername(df, f):
+            
+            df['ticker'] = [f.split('_')[0]]*len(df)
+            
+            return df
+    
+        # read csv
+        for filename in tqdm(filenames):
+            yield (
+                    add_tickername(
+                        pd.read_csv(
+                            root+filename,
+                            ),
+                        filename
+                        )
+                    )
+
+    # read quote files and organize them into a df
+    def get_quotes(self):
+        # get all files
+        quotes = [
+                f for f in os.listdir(
+                    self.quote_path
+                    ) if os.path.isfile(
+                    os.path.join(self.quote_path, f)
+                    )
+                ]
+        
+        # read quote data
+        quote_df = pd.concat(
+                self.load_stock_files(
+                    quotes, self.quote_path
+                    ), axis=0
+                )
+        print(quote_df['ticker'])
+        # get tickers belonging to nasdaq
+        ndx_df = quote_df[
+                quote_df['ticker'].isin(self.all_tickers)
+                ]
+        print(quote_df['ticker'].unique())
+        # chop data if needed
+        res_df = ndx_df.copy()
+        res_df = res_df[res_df['t']>946702800] 
+        # [WARNing!] datetime to attr
+        #>1672549200]#>1262322000] # 1/1/2010
+        # change the datatype
+        res_df['t'] = pd.to_datetime(res_df["t"], unit="s")
+        # checking
+        print('Successfully organized stock quotes...')
+        print('The size of the data:', res_df.shape)
+        # aave the quote data before normalization
+        return res_df
+    
+
+    # normalize quote data
+    def quote_norm(self, norm='zscore', update=False):
+        # normalize if defined
+        if len(norm):
+            res_norm = self.price_norm(self.quote_data, norm=norm)
+
+        # get maximum values (fold change)
+        max_df = res_norm.groupby('ticker').max().sort_values(
+                by=['c']
+                )
+        # get the latest quote
+        new_df = res_norm.groupby('ticker').last().sort_values(
+                by=['c']
+                )
+        new_df['ticker'] = new_df.index
+        # get top tickers
+        # [WARNing!] need to edit in the future
+        # ONLY for zscores right now
+        topt = new_df[new_df['c']>2].index
+        # label top tickers for lineplot
+        res_norm['labels'] = ''
+        res_norm.loc[
+                res_norm['ticker'].isin(topt), 'labels'
+                ] = res_norm.loc[
+                        res_norm['ticker'].isin(topt),
+                        'ticker'
+                        ].apply(
+                        lambda x: f'{x} ({np.round(new_df["c"][new_df["ticker"]==x].values[0], 3)})'
+                        )
+
+        # update quote data
+        if update==True:
+            self.quote_data = res_norm
+
+        return res_norm, topt, max_df, new_df
+    
+    # function to normalize data
+    @staticmethod
+    def price_norm(df, cols=['c'], norm='max'):
+        dftmp = df.copy()
+        for name in dftmp['ticker'].unique():
+            if norm=='max':
+                dftmp.loc[dftmp['ticker']==name, cols] = dftmp[
+                        dftmp['ticker']==name][cols].div(
+                        dftmp[dftmp['ticker']==name][cols].max()
+                        )
+            elif norm=='zscore':
+                dftmp.loc[dftmp['ticker']==name, cols] = dftmp[
+                        dftmp['ticker']==name][cols].sub(
+                        dftmp[dftmp['ticker']==name][cols].mean()
+                        ).div(
+                                dftmp[dftmp['ticker']==name][cols].std()
+                                )
+    
+            else:
+                dftmp.loc[dftmp['ticker']==name, cols] = dftmp[
+                        dftmp['ticker']==name][cols].div(
+                        dftmp[dftmp['ticker']==name][cols].min()
+                        )
+        return dftmp
+    
+    # read and organize financial data
+    @staticmethod
+    def get_financial(ticker, financial_path):
+        # load and read data
+        findata = pd.read_pickle(
+                financial_path+f'{ticker}_financial.pkl'
+                )
+        # convert data into dataframes
+        df_collect = []
+        for k in findata['series']['quarterly'].keys():
+            tmp = pd.DataFrame(findata['series']['quarterly'][k])
+            try:
+                tmp.index = tmp['period']
+                tmp = tmp.iloc[:,1:]
+                tmp.columns = [k]
+                df_collect.append(tmp)
+            except:
+                print(k, tmp)
+        # merge data
+        fin_series = pd.concat(df_collect, axis=1)
+        fin_series.index = pd.to_datetime(fin_series.index)
+
+        return fin_series.astype(float)
+    
+
+    # initialize when creating an instance of the class
+    def get_macroEcon(self):
+        # the name of data to the corresponding abbreviations
+        fields = {
+                "RATEINF/CPI_USA":'CPI',
+                "FRED/GDP":'GDP',
+                "EIA/PET_RWTC_D":'OIL',
+                "FRED/NROUST":'UNRATE',
+                "FRED/PCECTPIMD":'PCE',
+                'USTREASURY/YIELD':'TNMR',
+                'USTREASURY/LONGTERMRATES':'TNX'
+                }
+        # collect data
+        econData = {}
+        for fd, abbv in fields.items():
+            tmp_csv = pd.read_csv(
+                    self.macroecon_path+f'{fd.replace("/", "-")}.csv',
+                    index_col=0
+                    )
+            tmp_csv.columns = pd.Series(
+                    tmp_csv.columns
+                    ).apply(lambda x: abbv+'_'+x)
+            econData[abbv] = tmp_csv
+        
+        # organize the data
+        return self.econ_data_preprocess(econData)
+
+    @staticmethod   
+    def econ_data_preprocess(econ_dict):
+        # Merge datasets
+        econ_df = pd.concat(
+                [econ_dict[k] for k in econ_dict.keys()],
+                axis=1
+                ) 
+        # merge with stock quote and financial
+        econ_df.index = pd.to_datetime(econ_df.index)
+        # remove columns without any data
+        econ_trim_df = econ_df[econ_df.columns[
+            econ_df.any(axis=0)]
+            ]
+        # impute data before merge
+        econ_trim_df = econ_trim_df.interpolate(
+                method='linear', limit_direction='both'
+                )
+        return econ_trim_df
+
+
+    # merge quote, financial and macroecon data
+    @staticmethod
+    def merge_quote_financial_econ(ticker, fin_df, qdf, econ_df):
+        # get quote
+        qdf.index = qdf['t']
+        qdf = qdf.drop(columns=['s', 'ticker', 't']).astype(float)
+
+        #qdf = qdf.drop(columns=['s', 't']).astype(float)
+        # outer join the dataframe
+        #print(qdf, fin_df)
+        quote_fin = pd.concat(
+                (qdf.iloc[::-1,:], fin_df),
+                axis=1, join='outer')
+        #print(quote_fin)
+        # impute data
+        impute_fin = quote_fin.interpolate(
+                method='linear', limit_direction='both'
+                )
+        # merge econ data and quote_fin data
+        econ_trim_df = econ_df[
+                econ_df.index.isin(impute_fin.index)
+                   ]
+
+        qfe_df = pd.concat((impute_fin, econ_trim_df), axis=1)
+        # impute again
+        qfe_df = qfe_df.interpolate(
+                method='linear', limit_direction='both'
+                )
+    
+        return qfe_df
+ 
+    # initialize when creating an instance of the class
+    def get_newsData(self):
+        # collect data
+        econData = {}
+        for fd, abbv in fields.items():
+            tmp_csv = pd.read_csv(
+                    self.macroecon_path+f'{fd.replace("/", "-")}.csv',
+                    index_col=0
+                    )
+            tmp_csv.columns = pd.Series(
+                    tmp_csv.columns
+                    ).apply(lambda x: abbv+'_'+x)
+            econData[abbv] = tmp_csv
+        
+        # organize the data
+        return self.econ_data_preprocess(econData)
+
+
+
+    # a getter function
+    def get_mergedData(self):
+        return self._mergedData
+
+    # a setter function to merge and align datasets
+    def set_mergedData(
+            self,
+            tickers=[],
+            save_file_path='/nfs/turbo/umms-csriram/daweilin/data/stock_analysis/quote_financial_econ_ndx100.csv'
+            ):
+        
+        # get tickers
+        tickers = tickers if len(tickers) else self.all_tickers
+
+        # collect data
+        qfdf_collect = []
+        for ticker in tqdm(tickers):
+            # get financial data with corresponding ticker names
+            fin_df = self.get_financial(ticker, self.financial_path)
+            if fin_df.fillna(0).sum().sum()>0:
+                # get quote data with corresponding ticker names
+                qdf = self.quote_data[
+                        self.quote_data['ticker']==ticker
+                        ]
+                # collect
+                tmp_df = self.merge_quote_financial_econ(
+                    ticker,
+                    fin_df,
+                    qdf,
+                    self.macroecon_data
+                    )
+                tmp_df['ticker'] = ticker
+                qfdf_collect.append(tmp_df)
+        # stack
+        qfe = pd.concat(qfdf_collect, axis=0, join='inner')
+        qfe = qfe[qfe.columns[pd.isna(qfe).any(axis=0)==0]]
+        print(qfe[qfe['ticker']=='AAPL'])
+        # output data
+        if len(save_file_path):
+            qfe.to_csv(save_file_path)
+        
+        print(qfe)
+        # update
+        self._mergedData = qfe
+        
+
+"""
+
+[STATUS]In progress
+[PLANS]
+- set up ARIMA models
+- set up LSTM models
+- enable the calculations with different time windows
+-output the entire datasets with those predictions
+- model evaluation
+- other time-series/dynamics models (like DMD)
+
+"""
+class time_series_model:
+    
+    def __init__(
+            self,
+            ticker_name='AAPL',
+            mergedData_path='/nfs/turbo/umms-csriram/daweilin/data/stock_analysis/quote_financial_econ_ndx100.csv',
+            start_date='1999-12-31',
+            ):
+        self.mergedData_path = mergedData_path
+        self.ticker_name = ticker_name
+        self.__Data = self.read_mergedData(start_date)
+
+        # attributes
+        self.train = pd.DataFrame()
+        self.test = pd.DataFrame()
+        self.auto = pd.DataFrame()
+        self.n_diffs = None
+        self.forecasts = []
+        self.confidence_intervals = []
+
+    @property
+    def Data(self):
+        return self.__Data
+
+    @Data.setter
+    def Data(self, new_df):
+        self.__Data = new_df
+
+    def dataOuput(self, output_path):
+        self.__Data.to_csv(output_path)
+    
+    def read_mergedData(self, start_date):
+        
+        # import data
+        df = pd.read_csv(self.mergedData_path, index_col=0)
+        df.index = pd.Series(df.index).apply(lambda x: pd.to_datetime(x, format='%Y-%m-%d').date())
+        # datetime filtering
+        df = df[df.index>pd.to_datetime(start_date, format='%Y-%m-%d').date()]
+        # get data for specific ticker
+        df = df[df['ticker']==self.ticker_name]
+        
+        return df
+
+
+    # plot data
+    def single_ticker_plot(self, ticker='AAPL', plot=True):
+        # filter dataframe
+        df = self.__Data.copy()
+        dftmp = df[df['ticker']==ticker]
+        
+        # make plots
+        if plot==True:
+            fig, ax = plt.subplots(1,1,figsize=(12,8))
+            sns.lineplot(data=dftmp, y='c', x=dftmp.index, ax=ax)
+            tick_inds = np.linspace(0, len(dftmp)-1, 10)
+            ax.set_xticks(tick_inds.astype(int))
+            ax.set_xticklabels(
+                    dftmp.iloc[tick_inds.astype(int), 0]
+                    )
+            plt.xticks(rotation=90)
+            ax.set_xlabel('')
+            ax.set_ylabel('Closing price')
+            CanvasStyle(ax)
+            plt.savefig(f'/home/daweilin/stock_project/result_figs/{ticker}_closing.png')
+        
+        return dftmp
+    
+    # train-test split
+    def train_test_split(
+            self, split_date='', ticker='AAPL', plot=True
+            ):
+        # get dataframe
+        df = self.__Data.copy()
+        if split_date=='':
+            date_uq = df.index.unique()
+            split_date = date_uq[int((len(date_uq)*0.95))]
+        else:
+            split_date = pd.to_datetime(
+                    split_date,
+                    format='%Y-%m-%d'
+                    )
+        print(split_date)
+        # label training or testing
+        df['purpose'] = ''
+        df.loc[df.index<split_date, 'purpose'] = 'training'
+        df.loc[df.index>split_date, 'purpose'] = 'testing'
+        
+        if plot==True:
+            # make a plot for checking the split
+            # filter dataframe
+            dftmp = df[df['ticker']==ticker]
+            # make plots
+            fig, ax = plt.subplots(1,1,figsize=(12,8))
+            sns.lineplot(
+                    data=dftmp,
+                    y='c',
+                    x=dftmp.index,
+                    hue='purpose',
+                    ax=ax
+                    )
+            tick_inds = np.linspace(0, len(dftmp)-1, 10)
+            #ax.set_xticks(dftmp.index[tick_inds.astype(int)])
+            #ax.set_xticklabels(dftmp.index[tick_inds.astype(int)])
+            plt.xticks(rotation=90)
+            ax.set_xlabel('')
+            ax.set_ylabel('Closing price')
+            CanvasStyle(ax)
+            plt.savefig(f'/home/daweilin/stock_project/result_figs/{ticker}_closing.png')
+        
+        self.train = dftmp[dftmp['purpose']=='training']
+        self.test = dftmp[dftmp['purpose']=='testing']
+
+        return df, dftmp
+    
+
+    # technical analysis
+    #--> we can choose particular method in the future version
+    def techAnalysis(self):
+
+        # Add all ta features
+        from ta.utils import dropna
+        from ta import add_all_ta_features
+        df = self.__Data.copy()
+        df = add_all_ta_features(
+                df, 
+                open="o",
+                high="h",
+                low="l",
+                close="c",
+                volume="v"
+                )
+        self.__Data = df
+
+        return df
+
+    # time series analysis
+    def ARIMA(self, df):
+        # import arima package
+        from statsmodels.tsa.arima.model import ARIMA
+        # fit model
+        model = ARIMA(df, order=(5,1,0))
+        model_fit = model.fit()
+        # summary of fit model
+        print(model_fit.summary())
+        # line plot of residuals
+        residuals = DataFrame(model_fit.resid)
+        residuals.plot()
+        pyplot.show()
+        # density plot of residuals
+        residuals.plot(kind='kde')
+        pyplot.show()
+        # summary stats of residuals
+        print(residuals.describe())
+
+    
+    def ARIMA_premodel(self, df, ticker='AAPL'):
+
+        from pandas.plotting import lag_plot
+
+        fig, axes = plt.subplots(3, 2, figsize=(8, 12))
+        plt.title(f'{ticker} Autocorrelation plot')
+
+        # The axis coordinates for the plots
+        ax_idcs = [
+                    (0, 0),
+                    (0, 1),
+                    (1, 0),
+                    (1, 1),
+                    (2, 0),
+                    (2, 1),
+                ]
+
+        for lag, ax_coords in enumerate(ax_idcs, 1):
+            ax_row, ax_col = ax_coords
+            axis = axes[ax_row][ax_col]
+            dftmp = df[df['ticker']==ticker]
+            lag_plot(dftmp['c'], lag=lag, ax=axis)
+            axis.set_title(f"Lag={lag}")
+        
+        # save figure
+        plt.savefig(f'/home/daweilin/stock_project/result_figs/{ticker}_closing.png')
+
+
+    def ARIMA_diff(self):
+
+        from pmdarima.arima import ndiffs
+        kpss_diffs = ndiffs(self.train['c'], alpha=0.05, test='kpss', max_d=6)
+        adf_diffs = ndiffs(self.train['c'], alpha=0.05, test='adf', max_d=6)
+        n_diffs = max(adf_diffs, kpss_diffs)
+        
+        print(f"Estimated differencing term: {n_diffs}")
+        self.n_diffs = n_diffs
+        return n_diffs
+
+    def ARIMA_fit(self, as_variable=False):
+
+        import pmdarima as pm
+        feed_data = self.__Data['c'] if as_variable else self.train['c']
+        auto = pm.auto_arima(
+                feed_data,
+                d=self.n_diffs,
+                seasonal=False,
+                stepwise=True,
+                suppress_warnings=True,
+                error_action="ignore",
+                max_p=6,
+                max_order=None,
+                trace=True
+                )
+        self.auto = auto
+        print(auto.order)
+
+        return auto
+
+    def ARIMA_model_update(self, as_variable=False):
+
+        from sklearn.metrics  import mean_squared_error
+        from pmdarima.metrics import smape
+        
+        model = self.auto  # seeded from the model we've already fit
+        
+        def forecast_one_step():
+            fc, conf_int = model.predict(
+                    n_periods=1,
+                    return_conf_int=True
+                    )
+            return (
+                fc.tolist()[0],
+                np.asarray(conf_int).tolist()[0])
+        
+        forecasts = []
+        confidence_intervals = []
+        
+        feed_data = self.__Data['c'] if as_variable else self.test['c']
+        for new_ob in tqdm(feed_data):
+            fc, conf = forecast_one_step()
+            forecasts.append(fc)
+            confidence_intervals.append(conf)
+        
+            # Updates the existing model with a small number of MLE steps
+            model.update(new_ob)
+ 
+        print(f"Mean squared error: {mean_squared_error(self.test['c'], forecasts)}")
+        print(f"SMAPE: {smape(self.test['c'], forecasts)}")
+        # Mean squared error: 0.34238951346274243
+        # SMAPE: 0.9825490519101439
+        self.forecasts = forecasts
+        self.confidence_intervals = confidence_intervals
+
+        # save predictions from ARIMA to the tabel
+        self.__Data['forecasts'] = np.nan
+        self.__Data['upperCI'] = np.nan
+        self.__Data['lowerCI'] = np.nan
+        self.__Data.loc[
+                -len(forecasts):,
+                'forecasts'
+                ] = forecasts
+        self.__Data.loc[
+                -len(forecasts):,
+                'upperCI'
+                ] = [ele[0] for ele in confidence_intervals]
+        self.__Data.loc[
+                -len(forecasts):,
+                'lowerCI'
+                ] = [ele[1] for ele in confidence_intervals]
+
+    def ARIMA_visualization(
+            self,
+            show_train=100
+            ):
+
+        # initiate a figure
+        fig, axes = plt.subplots(2, 1, figsize=(12, 12))
+        
+        # Actual vs. Predicted
+        axes[0].plot(
+                self.train.index[-show_train:],
+                self.train['c'][-show_train:],
+                color='blue',
+                label='Training Data'
+                )
+        axes[0].plot(
+                self.test.index,
+                self.forecasts,
+                color='green',
+                marker='o',
+                label='Predicted Price'
+                )
+        axes[0].plot(
+                self.test.index,
+                self.test['c'],
+                color='red',
+                label='Actual Price'
+                )
+        axes[0].set_title(f'{self.ticker_name} Prices Prediction')
+        axes[0].set_xlabel('Dates')
+        axes[0].set_ylabel('Prices')
+        
+        #axes[0].set_xticks(
+        #        np.arange(0, 7982, 1300).tolist(),
+        #        df['Date'][0:7982:1300].tolist()
+        #        )
+        axes[0].legend()
+        
+        
+        # Predicted with confidence intervals
+        axes[1].plot(
+                self.train.index[-show_train],
+                self.train['c'][-show_train],
+                color='blue',
+                label='Training Data'
+                )
+        axes[1].plot(
+                self.test.index,
+                self.forecasts,
+                color='green',
+                label='Predicted Price'
+                )
+        axes[1].set_title(
+                'Prices Predictions & Confidence Intervals'
+                )
+        axes[1].set_xlabel('Dates')
+        axes[1].set_ylabel('Prices')
+        
+        conf_int = np.asarray(self.confidence_intervals)
+        axes[1].fill_between(
+                self.test.index,
+                conf_int[:, 0],
+                conf_int[:, 1],
+                alpha=0.9,
+                color='orange',
+                label="Confidence Intervals"
+                )
+        
+        #axes[1].set_xticks(np.arange(0, 7982, 1300).tolist(), df['Date'][0:7982:1300].tolist())
+        axes[1].legend()
+
+        # save figure
+        plt.savefig(f'/home/daweilin/stock_project/result_figs/{self.ticker_name}_performance.png')
+
+    def LSTM_setup(self,):
+
+        # import modules
+        from keras.models import Sequential
+        from keras.layers import LSTM, Dropout, Dense
+        
+        regressor = Sequential()
+        # First LSTM layer with Dropout regularisation
+        regressor.add(LSTM(
+            units=100,
+            return_sequences=True,
+            input_shape=(X_train.shape[1],1)
+            ))
+        regressor.add(Dropout(0.3))
+        regressor.add(LSTM(units=80, return_sequences=True))
+        regressor.add(Dropout(0.1))
+        regressor.add(LSTM(units=50, return_sequences=True))
+        regressor.add(Dropout(0.2))
+        regressor.add(LSTM(units=30))
+        regressor.add(Dropout(0.3))
+        regressor.add(Dense(units=1))
+        regressor.compile(
+                optimizer='adam',
+                loss='mean_squared_error'
+                )
+        
+    def LSTM_model(params, input_shape):
+        
+        import tensorflow as tf
+        from keras.layers import Dropout
+        from tensorflow.keras.layers import Dense
+        from tensorflow.keras.layers import LSTM
+        from tensorflow.keras.metrics import RootMeanSquaredError, MeanAbsoluteError
+        from tensorflow.keras.models import Sequential
+
+        model = Sequential()
+        model.add(
+            LSTM(units=params["lstm_units"],
+            return_sequences=True,
+            input_shape=(input_shape, 1))
+            )
+        model.add(Dropout(rate=params["dropout"]))
+        model.add(LSTM(units=params["lstm_units"], return_sequences=True))
+        model.add(Dropout(rate=params["dropout"]))
+        model.add(LSTM(units=params["lstm_units"], return_sequences=True))
+        model.add(Dropout(rate=params["dropout"]))
+        model.add(LSTM(units=params["lstm_units"], return_sequences=False))
+        model.add(Dropout(rate=params["dropout"]))
+        model.add(Dense(1))
+        model.compile(
+                loss=params["loss"],
+                optimizer=params["optimizer"],
+                metrics=[RootMeanSquaredError(),
+                    MeanAbsoluteError()]
+                )
+
+        return model
+
+    def LSTM_execute(self):
+
+        # params
+        params = {
+        	"loss": "mean_squared_error",
+            "optimizer": "adam",
+            "dropout": 0.2,
+            "lstm_units": 90,
+            "epochs": 30,
+            "batch_size": 128,
+            "es_patience" : 10
+            }       
+        # get model
+        model = self.LSTM_model(
+                params=params,
+                input_shape=self.train.shape[1]
+                )
+
+        es_callback = tf.keras.callbacks.EarlyStopping(
+                monitor='val_root_mean_squared_error',
+                mode='min',
+                patience=params["es_patience"]
+                )
+        model.fit(
+	            self.train.index,
+	            self.train,
+	            validation_data=(self.test.index, self.test),
+	            epochs=params["epochs"],
+	            batch_size=params["batch_size"],
+	            verbose=1,
+	            callbacks=[neptune_callback, es_callback]
+                )
+
+    # process the outcomes
+    def findPeak(self, plot=False):
+
+        from scipy.signal import find_peaks
+        peaks, _ = find_peaks(np.log(self.__Data['c']), height=0)
+        valleys, _ = find_peaks(1/(np.log(self.__Data['c'])), height=0)
+        tmp_data = self.__Data.copy()
+        tmp_data['labels'] = 0#'neutral'
+        tmp_data.loc[
+            tmp_data.index.isin(tmp_data.index[peaks]),
+            'labels'
+            ] = -1#'sell'
+        tmp_data.loc[
+            tmp_data.index.isin(tmp_data.index[valleys]),
+            'labels'
+            ] = 1#'buy'
+        #tmp_data.loc[0, 'labels'] = 0
+        print(np.unique(tmp_data.labels, return_counts=True))
+        self.Data = tmp_data
+        if plot:
+            fig, ax = plt.subplots(1,1,figsize=(20, 8))
+            sns.lineplot(
+                    data=tmp_data,
+                    x=tmp_data.index.to_numpy(),
+                    y='c',
+                    #hue='labels',
+                    ax=ax
+                    )
+            sns.scatterplot(
+                    data=tmp_data,
+                    x=tmp_data.index.to_numpy(),
+                    y='c',
+                    sizes=1000*np.ones(len(tmp_data)),
+                    hue='labels',
+                    ax=ax,
+                    zorder=100
+                    )
+            # save figure
+            plt.savefig(f'/home/daweilin/stock_project/result_figs/{self.ticker_name}_up_dw_labels.png')
+            
+
+
+    def feature_engineering(self):
+        # ytd
+        pass
+
+        # returns
+
+        # moving average
+
+"""
+
+[STATUS]In progress
+[PLANS]
+- predict to buy/sell/hold
+- model evaluation
+
+"""
+
+class decisionMaking(time_series_model):
+
+    def __init__(
+            self,
+            mergedData_path,
+            #ticker_name,
+            #start_date
+            ):
+        super().__init__(mergedData_path=mergedData_path)
+                #ticker_name,
+                #start_date
+                #) 
+        #self.__Data = data_w_time_series
+        #self.ticker_name = ticker_name
+
+    #@property
+    #def Data(self):
+    #    return self.__Data
+
+    #@Data.setter
+    #def Data(self, new_df):
+    #    self.__Data = new_df
+
+    #def dataOuput(self, output_path):
+    #    self.__Data.to_excel(output_path)
+
+    # build ML models to make decisions
+    def get_decision_making_model(self):
+
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.svm import LinearSVC, SVC
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.pipeline import make_pipeline
+        from sklearn.ensemble import StackingClassifier
+        estimators = [
+            ('rf',
+                RandomForestClassifier(
+                    n_estimators=10, random_state=42
+                    )),
+            ('svr', 
+                make_pipeline(
+                    StandardScaler(),
+                    SVC(
+                        #dual=False,
+                        #loss='l2',
+                        #penalty='l1',
+                        random_state=42
+                        )
+                    ))
+        ]
+        clf = StackingClassifier(
+            estimators=estimators,
+            final_estimator=LogisticRegression()
+        )
+        print(clf)
+        self.train = self.train.fillna(0)
+        self.test = self.test.fillna(0)
+        #from sklearn.model_selection import train_test_split
+        #print(cross_val_score(clf, X, y, cv=5, scoring='recall_macro'))
+
+        return clf.fit(
+                self.train.iloc[:, :-4].drop(columns=['ticker']).to_numpy(),
+                self.train['labels'].to_numpy()
+                ) 
+        #return clf.fit(
+        #        self.train.iloc[:, :-4].drop(columns=['ticker']).to_numpy(),
+        #        self.train['labels'].to_numpy()
+        #        ).score(
+        #                self.test.iloc[:, :-4].drop(columns=['ticker']).to_numpy(),
+        #                self.test['labels'].to_numpy()
+        #                )
+
+        #clf.fit(
+        #        self.train.iloc[:, :5].to_numpy(),
+        #        self.train['labels'].to_numpy()
+        #        ).score(
+        #                self.test.iloc[:, :5].to_numpy(),
+        #                self.test['labels'].to_numpy()
+        #                )
+
+
+        #return clf
+
+"""
+
+[STATUS]In progress
+[PLANS]
+- make linear programming/ML models to optimize
+1. maximize earning/return
+2. minimize the waiting time
+3. minimize risks (upper/lower bounds of possible prices?)
+
+"""
+
+
+class assessmentAllocation:
+    pass

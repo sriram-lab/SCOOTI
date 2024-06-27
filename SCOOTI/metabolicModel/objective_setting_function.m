@@ -1,4 +1,4 @@
-function model=objective_setting_function(model, obj, obj_c, obj_type, model_name),
+function model=objective_setting_function(model, obj, obj_c, obj_type, model_name, algorithm),
   % getting all compartments 
   %compartments = {};
   %metabolites = {};
@@ -8,6 +8,10 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
   %  ss = strsplit(s{2}, ']');
   %  compartments{i, 1} = ss{1};
   %end
+  model.genes = upper(model.genes)
+  initial_model = model;
+
+
   % Create compartment array
   compartments = {'c', 'm', 'n', 'x', 'r', 'g', 'l'};
   for i=1:length(compartments),
@@ -39,10 +43,10 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
       % else No objective for optimization
       if strcmp(obj, '')==0,
           if strcmp(obj, 'gh')~=1, % optimize reactions/new demand reactions
-              disp('New objective')
+              %disp('New objective')
               if strcmp('Demand', obj_type),
                   if sum(strfind(obj, '[')),
-                      disp('Create a new demand reaction')
+                      %disp('Create a new demand reaction')
                       demand_rxn = obj;
                       rname = sprintf('%s_demand', obj);
                       rsym = sprintf('%s -> ', obj);
@@ -51,7 +55,7 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
                       obj_ind = find(contains(model.rxns, rname));
                       model.c(obj_ind) = coef;
                   else,   
-                      disp('Create a new combination demand reaction')
+                      %disp('Create a new combination demand reaction')
                       obj1 = sprintf('%s%s', obj, compartments{1});
                       obj2 = sprintf('%s%s', obj, compartments{2});
                       obj3 = sprintf('%s%s', obj, compartments{3});
@@ -60,8 +64,8 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
                       obj6 = sprintf('%s%s', obj, compartments{6});
                       obj7 = sprintf('%s%s', obj, compartments{7});
                       inmodel = [findMetIDs(model,obj1)>0, findMetIDs(model,obj2)>0, findMetIDs(model,obj3)>0, findMetIDs(model,obj4)>0, findMetIDs(model,obj5)>0, findMetIDs(model,obj6)>0, findMetIDs(model,obj7)>0];
-                      disp('debug!!!!!!!')
-                      disp(inmodel)
+                      %disp('debug!!!!!!!')
+                      %disp(inmodel)
                       obj_mets = {obj1; obj2; obj3; obj4; obj5; obj6; obj7};
                       obj_mets = obj_mets(find(inmodel));
                       % Add all demand reactions
@@ -75,13 +79,13 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
                       end
                   end
               else % optimize biomass optimization
-                  disp('Maximize existing reaction')
+                  %disp('Maximize existing reaction')
                   % Change objective reaction if needed
                   exist_ind = find(contains(model.rxns, obj));
                   model.c(exist_ind) = coef;
               end
           else,
-              disp('Optimize biomass without using other objectives...')
+              %disp('Optimize biomass without using other objectives...')
 
               %% assign objective function
               %if strcmp(model_name, 'Recon3D'),
@@ -130,5 +134,19 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
   obj_check = find(model.c~=0);
   model.c(obj_check)
   model.rxns{obj_check}
+
+  %% recover and fix the model and then remove objectives
+  %if strcmp(algorithm, 'INIT') | strcmp(algorithm, 'MOOMIN'),
+  %  disp('edit initial model')
+  %  % fix model rule for mapExpressionToReactions
+  %  initial_model.b = model.b(:, 1);
+  %  initial_model = fixModelRules(initial_model);
+  %  initial_model.c = initial_model.c*0
+  %  model = initial_model
+
+  %  unqgenes = unique(model.genes);
+  %  model2 = deleteModelGenes(model,unqgenes(1));
+  %  disp('Successfully delete a gene 33333')
+  %end
 
 end

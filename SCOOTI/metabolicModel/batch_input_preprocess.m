@@ -19,6 +19,8 @@ function [data_series, prefix_series, medium_series] = batch_input_preprocess(da
           append_name = join(append_name(1:length(append_name)-1), '_');
           append_name = strsplit(append_name{:}, '_');
           append_name = join(append_name(1:length(append_name)-1), '_');
+        elseif strcmp(append_name(length(append_name)), 'mat'),
+          append_name = {name_arr{ll}};
         else,
           append_name = join(append_name(1:length(append_name)-1), '_');
         end

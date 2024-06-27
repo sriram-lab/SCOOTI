@@ -32,6 +32,7 @@ from adjustText import adjust_text
 # Regression models
 #from SCOOTI.regressorCollection import *
 from SCOOTI.regressorMetaLearner import *
+#from SCOOTI.ADALINEMetaLearner import *
 # Set cobra solver to glpk in order to avoid err msg
 config = cobra.Configuration()
 config.solver = "glpk"
@@ -109,8 +110,6 @@ def load_KOmat_gen(files, colnames, geneList_path='/home/daweilin/StemCell/uniqu
 
     for file, colname in zip(files, colnames):
         yield mat_to_df_process(file, genes_columns, colname)
-
-
 
 
 # ideally optimal fluxes with single objectives
@@ -198,15 +197,14 @@ def unconstrained_models(root_path, norm=False, return_variables=True, medium='D
 
 # fluxes simulated with constraints
 def constrained_models(
-        root_path, CFR_paraScan=False, DFA_paraScan=False, randomScan=False, norm=True,
+        root_path, CFR_paraScan=False, DFA_paraScan=False,
+        randomScan=False, norm=True, stack_model=False,
         file_suffix='_fluxes.csv.gz', input_path_pattern='',
         biomass_reaction_name='biomass_objective',
         CFR_k=[10, 1, 0.1, 0.01, 0.001],
         CFR_r=[10, 1, 0.1, 0.01, 0.001], 
         DFA_k=[10, 1, 0.1, 0.01, 0.001],
         ):
-
-
     """
 
     Description
@@ -220,6 +218,7 @@ def constrained_models(
     DFA_paraScan (list of float): DFA parameters of interest used to output fluxes
     randomScan (bool): read all models without considering parameters
     norm (bool): if normalize the data by the summation of fluxes or not
+    stack_model (bool) : models with stacked constraints
     file_suffix (string): the suffix of filenames to read
 
     Returns
@@ -280,6 +279,15 @@ def constrained_models(
                             cellType = f"{cellType}_k{JSON['CFR_kappa']}_r{JSON['CFR_rho']}"
                         elif DFA_paraScan==True:
                             cellType = f"{cellType}_dk{JSON['DFA_kappa']}"
+
+                        # append CFR model name
+                        if stack_model:
+                            with open(JSON['CFRModel'].replace('_model_CFR.mat', '_metadata.json'), 'rb') as J2:
+                                JSON2 = json.load(J2)
+                                stack_model_name = JSON2['input_path']
+                                stack_model_name = stack_model_name.split('/')[-1].split('.xlsx')[0]
+                                stack_model_name = stack_model_name.split('.csv')[0]
+                            cellType = f"[{stack_model_name}]{cellType}"
                         
                         # only get fluxes without objective
                         if objMet=='' or objMet=='gh':
@@ -323,7 +331,7 @@ def constrained_models(
 def load_multiObj_models(
         root_path, medium='KSOM', return_variables=True, norm=False,
         CFR_paraScan=False, DFA_paraScan=False, randomScan=False,
-        topology_use=False,
+        topology_use=False, stack_model=False,
         file_suffix='_fluxes.csv.gz',
         ind_labels=False,
         biomass_reaction_name='biomass_objective',
@@ -331,8 +339,6 @@ def load_multiObj_models(
         CFR_r=[10, 1, 0.1, 0.01, 0.001], 
         DFA_k=[10, 1, 0.1, 0.01, 0.001],
         ):
- 
-
     """
 
     Description
@@ -349,6 +355,7 @@ def load_multiObj_models(
     DFA_paraScan (bool): if filtering models with DFA parameters of interest
     randomScan (bool): read all models without considering parameters
     topology_use (bool): remove fluxes of candidate metabolites but biomass objective
+    stack_model (bool) : models with stacked constraints
     CFR_k (list of floats): CFR kappa of interest used to output fluxes
     CFR_r (list of floats): CFR rho of interest used to output fluxes
     CFR_r (list of floats): DFA parameters of interest used to output fluxes
@@ -357,12 +364,7 @@ def load_multiObj_models(
     Returns
     -------
     res_df (pandas.DataFrame): reaction fluxes with parameters of interest
-
-
     """
-
-
-
     print('Start processing the data of constrained models...')
     # get file names
     flux_files = [f for f in os.listdir(root_path) if os.path.isfile(os.path.join(root_path, f))]
@@ -384,7 +386,7 @@ def load_multiObj_models(
                     switch = JSON_DFA_kappa in DFA_k
                 else:
                     switch = 1
-                if switch:
+                if switch and sum(np.array(JSON['obj_c']))>0:
                     objMet = np.array(JSON['obj'])[np.array(JSON['obj_c'])!=0][0]
                     #cellType = JSON['upStage']
                     cellType = JSON['input_path']
@@ -409,6 +411,14 @@ def load_multiObj_models(
                             # make index labels for cells
                             if ind_labels==True:
                                 cellType = f'{cellType}_{i}'
+                            # append CFR model name
+                            if stack_model:
+                                with open(JSON['CFRModel'].replace('_model_CFR.mat', '_metadata.json'), 'rb') as J2:
+                                    JSON2 = json.load(J2)
+                                    stack_model_name = JSON2['input_path']
+                                    stack_model_name = stack_model_name.split('/')[-1].split('.xlsx')[0]
+                                    stack_model_name = stack_model_name.split('.csv')[0]
+                                cellType = f"[{stack_model_name}]{cellType}"
                             colnames.append(cellType)
                         else:
                             pass
@@ -425,6 +435,7 @@ def load_multiObj_models(
 
     if norm==True:
         cell_df = cell_df.div(cell_df[cell_df.index.str.contains(f'Obj|_demand|{biomass_reaction_name}|WT')==0].abs().sum(axis=0), axis=1)
+        #cell_df = cell_df.div(cell_df[cell_df.index=='Obj'], axis=1)
     if return_variables==True:
         cell_df = cell_df[cell_df.index.str.contains(f'Obj|_demand|{biomass_reaction_name}|WT')==0] # remove objective and demand reactions
     elif topology_use==True:
@@ -526,8 +537,6 @@ def load_geneKO_models(
     print('Finishing up loading the constrained models based on omics datasets...')
     
     return cell_df
-
-
 
 # reading fluxes of FVA ranges
 def fva_constrained_models(root_path):
@@ -642,13 +651,31 @@ def load_pageRankData(suffix, cell_name):
     return pg_uncon_models, pg_con_models
 
 # train regression models
-def model_training(uncon_models, con_models, cell_name, suffix, pg_uncon_models=[], pg_con_models=[], input_type='flux', cluster_path=''):
+def model_training(
+        uncon_models,
+        con_models,
+        cell_name,
+        suffix,
+        pg_uncon_models=[],
+        pg_con_models=[],
+        input_type='flux',
+        cluster_path='',
+        learner='L',
+        learning_rate=0.001,
+        epo=1000
+        ):
     
     # Part1: regression with fluxes
     if input_type=='flux':
         if cluster_path=='':
             # make regression with constrained CFR results
-            reg = regression_methods(uncon_models, con_models)
+            reg = regression_methods(
+                    uncon_models,
+                    con_models,
+                    learner=learner,
+                    learning_rate=learning_rate,
+                    epo=epo
+                    )
             sl_res = reg.SuperLearner()
         else:
             # cluster labels should be integers
@@ -657,6 +684,9 @@ def model_training(uncon_models, con_models, cell_name, suffix, pg_uncon_models=
                     uncon_models,
                     con_models,
                     cluster_label_path=cluster_path,
+                    learner=learner,
+                    learning_rate=learning_rate,
+                    epo=epo
                     )
             sl_res = reg.clusterSuperLearner()
         for sl_ in sl_res:
@@ -1015,7 +1045,7 @@ def heatmap_pvalues(pca_df, mets_category, labels, col_str, prefix, sel_samples=
 def coef_distance_diffObj(
         df1, df2, labels, prefix, norm=False, func='euclidean', zscore=False,
         model_path='/home/daweilin/StemCell/cancer_model.mat',
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
+        save_root_path='./',
         histplot=True, boxplot_cols=[], boxplot_order=[],
         ):
     
@@ -1268,7 +1298,7 @@ def getRxnCoefficients(
 # calculate the Eucleadian distance from the biomass objective to the inferred objectives
 def coef_distance_to_biomassObj(
         df, labels, biomass_coef_df, prefix, func='euclidean', norm=False, rank=False, zscore=False, ref_input_type='model',
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
+        save_root_path='./',
         histplot=True, boxplot_cols=[], boxplot_order=[],
         ):
     """Visualize Eucleadian distances from inferred objectives to biomass objectives
@@ -1291,7 +1321,7 @@ def coef_distance_to_biomassObj(
         name of the method used for the calculation of distances between coefficients
     norm : {bool}, default=False
         normalize the coefficient of each sample by the summation of coefficients of metabolites
-    save_root_path : {str}, default='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results/'
+    save_root_path : {str}, default='./'
         path to save the figure
     histplot : {bool}, default=True
         show histogram next to the scatterplot
@@ -1446,7 +1476,7 @@ def coef_distance_to_biomassObj(
 def metabolites_dist_to_biomassObj(
         df, labels, prefix, func='euclidean', norm=False, rank=False, zscore=False,
         model_path='/home/daweilin/StemCell/cancer_model.mat',
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
+        save_root_path='./',
         histplot=True, boxplot_cols=[], boxplot_order=[],
         ):
     # load human metabolic model with acetylation-related reactions
@@ -1590,7 +1620,7 @@ def metabolites_dist_to_biomassObj(
 def coef_distance_to_biomassFlux(
         df, labels, prefix,
         medium='KSOM', norm=False, func='euclidean', rank=False, zscore=False,
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
+        save_root_path='./',
         histplot=True, boxplot_cols=[], boxplot_order=[],
         ):
 
@@ -1842,7 +1872,7 @@ def sankey_plot(
 def parallel_plots(
         pca_df, mets_category, labels, prefix, col_str,
         stat_test=True, col1='', col2='', pv=0.05,
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results/',
+        save_root_path='./',
         ):
 
     
@@ -1928,7 +1958,7 @@ def parallel_plots(
 # proportion plot comparisons for two stages
 def lollipop_fig(
         input_df, mets_category, labels, prefix, cols, cutoff=0.1, value_ordering=True,
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results/'
+        save_root_path='./'
         ):
     """Visualize metabolic objectives with lollipop plots
     
@@ -1951,7 +1981,7 @@ def lollipop_fig(
         sort values based on fold changes if set true
     cutoff : {float}, default=0.1
         the portion of cells selecting a metabolite
-    save_root_path : {str}, default='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results/'
+    save_root_path : {str}, default='./'
         path to save the figure
 
 
@@ -2064,7 +2094,7 @@ def lollipop_fig(
 # feature selection plots of multiple samples
 def multiGrids_fig(
         pca_df, mets_category, labels, prefix, col_str,
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results/'
+        save_root_path='./'
         ):
     
     # prepare dataframe for boxplots
@@ -2265,7 +2295,7 @@ def boxplot_fig(
         input_df, mets_category, labels, col_str, col1, col2,
         prefix, value_ordering=True, pv=0.05, fc=1, col3='', portion=0.0,
         norm=False, plottype='boxplot', xlabel='Normalized coefficients',
-        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results/'
+        save_root_path='./'
         ):
 
     """
@@ -2533,7 +2563,7 @@ def subSystem_score(
         coef_sel, labels, sample_name='', fc_th=2,
         uncon_path='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/pfba/KSOM/',
         model_path='/home/daweilin/StemCell/cancer_model.mat',
-        save_root_path='home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
+        save_root_path='./',
         medium='KSOM',
     ):
 
@@ -2737,10 +2767,19 @@ class clustering_func:
         else:
             cols = labels
         # get colors for type of cells/samples
-        cellType_pal = sns.color_palette(
-                'Set3',
-                n_colors=pd.Series(cols).unique().size,
-                )
+        if len(pd.Series(cols).unique())>12:
+            #cmap = 'cubehelix'
+            colormap = plt.cm.gist_ncar
+            # Normalize the categories to 0-1 scale
+            cnorm = plt.Normalize(vmin=0, vmax=pd.Series(cols).unique().size-1)
+            cellType_pal = [colormap(cnorm(i)) for i in range(pd.Series(cols).unique().size)]
+        else:
+            cmap = 'Set3'
+            # set colors
+            cellType_pal = sns.color_palette(
+                    cmap,
+                    n_colors=pd.Series(cols).unique().size,
+                    )
         # map the colors to cell types
         #cellType_pal = sns.color_palette("Set2")
         cellType_lut = dict(zip(map(str, pd.Series(cols).unique()), cellType_pal))
@@ -2907,7 +2946,8 @@ class clustering_func:
                     row_cluster=True,
                     col_cluster=False,
                     yticklabels=False,
-                    figsize=(len(pca_df[pca_df.any(axis=1)].index),20)
+                    figsize=(80,20)
+                    #figsize=(len(pca_df[pca_df.any(axis=1)].index),20)
                 )
         
         # edit legend boxes for the additioanl colors
@@ -2965,7 +3005,8 @@ class clustering_func:
             # PCA variance
             from sklearn.decomposition import PCA
             X = pca_df.T
-            pc = PCA(n_components=8).fit(pca_df.T)
+            dim = pca_df.shape[0] if pca_df.shape[0]<8 else 8
+            pc = PCA(n_components=dim).fit(pca_df.T)
             
             return pc.explained_variance_ratio_
         
@@ -2995,6 +3036,13 @@ class clustering_func:
     
         # set up colormap for visualization
         multiColors = 'gist_rainbow' if len(np.unique(labels))>5 else 'Set2'
+        if len(np.unique(labels))>4:
+            # Get the colormap
+            colormap = plt.cm.gist_ncar
+            # Normalize the categories to 0-1 scale
+            cnorm = plt.Normalize(vmin=0, vmax=n_categories-1)
+            multiColors = [colormap(cnorm(i)) for i in range(np.unique(labels))]
+
         color = multiColors if continuous==False else 'Blues'#sns.color_palette("dark:#69d", as_cmap=True)#"mako"#'viridis'
         pca_df = self.pca_df.copy()
         axis_label = func if func!='PCA' else 'PC'
@@ -3022,7 +3070,15 @@ class clustering_func:
                 cellTypes = pc_plt[hue_col].unique()
             if len(alpha)==1:
                 alpha = alpah*len(cellTypes)
-            colors = ['lightgrey', 'tomato', 'teal', 'slateblue']
+
+            if len(cellTypes)>4:
+                # Get the colormap
+                colormap = plt.cm.gist_ncar
+                # Normalize the categories to 0-1 scale
+                cnorm = plt.Normalize(vmin=0, vmax=n_categories-1)
+                colors = [colormap(cnorm(i)) for i in range(len(cellTypes))]
+            else:
+                colors = ['lightgrey', 'tomato', 'teal', 'slateblue']
             for i, label in enumerate(cellTypes):
                 color = colors[i]
                 df = pc_plt[pc_plt[hue_col]==label]
@@ -3060,8 +3116,7 @@ class clustering_func:
                 pc_plt = pd.DataFrame(pc[:,cols])
                 pc_plt.columns = [f'{axis_label}{cols[0]+1}', f'{axis_label}{cols[1]+1}']
                 pc_plt[hue_col] = labels
-                
-               
+
                 # colorbar
                 if continuous==True:
 
@@ -3093,8 +3148,15 @@ class clustering_func:
                     ax.figure.colorbar(sm)
 
                 else:
-
-                    colors = ['lightgrey', 'tomato', 'teal', 'slateblue']
+                    cellTypes = pc_plt[hue_col].unique()
+                    if len(cellTypes)>4:
+                        # Get the colormap
+                        colormap = plt.cm.gist_ncar
+                        # Normalize the categories to 0-1 scale
+                        cnorm = plt.Normalize(vmin=0, vmax=n_categories-1)
+                        colors = [colormap(cnorm(i)) for i in range(len(cellTypes))]
+                    else:
+                        colors = ['lightgrey', 'tomato', 'teal', 'slateblue']
                     # create figures
                     fig = plt.figure(figsize = (6,6))
                     ax = fig.add_subplot(1,1,1) 
@@ -3109,7 +3171,6 @@ class clustering_func:
                             s=100,
                             legend=True
                             )
-                    
                     for pos in ['right', 'top', 'bottom', 'left']:
                         plt.gca().spines[pos].set_visible(False)
                     plt.xticks([])
@@ -3702,38 +3763,82 @@ def biomass_gene_essentiality(ko_df, sel_para, method='zscore', th=1):
     return biomass_growthGenes, biomass_nongrowthGenes
 
 
-def metObj_gene_essentiality(coef_paths, sel_para, method='zscore', th=1):
+def metObj_gene_essentiality(
+        coef_paths, sel_para, method='zscore', th=1,
+        model_name='Recon3D',
+        geneID_symbol_path='/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json'
+        ):
     
     """
-    # Process objective coefficients
-    coef_paths = {
-            'ESC':f'/nfs/turbo/umms-csriram/daweilin/regression_models/GeneKO/flux_sl_ESC_{sel_para}_norm_nonorm.csv',
-            }
+
+    Description
+    -----------
+    Read coefficients of WT and KO strains and identify essential genes
+
+    Arguments
+    ---------
+    coef_paths (str): path to access the data of coefficients. examples are below
+    (example)
+    ===
+    coef_paths = [
+    '/nfs/turbo/umms-csriram/daweilin/regression_models/GeneKO/flux_sl_ESC_recon3d_paraScan_r10_norm_nonorm.csv',
+    '/nfs/turbo/umms-csriram/daweilin/regression_models/GeneKO/flux_sl_ESC_recon3d_paraScan_r1_norm_nonorm.csv',
+            ]
+    ===
+    sel_para (str): parameters used for the analysis, e.g. 'k1_r1'
+    method (str): the criteria for identifying essential genes. options are 'zscore', 'quantile', and '' which is nonzero changes
+    th (float): thresholds of distances from the WT to KO coefficients
+    model_name (str): name of the genome scale metabolic models. options are 'Recon3D', 'Recon2.2', and '' which is Shen's Recon1
+    geneID_symbol_path (str): path to access .json files that contains the gene IDs used in the GEMs with corresponding gene symbols
+
+    Returns
+    -------
+    growth_genes (list): a list of genes that make the distances from the WT to KO coefficients greater than a threshold
+    nongrowth_genes (list): return a list of genes that change the coefficients in opposite direction if a reference exists
+    coefs_df (pandas.DataFrame): processed coefficients
+
     """
 
     # get fluxes of multi-objective models with constraints
-    coefs = {}
-    for k in coef_paths.keys():
-        path = coef_paths[k]
-        coefs[k] = pd.read_csv(path, index_col=0)
-        #coefs[k].index = pd.Series(coefs[k].index).replace(mnames)
+    coefs_collect = [pd.read_csv(path, index_col=0) for path in coef_paths]
     
     # Merge
-    coefs_df = pd.concat((coefs[k] for k in coefs.keys()), axis=1)
-    paras = pd.Series(coefs_df.columns).apply(
-            lambda x: '_'.join(x.split('_')[-3:-1])
+    coefs_df = pd.concat(coefs_collect, axis=1)
+    print(coefs_df)
+
+    # get parameters
+    col_prefix = pd.Series(coefs_df.columns).apply(
+            lambda x: x.split('_r')[0].split('_k')[-1]
             )
+    col_suffix = pd.Series(coefs_df.columns).apply(
+            lambda x: x.split('_r')[-1].split('_')[0]
+            )
+    paras = pd.Series([f'k{ele1}_r{ele2}' for ele1, ele2 in zip(col_prefix, col_suffix)])
+    #paras = pd.Series(coefs_df.columns).apply(
+    #        lambda x: '_'.join(x.split('_')[-3:-1])
+    #        )
+
+    # slice the data with specific parameters
     coefs_df = coefs_df[coefs_df.columns[paras==sel_para]]
-    labels = pd.Series(coefs_df.columns).apply(lambda x: x.split('_')[-1])
+    # process the gene names
+    if model_name=='Recon3D':
+        # get gene map
+        geneMap = geneID_symbol_map(path=geneID_symbol_path, model_name=model_name)
+        labels = pd.Series(coefs_df.columns).apply(lambda x: '_'.join(x.split('_')[-2:]))
+        labels = labels.replace(geneMap)
+        labels.iloc[0] = 'WT'
+        print(labels)
+    elif model_name=='Recon2.2':
+        # get gene map
+        geneMap = geneID_symbol_map(path=geneID_symbol_path, model_name=model_name)
+        labels = pd.Series(coefs_df.columns).apply(lambda x: '_'.join(x.split('_')[-1:]))
+        labels = labels.replace(geneMap)
+        labels.iloc[0] = 'WT'
+        print(labels)
+    else:
+        labels = pd.Series(coefs_df.columns).apply(lambda x: x.split('_')[-1])
     print(coefs_df.shape, paras)
     
-    # distance from the biomass coef to the inferred obj
-    #dist_df = coef_distance_to_biomassObj(
-    #        coefs_df, labels, 'KO',
-    #        norm=True, rank=False, func='euclidean',
-    #        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
-    #        histplot=False, boxplot_cols=[], boxplot_order=[]
-    #        )
     dist_res = []
     coefs_df.columns = labels
     for col in coefs_df.columns:
@@ -3744,7 +3849,7 @@ def metObj_gene_essentiality(coef_paths, sel_para, method='zscore', th=1):
     
     # get difference of the distance
     diff_df = dist_df['Distances']#-dist_df['Distances'].iloc[0]
-    
+    print(diff_df)
     # quantile methods
     if method=='quantile':
         # get q1 and q3 and calculate iqr
@@ -3770,7 +3875,8 @@ def metObj_gene_essentiality(coef_paths, sel_para, method='zscore', th=1):
         nongrowth_genes = labels.to_numpy()[diff_df<0]
         growth_genes = labels.to_numpy()[diff_df>0]
         
-    return growth_genes, nongrowth_genes
+    return growth_genes, nongrowth_genes, coefs_df
+
 
 
 
@@ -4841,7 +4947,7 @@ Tradeoff between objectives
 - read_sampling_objFlux
 - find_pareto
 - ObjectiveTradeOffs
-
+- archetypal_computing
 
 """
 def pareto_surface_to_points(data_df, ref_df, met1, met2, met3,
@@ -5179,10 +5285,128 @@ def find_pareto(res, met1, met2, met3='', plotting=False):
     return optimal_res, merge_res
 
 
+def trait_analysis(
+        sampling_objFlux,
+        coef_df,
+        labels,
+        sample_trait_func,
+        control_trait_func,
+        n_pc=2,
+        sample_name='',
+        plot=True,
+        save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
+        ):
+
+    # +++++++++++++++++++++++++++++++++++
+    # + PCA identifies metabolic traits +
+    # +++++++++++++++++++++++++++++++++++
+    # PCA of randomly simulated fluxes       
+    archetype_df = sampling_objFlux.copy().T
+    archetype_df = archetype_df.iloc[:-1, :]
+    
+    # Merge ratio of fluxes and ratio of coefficients
+    sel_df = coef_df.T[archetype_df.index].T
+    sel_tmp_df = sel_df.div(sel_df.sum(axis=0), axis=1)
+    arch_tmp_df = archetype_df.div(archetype_df.sum(axis=0), axis=1)
+    merge_tmp = pd.concat((arch_tmp_df, sel_tmp_df,), axis=1)
+    labels_tmp = ['Control']*arch_tmp_df.shape[1]+labels.to_list()
+
+    # ++++++++++++++++++++++++++++
+    # + Metabolic trait analysis +
+    # ++++++++++++++++++++++++++++
+    # find the archetype points
+    trait_df = merge_tmp.copy()#[merge_tmp.index!='h2o'].copy()
+    trait_df.columns = labels_tmp
+    from sklearn.decomposition import PCA
+    X = trait_df.T
+    # coordinate of pc
+    pc_coord = PCA(n_components=n_pc).fit_transform(X)
+    # convert into a dataframe for filtering
+    pc_coord_df = pd.DataFrame(pc_coord)
+    pc_coord_df.columns = [f'PC{n+1}' for n in range(n_pc)]
+    pc_coord_df['labels'] = labels_tmp
+    # conditions for filtering samples
+    con2 = pc_coord_df['labels']!='Control'
+    pc_coord_df = pc_coord_df[con2]
+    # get trait points
+    traits_ind_arr = sample_trait_func(pc_coord_df)
+    traits_ind = np.concatenate(traits_ind_arr)
+    # archetypes of metabolic traits
+    sample_archetypes = pd.concat(
+        [sel_tmp_df.iloc[:, t_ind].mean(axis=1) for t_ind in traits_ind_arr],
+        axis=1)
+    #sample_archetypes = sel_tmp_df.iloc[:, traits_ind]
+    sample_archetypes.columns = [f'{sample_name}_Trait{n+1}' for n in range(n_pc+1)]
+    sample_archetypes = sample_archetypes.sort_values(
+            by=[f'{sample_name}_Trait{n+1}' for n in range(n_pc+1)]
+            )
+    
+    # random traits
+    pc_coord_df = pd.DataFrame(pc_coord)
+    pc_coord_df.columns = [f'PC{n+1}' for n in range(n_pc)]
+    pc_coord_df['labels'] = labels_tmp
+    # conditions for filtering samples
+    con1 = pc_coord_df['labels']=='Control'
+    pc_coord_df = pc_coord_df[con1]
+    # get indices of traits with a predefined function
+    traits_ind_arr = control_trait_func(pc_coord_df, arch_tmp_df)
+    traits_ind = np.concatenate(traits_ind_arr)
+    # random coefficients lead to archetypes 
+    random_archetypes = pd.concat(
+        [arch_tmp_df.iloc[:, t_ind].mean(axis=1) for t_ind in traits_ind_arr],
+        axis=1)
+    random_archetypes.columns = [
+            f'Control_Trait{n+1}' for n in range(n_pc+1)
+            ]
+    # merge sample traits with archetypes
+    arch_df = pd.concat((sample_archetypes, random_archetypes), axis=1)
+    
+    if plot==True:
+        #arch_df = arch_df.T
+        from matplotlib.colors import LogNorm, Normalize
+        # make a heatmap
+        #fig, ax = plt.subplots(1,1, figsize=(8, n_pc*2)) 
+        fig, ax = plt.subplots(1,1, figsize=(n_pc*2+2, 6)) 
+        log_norm = LogNorm(
+                vmin=arch_df.T[arch_df.T>0].fillna(1).values.min().min(),
+                vmax=arch_df.T.max().max(),
+                )
+        # heatmap
+        mask = np.zeros_like(arch_df)
+        mask[arch_df==0] = True
+        sns.set_context("notebook", font_scale=2.)
+        g = sns.heatmap(
+                arch_df,
+                mask=mask,
+                cmap='Blues',
+                annot=False,
+                linewidth=2,
+                linecolor='black',
+                square=True,
+                vmin=0,
+                vmax=arch_df.T.max().max(),
+                fmt='.2g',
+                norm=log_norm,
+                cbar_kws={"shrink": 0.5},
+                ax=ax
+                )
+        g.set_facecolor('xkcd:white')
+        #ax.set_facecolor('w')
+        #plt.legend(frameon=False, fontsize=20, loc='best')
+        CanvasStyle(g, square=True, lw=4, ticks_lw=0)
+        plt.tight_layout()
+        plt.savefig(f'{save_root_path}/{sample_name}_archetype_hp.png')
+
+
+    return merge_tmp, labels_tmp, arch_df
+
+
 def ObjectiveTradeOffs(
-        merge_dff, prefix, cellType_col, sampling_objFlux='', corrplot=True,
+        merge_dff, prefix, cellType_col, sampling_objFlux='', corrplot=True, th=0.5,
         save_root_path='/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/',
         compare_mets=['gthrd', 'gthox'],
+        pairplot=False,
+        single_scatter=False,
         cellType_curvefit=True, 
         theory_ref=False,
         pareto_line='curvefit',
@@ -5199,7 +5423,7 @@ def ObjectiveTradeOffs(
         return a * x + b * x**2 + c
         #return a * x + c
     
-    if corrplot==True:
+    if corrplot:
         from scipy.spatial import distance
         from scipy.cluster import hierarchy
         # Part 1.
@@ -5216,9 +5440,9 @@ def ObjectiveTradeOffs(
         # two objectives form a tradeoff if they are negatively correlated otherwise synergistic
         cmap = sns.diverging_palette(220, 20, as_cmap=True)
         sns.set_context("notebook", font_scale=2.)
-        met_arr = corr_df.index[(corr_df<-0.5).any(axis=1)]
+        met_arr = corr_df.index[(corr_df<-th).any(axis=1)]
         # remove rows
-        corr_df = corr_df[(corr_df<-0.5).any(axis=1)]
+        corr_df = corr_df[(corr_df<-th).any(axis=1)]
         # remove columns
         corr_df = corr_df[met_arr]
         #sns.clustermap(corr_df, cmap=cmap, center=0, figsize=(18, 18))
@@ -5259,11 +5483,17 @@ def ObjectiveTradeOffs(
     
     # Part 2.
     # 2D scatter plots for coefficients
-    plot_df = merge_dff.copy()
-    
+    plot_df = merge_dff.copy().fillna(0)
+    if pairplot:
+        pair_df = plot_df[compare_mets+['cellType']]
+        sns.set_style({'legend.frameon':True, 'figure.facecolor': 'white'})
+        pal = sns.color_palette('Set2')
+        g = sns.pairplot(pair_df, hue='cellType', corner=True, palette=pal)
+        g.fig.set_size_inches(15,15)
+        plt.savefig(f'{save_root_path}/{prefix}_objCoef_pairplot.png')
 
     # normalization
-    plot_df.iloc[:,:-1] = plot_df.iloc[:,:-1].div(plot_df.iloc[:,:-1].sum(axis=1), axis=0).fillna(0)
+    #plot_df.iloc[:,:-1] = plot_df.iloc[:,:-1].div(plot_df.iloc[:,:-1].sum(axis=1), axis=0).fillna(0)
     if theory_ref==True:
         # merge with reference tradeoffs
         res = sampling_objFlux#read_sampling_objFlux()
@@ -5273,174 +5503,348 @@ def ObjectiveTradeOffs(
     hue_order_pareto = hue_order+['Pareto']
     print(plot_df.columns)
     # go thru all candidates
-    for y in compare_mets:
-    
-        # Figure 5.
-        cols = plot_df.columns[(plot_df.columns!=y) & (plot_df.columns!='cellType')]
-        for met in cols:
+    if single_scatter:
+        for y in compare_mets:
+        
+            # Figure 5.
+            cols = plot_df.columns[(plot_df.columns!=y) & (plot_df.columns!='cellType')]
+            for met in cols:
 
-            plot_df_copy = plot_df.copy()
-            # figure
-            #sns.despine()
+                plot_df_copy = plot_df.copy()
+                # figure
+                #sns.despine()
 
-            PltProps()
-            sns.set_style({'legend.frameon':True, 'figure.facecolor': 'white'})
-            fig, ax = plt.subplots(1,1,figsize=(6, 4))
-            pal = sns.color_palette('Set2')
-            
-            if cellType_curvefit:
-                for i, ele in enumerate(hue_order):
-
-                    # curve fit
-                    popt, _ = curve_fit(objective, plot_df[met][plot_df[cellType_col]==ele], plot_df[y][plot_df[cellType_col]==ele])
-                    a, c = popt
-                    # define a sequence of inputs between the smallest and largest known inputs
-                    x_line = np.linspace(
-                            plot_df[met][plot_df[cellType_col]==ele].min(),
-                            plot_df[met][plot_df[cellType_col]==ele].max(),
-                            100
-                            )
-                    # calculate the output for the range
-                    y_line = objective(x_line, a, c)
-                    # create a line plot for the mapping function
-                    ax.plot(x_line, y_line, '--', color=pal.as_hex()[i], label=ele)
-            
-                # curve fit for all celltypes
-                popt, _ = curve_fit(objective, plot_df[met], plot_df[y])
-                a, c = popt
-                # define a sequence of inputs between the smallest and largest known inputs
-                x_line = np.linspace(plot_df[met].min(), plot_df[met].max(), 100)
-                # calculate the output for the range
-                y_line = objective(x_line, a, c)
-                # create a line plot for the mapping function
-                ax.plot(x_line, y_line, '--', color='k', label='All')
-                # change the fontsize
-                #ax.tick_params(axis='x', labelsize=20)
-                #ax.tick_params(axis='y', labelsize=20)
-
-
-            # overlaying modeling objective fluxes to data
-            if theory_ref==True:
                 PltProps()
-                # reset figures
+                sns.set_style({'legend.frameon':True, 'figure.facecolor': 'white'})
                 fig, ax = plt.subplots(1,1,figsize=(6, 4))
                 pal = sns.color_palette('Set2')
-                # merge with reference tradeoffs
-                res = sampling_objFlux#read_sampling_objFlux()
-                pareto, _ = find_pareto(res, met, y)
-                if len(pareto)==0:
-                    pareto = res
-                placeholder = plot_df.copy()
-                plot_df = pd.concat((pareto, plot_df[pareto.columns]), axis=0)
-                plot_df[[met, y]] = plot_df[[met, y]].div(plot_df[[met, y]].max(axis=0), axis=1)
-                pareto = plot_df[plot_df['cellType']=='Pareto']
-                if pareto_line=='connected':
-                    pareto = pareto.sort_values(by=[met])
-                    ax.plot(pareto[met], pareto[y], '--',
-                            color='k',
-                            label='Est. Pareto', linewidth=3.)
-                else: # fitting curve
-                    if len(pareto)>2:
-                        # curve fit for all celltypes
-                        popt, _ = curve_fit(pareto_front, pareto[met], pareto[y])
-                        a, b, c = popt
-                        # define a sequence of inputs between the smallest and largest known inputs
-                        x_line = np.linspace(pareto[met].min(), pareto[met].max(), 100)
-                        # calculate the output for the range
-                        y_line = pareto_front(x_line, a, b, c)
-                        # create a line plot for the mapping function
-                        ax.plot(x_line, y_line, '--',
-                                color='k',
-                                label='Est. Pareto', linewidth=3.)
-                                   
-                    elif len(pareto)==2:
-                        # curve fit for all celltypes
-                        popt, _ = curve_fit(objective, pareto[met], pareto[y])
+                
+                if cellType_curvefit:
+                    for i, ele in enumerate(hue_order):
+
+                        # curve fit
+                        popt, _ = curve_fit(objective, plot_df[met][plot_df[cellType_col]==ele], plot_df[y][plot_df[cellType_col]==ele])
                         a, c = popt
                         # define a sequence of inputs between the smallest and largest known inputs
-                        x_line = np.linspace(pareto[met].min(), pareto[met].max(), 100)
+                        x_line = np.linspace(
+                                plot_df[met][plot_df[cellType_col]==ele].min(),
+                                plot_df[met][plot_df[cellType_col]==ele].max(),
+                                100
+                                )
                         # calculate the output for the range
                         y_line = objective(x_line, a, c)
                         # create a line plot for the mapping function
-                        ax.plot(x_line, y_line, '--',
-                                color='k',
-                                label='Est. Pareto', linewidth=3.)
+                        ax.plot(x_line, y_line, '--', color=pal.as_hex()[i], label=ele)
+                
+                    # curve fit for all celltypes
+                    popt, _ = curve_fit(objective, plot_df[met], plot_df[y])
+                    a, c = popt
+                    # define a sequence of inputs between the smallest and largest known inputs
+                    x_line = np.linspace(plot_df[met].min(), plot_df[met].max(), 100)
+                    # calculate the output for the range
+                    y_line = objective(x_line, a, c)
+                    # create a line plot for the mapping function
+                    ax.plot(x_line, y_line, '--', color='k', label='All')
+                    # change the fontsize
+                    #ax.tick_params(axis='x', labelsize=20)
+                    #ax.tick_params(axis='y', labelsize=20)
 
-                    else:
-                        print('Not enough data points')
-                # scatter plot of tradeoffs
-                sns.scatterplot(
-                        x=met,
-                        y=y, #hue
-                        data=plot_df,
-                        legend=True,
-                        s=100,
-                        palette=sns.color_palette('Set2')[:len(hue_order)]+['k'],
-                        hue='cellType',
-                        hue_order=hue_order_pareto,
-                        alpha=0.5,
-                        ax=ax,
-                        zorder=0
-                        )
-                # point plots of average trade-offs
-                mean_df = plot_df.groupby(by='cellType').mean()
-                print('mean-df')
-                print(mean_df)
-                sns.scatterplot(
-                        x=met,
-                        y=y, #hue
-                        data=mean_df[mean_df.index!='Pareto'],
-                        legend=False,
-                        s=300,
-                        marker='X',
-                        palette='Dark2',
-                        hue=mean_df[mean_df.index!='Pareto'].index,
-                        hue_order=hue_order,
-                        ax=ax,
-                        zorder=1,
-                        )
 
-                # setup title
-                #ax.set_title(f'{prefix} Objective Tradeoffs', fontsize=20)
-                ax.set_xlim([-0.05, plot_df[met].max()+0.05])
-                ax.set_ylim([-0.05, plot_df[y].max()+0.05])
-                ax.set_xticks(np.linspace(0, plot_df[met].max(), 6))
-                ax.set_yticks(np.linspace(0, plot_df[y].max(), 6))
-                CanvasStyle(ax, lw=4, ticks_lw=3)
-                ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', facecolor='w', frameon=False)
-                #ax.set_ylim([-0.005, 0.05])
-                plt.tight_layout()
-                # save the figures
-                plt.savefig(f'{save_root_path}/{prefix}_obj_overlay_tradeoff2D_{met}vs{y}.png')
-                plot_df = placeholder.copy()
-            else:
+                # overlaying modeling objective fluxes to data
+                if theory_ref==True:
+                    if y in res.columns:
+                        PltProps()
+                        # reset figures
+                        fig, ax = plt.subplots(1,1,figsize=(6, 4))
+                        pal = sns.color_palette('Set2')
+                        # merge with reference tradeoffs
+                        res = sampling_objFlux#read_sampling_objFlux()
+                        pareto, _ = find_pareto(res, met, y)
+                        if len(pareto)==0:
+                            pareto = res
+                        placeholder = plot_df.copy()
+                        plot_df = pd.concat((pareto, plot_df[pareto.columns]), axis=0)
+                        plot_df[[met, y]] = plot_df[[met, y]].div(plot_df[[met, y]].max(axis=0), axis=1)
+                        pareto = plot_df[plot_df['cellType']=='Pareto']
+                        if pareto_line=='connected':
+                            pareto = pareto.sort_values(by=[met])
+                            ax.plot(pareto[met], pareto[y], '--',
+                                    color='k',
+                                    label='Est. Pareto', linewidth=3.)
+                        else: # fitting curve
+                            if len(pareto)>2:
+                                # curve fit for all celltypes
+                                popt, _ = curve_fit(pareto_front, pareto[met], pareto[y])
+                                a, b, c = popt
+                                # define a sequence of inputs between the smallest and largest known inputs
+                                x_line = np.linspace(pareto[met].min(), pareto[met].max(), 100)
+                                # calculate the output for the range
+                                y_line = pareto_front(x_line, a, b, c)
+                                # create a line plot for the mapping function
+                                ax.plot(x_line, y_line, '--',
+                                        color='k',
+                                        label='Est. Pareto', linewidth=3.)
+                                           
+                            elif len(pareto)==2:
+                                # curve fit for all celltypes
+                                popt, _ = curve_fit(objective, pareto[met], pareto[y])
+                                a, c = popt
+                                # define a sequence of inputs between the smallest and largest known inputs
+                                x_line = np.linspace(pareto[met].min(), pareto[met].max(), 100)
+                                # calculate the output for the range
+                                y_line = objective(x_line, a, c)
+                                # create a line plot for the mapping function
+                                ax.plot(x_line, y_line, '--',
+                                        color='k',
+                                        label='Est. Pareto', linewidth=3.)
 
-                # scatter plot
-                sns.scatterplot(
-                        x=met,
-                        y=y, #hue
-                        data=plot_df,
-                        legend=True,
-                        s=100,
-                        color='grey',
-                        #palette='Blues',#sns.color_palette("dark:#69d",as_cmap=True),
-                        alpha=0.5,
-                        ax=ax,
+                            else:
+                                print('Not enough data points')
+                        # scatter plot of tradeoffs
+                        sns.scatterplot(
+                                x=met,
+                                y=y, #hue
+                                data=plot_df,
+                                legend=True,
+                                s=100,
+                                palette=sns.color_palette('Set2')[:len(hue_order)]+['k'],
+                                hue='cellType',
+                                hue_order=hue_order_pareto,
+                                alpha=0.5,
+                                ax=ax,
+                                zorder=0
+                                )
+                        # point plots of average trade-offs
+                        mean_df = plot_df.groupby(by='cellType').mean()
+                        print('mean-df')
+                        print(mean_df)
+                        sns.scatterplot(
+                                x=met,
+                                y=y, #hue
+                                data=mean_df[mean_df.index!='Pareto'],
+                                legend=False,
+                                s=300,
+                                marker='X',
+                                palette='Dark2',
+                                hue=mean_df[mean_df.index!='Pareto'].index,
+                                hue_order=hue_order,
+                                ax=ax,
+                                zorder=1,
+                                )
+
+                        # setup title
+                        #ax.set_title(f'{prefix} Objective Tradeoffs', fontsize=20)
+                        ax.set_xlim([-0.05, plot_df[met].max()+0.05])
+                        ax.set_ylim([-0.05, plot_df[y].max()+0.05])
+                        ax.set_xticks(np.linspace(0, plot_df[met].max(), 6))
+                        ax.set_yticks(np.linspace(0, plot_df[y].max(), 6))
+                        CanvasStyle(ax, lw=4, ticks_lw=3)
+                        ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', facecolor='w', frameon=False)
+                        #ax.set_ylim([-0.005, 0.05])
+                        plt.tight_layout()
+                        # save the figures
+                        plt.savefig(f'{save_root_path}/{prefix}_obj_overlay_tradeoff2D_{met}vs{y}.png')
+                        plot_df = placeholder.copy()
+                else:
+
+                    # scatter plot
+                    sns.scatterplot(
+                            x=met,
+                            y=y, #hue
+                            data=plot_df,
+                            legend=True,
+                            s=100,
+                            color='grey',
+                            #palette='Blues',#sns.color_palette("dark:#69d",as_cmap=True),
+                            alpha=0.5,
+                            ax=ax,
+                            )
+                    # setup title
+                    #ax.set_title(f'{prefix} Objective Tradeoffs', fontsize=20)
+                    ax.set_xlim([-plot_df[met].max()/100, plot_df[met].max()*1.01])
+                    ax.set_ylim([-plot_df[y].max()/100, plot_df[y].max()*1.01])
+                    #ax.set_xticks(np.linspace(0, plot_df[met].max(), 6))
+                    #ax.set_yticks(np.linspace(0, plot_df[y].max(), 6))
+                    CanvasStyle(ax, lw=4, ticks_lw=3)
+                    ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', facecolor='w', frameon=False)
+                    plt.tight_layout()
+                    # save the figures
+                    plt.savefig(f'{save_root_path}/{prefix}_obj_tradeoff2D_{met}vs{y}.png')
+                
+                # recover
+                plot_df = plot_df_copy.copy()
+
+
+
+def archetypal_computing(
+        df,
+        labels,
+        n_arch=6,
+        select_labels=[],
+        show_other=0,
+        prefix='',
+        n_arch_scan=False,
+        simplex_plot=True,
+        archetype_profile_plot=False,
+        norm=False,
+        save_root_path='./'
+        ):
+    """Using archetypal computing to extract extreme features
+
+    This function is adapted from the archetypal analysis code applying RSS method
+    We integrate the function to our pipeline and data format
+    Motevalli Soumehsaraei A Benyamin; Barnard. Archetypal Analysis Package. v1. CSIRO. Software Collection.; 2019.
+
+    Parameters
+    ----------
+    n_arch : {integer}, default=6
+        number of archetypes
+    select_labels : {list-like}, default=[]
+        a list of labels/samples that are chosen to show up (rest of samples will be labeled as "other")
+    show_other : {bool}, default=0
+        Set True to show samples labeled by "other" or not.
+    prefix : {string}, default=''
+        name of an experiment or anything worth to add into the file names
+    n_arch_scan : {bool}, default=False
+        scan number of archetypes that affects the explained variances
+    simplex_plot : {bool}, default=True
+        enable plotting similarities among data points and archetypes
+    archetype_profile_plot : {bool}, default=True
+        enable plottting profiles of archetypes with heatmaps
+    norm : {bool}, default=False
+        normalize the input data and sum to 1 which is equal to allocation
+    save_root_path : {string}, default='./'
+        
+    Returns
+    -------
+    AA : {python class},
+        Object of archetypal analysis
+    """
+    # import packages
+    from archetypes import ArchetypalAnalysis
+    from sklearn.preprocessing import StandardScaler
+    import matplotlib.patches as mpatches
+    from matplotlib.lines import Line2D
+    # get allocation of elements
+    if norm:
+        df = df.div(df.sum(axis=0), axis=1)
+    
+    # convert labels not selected in the `select_labels` into `other`
+    if len(select_labels)>0:
+        df.columns = [ele if ele in select_labels else 'other' for ele in labels]
+    else:
+        df.columns = labels
+    
+    # zscore normalize data
+    sc = StandardScaler()
+    X_scaled = sc.fit_transform(df.T)
+
+    # scan different number of archetypes
+    print('Scanning the number of archetypes...')
+    if n_arch_scan:
+        # get different number of archetypes
+        n_archs = list(range(10, 20))
+        
+        # scanning
+        lst_exp_var = []
+        for n_arch in tqdm(n_archs):
+            AA = ArchetypalAnalysis(n_archetypes = n_arch, 
+                                tolerance = 0.001, 
+                                max_iter = 200, 
+                                random_state = 0, 
+                                C = 0.0001, 
+                                initialize = 'random',
+                                redundancy_try = 30)
+            AA.fit(X_scaled)
+            lst_exp_var.append(AA.explained_variance_)
+        
+        fig, ax = plt.subplots(1,1,figsize=(12,8))
+        plt.style.use('seaborn')
+        ax.plot(n_archs, lst_exp_var, '-o')
+        plt.savefig(f'{save_root_path}/{prefix}_norm[{norm}]_elbow_plot.png')
+    
+    print('Arhcetypal computing...')
+    # get archetypes 
+    AA = ArchetypalAnalysis(
+            n_archetypes = n_arch,
+            tolerance = 0.0001,
+            max_iter = 300,
+            random_state = 0,
+            C = 0.0001,
+            initialize = 'furthest_sum',
+            redundancy_try = 30
+            )
+    AA.fit(X_scaled)
+    print('Report the explained variances:')
+    print(AA.explained_variance_)
+
+    if simplex_plot:
+        # Number of categories
+        n_categories = len(np.unique(df.columns))
+        # Get the colormap
+        colormap = plt.cm.gist_ncar
+        # Normalize the categories to 0-1 scale
+        cnorm = plt.Normalize(vmin=0, vmax=n_categories-1)
+        # Create a list of RGB tuples by mapping the normalized values to the colormap
+        color_dict = {ele:colormap(cnorm(i)) for i, ele in zip(range(n_categories), np.unique(df.columns))}
+        color_dict['other'] = (0,0,0,0) if show_other else (1, 1, 1, 1) # black if show the others else white
+        # adjust the colors
+        if len(np.unique(df.columns))==2:
+            color_dict[np.unique(df.columns)[0]] = (0,0,1,0)
+            color_dict[np.unique(df.columns)[1]] = (1,0,0,0)
+        # settings
+        df_args = pd.DataFrame({'cellType':df.columns})
+        df_args['color'] = df_args['cellType'].apply(lambda x: color_dict[x])
+        # set the size of scatters to 0 to hide "other" if show_other=0
+        df_args['size'] = df_args['cellType'].apply(lambda x: 30*show_other if x=='other' else 30)
+        plot_args = {'color': df_args['color'], 's': df_args['size']}
+        
+        # make plots
+        fig, ax = plt.subplots(1,1,figsize=(12,12))
+        ax = AA.plot_simplex(AA.alfa, plot_args)
+        patches = []
+        for tissue in color_dict.keys():
+            # Create custom handles
+            patches.append(
+                    Line2D([0], [0], marker='o',
+                        color='w',
+                        markerfacecolor=color_dict[tissue],
+                        markersize=10,
+                        label=tissue
                         )
-                # setup title
-                #ax.set_title(f'{prefix} Objective Tradeoffs', fontsize=20)
-                ax.set_xlim([-plot_df[met].max()/100, plot_df[met].max()*1.01])
-                ax.set_ylim([-plot_df[y].max()/100, plot_df[y].max()*1.01])
-                #ax.set_xticks(np.linspace(0, plot_df[met].max(), 6))
-                #ax.set_yticks(np.linspace(0, plot_df[y].max(), 6))
-                CanvasStyle(ax, lw=4, ticks_lw=3)
-                ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', facecolor='w', frameon=False)
-                plt.tight_layout()
-                # save the figures
-                plt.savefig(f'{save_root_path}/{prefix}_obj_tradeoff2D_{met}vs{y}.png')
-            
-            # recover
-            plot_df = plot_df_copy.copy()
+                    )                   
+        ax.legend(handles=patches, bbox_to_anchor=(1, 0.2), loc='upper right', ncol=2)
+        plt.savefig(
+                f'{save_root_path}/{prefix}_simplex_arch[{n_arch}]_norm[{norm}].png'
+                )
+
+    if archetype_profile_plot:
+        # get archetype profiles
+        AA_df = pd.DataFrame(AA.archetype_profile)
+        AA_df.index = moa.coef_df.index
+        AA_df.columns = [f'A{i+1}' for i in AA_df.columns]
+        # make heatmap
+        fig, ax = plt.subplots(1,1, figsize=(35, 35)) 
+        sns.set_context("notebook", font_scale=2.)
+        g = sns.heatmap(
+                AA_df.sort_values(by=[ele for ele in AA_df.columns]).T,
+                cmap='Blues',
+                annot=False,
+                linewidth=2,
+                linecolor='black',
+                square=True,
+                vmin=0,
+                vmax=AA_df.T.max().max(),
+                fmt='.2g',
+                cbar_kws={"shrink": 0.1},
+                ax=ax
+                )
+        g.set_facecolor('xkcd:white')
+        CanvasStyle(g, square=True, lw=4, ticks_lw=0)
+        plt.tight_layout()
+        plt.savefig(f'{save_root_path}/{prefix}_archetype_profiles_arch[{n_arch}]_norm[{norm}].png')
+    
+    return AA
 
 
     
@@ -5464,11 +5868,10 @@ def ObjectiveTradeOffs(
 
 ---                                                                  
 Statistical methods
-- pareto_surface_3d
-- triangle_plot
-- read_sampling_objFlux
-- find_pareto
-- ObjectiveTradeOffs
+- hyppergeom_test
+- ranksumtest
+- read_mat_model
+- RobustZScore
 
 """
 

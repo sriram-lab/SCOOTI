@@ -83,7 +83,7 @@ class metObjAnalyzer:
 
     prefix : {str},
         Project name (e.g. scEmbryo)
-    
+   
     medium : {string}, options=['KSOM', 'DMEMF12']
         medium used to model the fluxes with FBA
     
@@ -178,6 +178,10 @@ class metObjAnalyzer:
         self.flux_df = pd.DataFrame()
         self.coef_df = pd.DataFrame()
         self.labels = pd.Series()
+
+        # reconstructed fluxes
+        self.wrxns = pd.DataFrame()
+        self.wobjs = pd.DataFrame()
 
     def get_unconstrained_model(self, sel_mets=[], flux_plot=False, corr_plot=False, obj_sanity_check=False):
         """Sanity checks and analysis of unconstrained models
@@ -352,7 +356,7 @@ class metObjAnalyzer:
         return label_func(df)
 
 
-    def get_flux(self, kappa=1, rho=1, rank=False):
+    def get_flux(self, kappa=1, rho=1, rank=False, stack_model=False):
         """Load inferred metabolic objectives.
 
         The coefficients of metabolic objectives were obtained by
@@ -379,7 +383,7 @@ class metObjAnalyzer:
             print(k)
             res = load_multiObj_models(
                     self.flux_paths[k], medium=self.medium,
-                    return_variables=True, norm=False,
+                    return_variables=True, norm=False, stack_model=stack_model,
                     CFR_paraScan=True, CFR_k=[kappa], CFR_r=[rho],
                     file_suffix='_fluxes.csv.gz'
                     )
@@ -452,7 +456,7 @@ class metObjAnalyzer:
                 )
         
         # initialize the clustering objective
-        cf.corr_clustermap(self.labels, show_cluster=True)
+        cf.corr_clustermap(self.labels, show_cluster=False)
         # call umap function to reduce the dimension of data
         umaps = cf.reduction_scatter(
                 self.labels, continuous=False, func='UMAP', para=umap_para
@@ -537,7 +541,7 @@ class metObjAnalyzer:
                 )
         
 
-    def get_coef(self):
+    def get_coef(self, metType_cluster=False):
         """Load inferred metabolic objectives.
 
         The coefficients of metabolic objectives were obtained by
@@ -577,14 +581,62 @@ class metObjAnalyzer:
                 'Columns with zero coefficients:', coef_sel.columns[coef_sel.any(axis=0)==0]
                 )
         coef_sel = coef_sel[keep_cols]
+        coef_sel = coef_sel[coef_sel.abs()>1E-16].fillna(0) # remove metabolites with extremely low coef
         # get labels
         labels = self.label_setup(coef_sel, self.label_func)
         print(labels)
 
         self.coef_df = coef_sel
         self.labels = labels
+        
+        if metType_cluster:
+            # cluster the metabolites by their types
+            metDict = mets_category()
+            self.coef_df['metTypes'] = metDict[self.coef_df.index]
+            self.coef_df = self.coef_df.groupby('metTypes').sum()
+        
 
+    def get_randomObj_coef(self, th=50, sample_size=100000):
+        """get random coefficients of designated objectives
 
+        Enable randomly sampling coefficients of selected metabolites based on how many portion
+        of cells choose a metabolite as a feature. The coefficients will be saved into a .csv file
+
+        Parameters
+        ----------
+        th : {float}, default=50
+            the threshold to select metabolites as features. the number represents the percentage of
+            cells that choose the metabolites; thus, it ranges from [0, 100]
+        sample_size : {integer}, default=100000
+            number of random samples used to generate coefficients.
+
+        Returns
+        -------
+        None
+        """
+        # Separate dataframes by parameters
+        coef_sel = self.coef_df.copy()
+        coef_sel = coef_sel[
+                    coef_sel.any(axis=1)
+                    ]
+        # get selected metabolites
+        coef_ratio = coef_sel.div(coef_sel.sum(axis=0), axis=1)
+        single_obj = np.array([]) # initialize
+        for unique_label in np.unique(self.labels):
+            coef_unique_label = coef_ratio[coef_ratio.columns[self.labels==unique_label]]
+            single_obj = np.unique(np.append(
+                    single_obj,
+                    coef_unique_label.index[(coef_unique_label>0).mean(axis=1)>=th],
+                    ))
+        
+        # sampling and save
+        df = pd.DataFrame(np.random.rand(len(single_obj), sample_size))
+        df.index = single_obj
+        df.columns = [f'Sample_{ind}' for ind in np.arange(len(df.columns))]
+        df.to_csv(f'{self.save_root_path}/samplingObjCoef_{self.prefix}_{th}percent.csv')
+        coef = pd.read_csv(f'{self.save_root_path}/samplingObjCoef_{self.prefix}_{th}percent.csv')
+
+        return coef
 
 
         
@@ -599,8 +651,6 @@ class metObjAnalyzer:
             umap_para=[5, 50],
             recluster_min_size=10,
             method='average',
-            get_randomObj_coef=False,
-            th=50,
             ):
         """Analysis of inferred metabolic objectives.
 
@@ -639,16 +689,6 @@ class metObjAnalyzer:
             Options include 'average', 'single', 'complete', 'weighted', 'centroid'.
             For more details, one can visit the official document.
             https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html
-
-        
-        get_randomObj_coef : {bool}, default=False
-            enable randomly sampling coefficients of selected metabolites based on how many portion
-            of cells choose a metabolite as a feature. The coefficients will be saved into a .csv file
-
-        th : {float}, default=50
-            the threshold to select metabolites as features. the number represents the percentage of
-            cells that choose the metabolites; thus, it ranges from [0, 100]
-
 
         Returns
         -------
@@ -721,7 +761,7 @@ class metObjAnalyzer:
                         )
             
             # clustering
-            cf.corr_clustermap(self.labels)
+            cf.corr_clustermap(self.labels, show_cluster=False)
             #cf.reduction_scatter(labels, continuous=False, func='PCA')
             cf.reduction_scatter(
                     self.labels,
@@ -785,31 +825,6 @@ class metObjAnalyzer:
                     boxplot_order=[col for col in cols]
                     )
 
-        if get_randomObj_coef:
-            
-            # Separate dataframes by parameters
-            coef_sel = self.coef_df.copy()
-            coef_sel = coef_sel[
-                        coef_sel.any(axis=1)
-                        ]
-            # get selected metabolites
-            coef_ratio = coef_sel.div(coef_sel.sum(axis=0), axis=1)
-            single_obj = np.array([]) # initialize
-            for unique_label in np.unique(self.labels):
-                coef_unique_label = coef_ratio[coef_ratio.columns[self.labels==unique_label]]
-                single_obj = np.unique(np.append(
-                        single_obj,
-                        coef_unique_label.index[(coef_unique_label>0).mean(axis=1)>=th],
-                        ))
-            
-            # sampling and save
-            sample_size = 100000
-            df = pd.DataFrame(np.random.rand(len(single_obj), sample_size))
-            df.index = single_obj
-            df.columns = [f'Sample_{ind}' for ind in np.arange(len(df.columns))]
-            df.to_csv(f'{self.save_root_path}/samplingObjCoef_{self.prefix}_{th}percent.csv')
-            coef = pd.read_csv(f'{self.save_root_path}/samplingObjCoef_{self.prefix}_{th}percent.csv')
-        
         # Comparisons of metabolic objectives in 2 or 3 different samples
         if len(cols)==2:
             # get labels
@@ -879,6 +894,8 @@ class metObjAnalyzer:
             col1, col2, col3 = cols[0], cols[1], cols[2]
             
             if compare==True:
+
+                plot_df = self.coef_df.copy() 
                 # +----------------------+
                 # + Significant Features +
                 # +----------------------+
@@ -916,13 +933,19 @@ class metObjAnalyzer:
 
     def tradeoff_analysis(
             self,
+            input_type='coef',
+            corr_th=0.5,
             tri_mets=['gh', 'chsterol', 'glutathione'],
             pareto_mets=['gh'],
+            pairplot=False,
+            pairScatter=False,
             triangle=False,
             pareto3D=False,
-            traitAnalysis=False,
+            pareto2DAnalysis=False,
+            archetypeAnalysis=False,
             sample_trait_func=None,
             control_trait_func=None,
+            norm=True,
             ):
         """Analysis of inferred metabolic objectives.
 
@@ -934,6 +957,14 @@ class metObjAnalyzer:
 
         Parameters
         ----------
+        input_type : {string}, default='coef'
+            the data used to perform trade-off analysis. Options include 'coef' and 'fluxRecon'.
+            The first type of option will get `coef_df` from the class attribute.
+            The second type of option will get `wobjs` from the class attribute.
+
+        corr_th : {float}, default=0.5
+            Threshold value used to filter out pairs of metabolites with low magnitude of correlations.
+
         tri_mets : {string array}, default=['gh', 'chsterol', 'glutathione']
             Input of metabolites for the triangle plot. The length of the input array has to be 3.
             `glutathione`, the label, is only applicable when using Recon1 or Shen model which merges
@@ -967,36 +998,31 @@ class metObjAnalyzer:
         self : object
             Returns self.
         """
+        # get input data
+        input_df = self.coef_df if input_type=='coef' else self.wobjs
         # get unique column names
         cols = np.unique(self.labels)
         # +-----------------------+
         # + Load and process data +
         # +-----------------------+
         # Trade-off of objective coefficients
-        tradeoff_df = self.coef_df.copy().T
+        tradeoff_df = input_df.copy().T
         tradeoff_df['cellType'] = self.labels.to_numpy()
         # normalize coefficients in each cell
-        tradeoff_df_norm = tradeoff_df.copy()
-        tradeoff_df_norm.iloc[:,:-1] = tradeoff_df.iloc[:, :-1].div(
-                tradeoff_df.iloc[:, :-1].sum(axis=1), axis=0
-                ).fillna(0)
+        if norm:
+            tradeoff_df.iloc[:,:-1] = tradeoff_df.iloc[:, :-1].div(
+                    tradeoff_df.iloc[:, :-1].sum(axis=1), axis=0
+                    ).fillna(0)
         # merge rows for glutathione
         if 'glutathione' in tri_mets:
             # merge oxidized and reduced glutathione
-            tradeoff_df_tmp = self.coef_df.copy().T
-            tradeoff_df_tmp = tradeoff_df_tmp.div(
-                    tradeoff_df_tmp.sum(axis=1), axis=0
-                    ).fillna(0)
-            tradeoff_df_tmp['glutathione'] = tradeoff_df_tmp['gthox'].add(
-                    tradeoff_df_tmp['gthrd']
+            tradeoff_df['glutathione'] = tradeoff_df['gthox'].add(
+                    tradeoff_df['gthrd']
                     ).to_numpy()
-            tradeoff_df_tmp = tradeoff_df_tmp.drop(
+            tradeoff_df = tradeoff_df.drop(
                     columns=['gthox', 'gthrd']
                     )
-            tradeoff_df_tmp['cellType'] = labels.to_numpy()
-        else:
-            # use the original table
-            tradeoff_df_tmp = tradeoff_df_norm
+            tradeoff_df['cellType'] = labels.to_numpy()
         
         
         # +--------------------------------+
@@ -1009,8 +1035,11 @@ class metObjAnalyzer:
                 'cellType',
                 sampling_objFlux=[],
                 corrplot=True,
+                th=corr_th,
                 save_root_path=self.save_root_path,
-                compare_mets=[met for met in pareto_mets], 
+                compare_mets=[met for met in pareto_mets],
+                pairplot=False,
+                single_scatter=False,
                 theory_ref=False,
                 cellType_curvefit=True,
                 pareto_line='connected',
@@ -1064,7 +1093,7 @@ class metObjAnalyzer:
         # +-----------------------------------------+
         # + 2D pareto analysis and metabolic traits +
         # +-----------------------------------------+
-        if traitAnalysis:
+        if pareto2DAnalysis:
             # get obj fluxes modeled by random sample of objective coefficients
             print('Loading sampling flux data...')
             sampling_objFlux = read_sampling_objFlux(
@@ -1083,19 +1112,38 @@ class metObjAnalyzer:
                     sampling_objFlux=sampling_objFlux,
                     save_root_path=self.save_root_path,
                     corrplot=False,
+                    pairplot=True,
+                    single_scatter=True,
                     compare_mets=[met for met in pareto_mets],
                     theory_ref=True,
                     cellType_curvefit=False,
                     pareto_line='connected',
                     hue_order=[col for col in cols]
                     )
-            
-            
+
+
+        # +---------------------------------+
+        # + Archetype analysis with control +
+        # +---------------------------------+
+        if archetypeAnalysis_w_control:
+            try:
+                print(sampling_objFlux)
+            except:
+                # get obj fluxes modeled by random sample of objective coefficients
+                print('Loading sampling flux data...')
+                sampling_objFlux = read_sampling_objFlux(
+                        path=self.samplingFlux_path,
+                        medium=self.medium
+                        )
+                sampling_objFlux.columns = pd.Series(
+                        sampling_objFlux.columns
+                        ).replace({'biomass_objective':'gh'})
             # normalize coefficients in each cell
             tradeoff_df_norm = tradeoff_df.copy()
-            tradeoff_df_norm.iloc[:,:-1] = tradeoff_df.iloc[:, :-1].div(
-                    tradeoff_df.iloc[:, :-1].sum(axis=1), axis=0
-                    ).fillna(0)
+            if norm:
+                tradeoff_df_norm.iloc[:,:-1] = tradeoff_df.iloc[:, :-1].div(
+                        tradeoff_df.iloc[:, :-1].sum(axis=1), axis=0
+                        ).fillna(0)
             
                    
             # +---------------------+
@@ -1108,17 +1156,18 @@ class metObjAnalyzer:
             #archetype_df = archetype_df[archetype_df.index!='h2o']
             archetype_df = archetype_df.T[archetype_df.any(axis=0)].T
             # merge the ratio of fluxes and ratio of inferred coefficients
-            sel_df = self.coef_df.T[archetype_df.T.columns].T
-            sel_tmp_df = sel_df.div(sel_df.sum(axis=0), axis=1)
-            arch_tmp_df = archetype_df.div(archetype_df.sum(axis=0), axis=1)
+            # [updates: outer join for archetypes]
+            sel_df = input_df.copy()
+            if norm:
+                sel_tmp_df = sel_df.div(sel_df.sum(axis=0), axis=1)
+                arch_tmp_df = archetype_df.div(archetype_df.sum(axis=0), axis=1)
             merge_tmp = pd.concat((
-                sel_tmp_df, arch_tmp_df#[arch_tmp_df.index.isin(sel_tmp_df)]
-                ), axis=1)
+                sel_tmp_df, arch_tmp_df
+                ), axis=1, join='outer')
             labels_tmp = self.labels.to_list()+['Control']*arch_tmp_df.shape[1]
-            
             # visualize with PCA plot
             cf = clustering_func(
-                    merge_tmp,
+                    merge_tmp.fillna(0),
                         self.save_root_path,
                         f'{self.prefix}_50percent',#_woH2O',
                         mets_category(),
@@ -1137,70 +1186,122 @@ class metObjAnalyzer:
                     para=[3,3], plot_order=plot_order,
                     rot=[30, 120+90+30], alpha=[0.5, 0.5, 0.5, 0.5]
                     )
-            
-            # ++++++++++++++++++++++++++++
-            # + Metabolic trait analysis +
-            # ++++++++++++++++++++++++++++
-            # trait analysis
-            merge_tmp, labels_tmp, arch_df = trait_analysis(
-                    sampling_objFlux,
-                    self.coef_df,
-                    self.labels,
-                    sample_trait_func,
-                    control_trait_func,
-                    n_pc=2,
-                    sample_name=self.prefix,
-                    plot=True
-                    )
-            
-            # analyze the subsystems 
-            subsys_report = subsystems_of_traits(
-                    merge_tmp,
-                    arch_df,
-                    uncon_model_path=self.uncon_model_path,
-                    medium=self.medium,
-                    gem_path=self.GEM_path,
-                    sample_name=self.prefix,
-                    plot=True,
-                    )
-            
-            
-            # Overlay the coefficients of each metabolite to the pca plot
-            for met in sampling_objFlux.columns[:-1]:
-                # visualize with PCA plot
-                cf = clustering_func(
-                        merge_tmp,
-                        self.save_root_path,
-                        f'{self.prefix}_50percent_{met}',#_woH2O',
-                        mets_category(),
+
+            if sample_trait_func!=None and control_trait_func!=None:
+                # ++++++++++++++++++++++++++++
+                # + Metabolic trait analysis +
+                # ++++++++++++++++++++++++++++
+                # trait analysis
+                merge_tmp, labels_tmp, arch_df = trait_analysis(
+                        sampling_objFlux,
+                        input_df,
+                        self.labels,
+                        sample_trait_func,
+                        control_trait_func,
+                        n_pc=2,
+                        sample_name=self.prefix,
+                        plot=True
                         )
-                coef = merge_tmp[merge_tmp.index==met].to_numpy()[0].astype(float)
-                # calculate values only based on embryo data
-                switch_arr = pd.Series(merge_tmp.columns).apply(
-                        lambda x: 0 if x.split('_')[0]=='data1' else 1
-                        )
-                #coef = coef*switch_arr
-                min_v = np.min(coef[coef>0])
-                met_sum = merge_tmp[merge_tmp.index==met].to_numpy()[0].astype(float)
-                #np.log10(
-                #        merge_tmp[merge_tmp.index==met].to_numpy()[0].astype(float)+min_v/10
-                #        )
                 
-                # create an alpha array
-                alpha_arr = pd.Series(merge_tmp.columns).apply(
-                        lambda x: 0 if x.split('_')[0]=='data1' else 0.5
+                # analyze the subsystems 
+                subsys_report = subsystems_of_traits(
+                        merge_tmp,
+                        arch_df,
+                        uncon_model_path=self.uncon_model_path,
+                        medium=self.medium,
+                        gem_path=self.GEM_path,
+                        sample_name=self.prefix,
+                        plot=True,
                         )
-                # 3 traits
-                pc_df = cf.reduction_scatter(
-                        met_sum, continuous=True, func='PCA', para=[2,2],
-                        alpha=alpha_arr
-                        )
+                
+                
+                # Overlay the coefficients of each metabolite to the pca plot
+                for met in sampling_objFlux.columns[:-1]:
+                    # visualize with PCA plot
+                    cf = clustering_func(
+                            merge_tmp,
+                            self.save_root_path,
+                            f'{self.prefix}_50percent_{met}',#_woH2O',
+                            mets_category(),
+                            )
+                    coef = merge_tmp[merge_tmp.index==met].to_numpy()[0].astype(float)
+                    # calculate values only based on embryo data
+                    switch_arr = pd.Series(merge_tmp.columns).apply(
+                            lambda x: 0 if x.split('_')[0]=='data1' else 1
+                            )
+                    #coef = coef*switch_arr
+                    min_v = np.min(coef[coef>0])
+                    met_sum = merge_tmp[merge_tmp.index==met].to_numpy()[0].astype(float)
+                    #np.log10(
+                    #        merge_tmp[merge_tmp.index==met].to_numpy()[0].astype(float)+min_v/10
+                    #        )
+                    
+                    # create an alpha array
+                    alpha_arr = pd.Series(merge_tmp.columns).apply(
+                            lambda x: 0 if x.split('_')[0]=='data1' else 0.5
+                            )
+                    # 3 traits
+                    pc_df = cf.reduction_scatter(
+                            met_sum, continuous=True, func='PCA', para=[2,2],
+                            alpha=alpha_arr
+                            )
 
-            return subsys_report
+                return subsys_report
+        
 
+        # +---------------------+
+        # + PCA Metabolic trait +
+        # +---------------------+
+        if archetypeAnalysis_RSS:
+            # archetypes computing
+            AA_input = tradeoff_df.iloc[:,:-1].T
+            AA_input.columns = tradeoff_df['cellType']
+            AA = archetypal_computing(
+                            AA_input,
+                            n_arch=6,
+                            select_labels=[],
+                            show_other=0,
+                            prefix='',
+                            n_arch_scan=False,
+                            simplex_plot=True,
+                            archetype_profile_plot=False,
+                            norm=norm,
+                            save_root_path=self.save_root_path
+                            )
+
+        # +---------------------+
+        # + PCA Metabolic trait +
+        # +---------------------+
+        if archetypeAnalysis_PCA:
+
+            AA_input = tradeoff_df.iloc[:,:-1].T
+            AA_input.columns = tradeoff_df['cellType']
+            # get data
+            cf = clustering_func(
+                    AA_input,
+                    self.save_root_path,
+                        f'{self.prefix}_{input_type}_norm_{norm}',
+                        mets_category(),
+                    )
+            # 3 traits
+            pc_df = cf.reduction_scatter(
+                    tradeoff_df['cellType'],
+                    continuous=False, func='PCA', para=[2,2]
+                    )
+            # 4 traits
+            #plot_order = [disease]+['gtex']
+            pc_df = cf.reduction_scatter3D(
+                    tradeoff_df['cellType'],
+                    continuous=False, func='PCA',
+                    high_dimension=True,
+                    save_animate=False, projection=True,
+                    para=[3,3], #plot_order=plot_order,
+                    rot=[30, 120+90+30], alpha=[0.5, 0.5, 0.5, 0.5]
+                    )
 
     def fluxRecon(
             self,
+            objNorm=True,
             clustering=False,
             validation=False,
             ):
@@ -1210,6 +1311,9 @@ class metObjAnalyzer:
 
         Parameters
         ----------
+        objNorm : {bool}, default=True
+            normalize the flux values with objective values
+
         clustering : {bool}, default=True
             enable dimension reduction methods or clustering methods for metabolic objectives.
             UMAP is the default method in the class, but it is allowed to be swapped by
@@ -1232,6 +1336,15 @@ class metObjAnalyzer:
                 root_path=self.uncon_model_path,
                 medium=self.medium,
                 )
+        
+        self.wrxns = wrxns
+        wobjs.index = pd.Series(wobjs.index).apply(lambda x: x.split('[')[0])
+        wobjs = wobjs.groupby(wobjs.index).sum()
+        if objNorm:
+            wobjs = wobjs.div(wobjs[wobjs.index=='Obj'].values, axis=1)
+        wobjs = wobjs[wobjs.index!='Obj']
+        wobjs = wobjs[wobjs.any(axis=1)]
+        self.wobjs = wobjs
         
         if clustering:
             # initiate the objective for clustering and analysis
@@ -1260,6 +1373,7 @@ class metObjAnalyzer:
                     uncon_path=self.uncon_model_path,
                     medium=self.medium
                     )
+
 
             return res
 

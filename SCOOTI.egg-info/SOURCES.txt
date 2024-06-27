@@ -1,8 +1,11 @@
+LICENSE
 setup.py
+SCOOTI/ADALINEMetaLearner.py
 SCOOTI/MatplotProp.py
 SCOOTI/RegulatorsFromDatasets.py
 SCOOTI/SCOOTI_trainer.py
 SCOOTI/__init__.py
+SCOOTI/archetypes.py
 SCOOTI/metObjAnalyzer.py
 SCOOTI/regressionAnalyzer.py
 SCOOTI/regressorCollection.py

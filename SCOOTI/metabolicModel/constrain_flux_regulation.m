@@ -1,4 +1,4 @@
-function [fluxstate_uncon, fluxstate_gurobi, grate, geneko_flux, rxnko_growthrate, solverobj, grate_wt_min, grate_wt_max] =  constrain_flux_regulation(model1,onreactions,offreactions,kappa,rho,epsilon,mode,genedelflag,rxndelflag,epsilon2,minfluxflag,FVAflag)
+function [fluxstate_uncon, fluxstate_gurobi, grate, geneko_flux, rxnko_growthrate, solverobj, grate_wt_min, grate_wt_max, model_out] =  constrain_flux_regulation(model1,onreactions,offreactions,kappa,rho,epsilon,mode,genedelflag,rxndelflag,epsilon2,minfluxflag,FVAflag,CFR_model,extra_weight)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -12,9 +12,9 @@ end
 if mode == 0 % genes
     [~,~,onreactions,~] =  deleteModelGenes(model1, onreactions);
     [~,~,offreactions,~] =  deleteModelGenes(model1, offreactions);
-    disp('number of rxns')
-    disp(length(onreactions))
-    disp(length(offreactions))
+    %disp('number of rxns')
+    %disp(length(onreactions))
+    %disp(length(offreactions))
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if (~exist('epsilon','var')) || (isempty(epsilon))
@@ -66,42 +66,63 @@ if (~exist('minfluxflag','var')) || (isempty(minfluxflag))
     
 end
 
+CFR_model_flag = 1;
+if (~exist('CFR_model','var')) || (isempty(CFR_model))  
+
+    CFR_model_flag = 0; % by default sum of flux through all ractions is minimized
+
+elseif length(CFR_model)==0,
+
+    CFR_model_flag = 0;
+    
+end
+
 kappa1 = 1E-4; % minfluxflag
 params.outputflag = 0;
 % params.iterationlimit = 1E9;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if minfluxflag
-kappa = [kappa(:); ones(size(setdiff(model1.rxns, offreactions)))*kappa1]; % minimize flux through all the reactions. PFBA
-epsilon2 = [epsilon2; zeros(size(setdiff(model1.rxns, offreactions)))];
-offreactions = [offreactions(:); setdiff(model1.rxns, offreactions)];
+  kappa = [kappa(:); ones(size(setdiff(model1.rxns, offreactions)))*kappa1]; % minimize flux through all the reactions. PFBA
+  epsilon2 = [epsilon2; zeros(size(setdiff(model1.rxns, offreactions)))];
+  offreactions = [offreactions(:); setdiff(model1.rxns, offreactions)];
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert to gurobi format.
 % model1 = load('model_MGSA.mat');
 % model1 = model1.model_MGSA;
-model = model1;
-model.A = model1.S;
-model.obj = model1.c;
-model.rhs = model1.b;
-if exist('model1.csense','var') && ~isempty(model1.csense)
-    model.sense = model1.csense;
-    model.sense(ismember(model.sense,'E')) = '=';
-    model.sense(ismember(model.sense,'L')) = '<';
-    model.sense(ismember(model.sense,'G')) = '>';
-else
-    model.sense =repmat( '=',[size(model1.S,1),1]);
+
+% get original number of reactions
+nrxns = length(model1.rxns);
+
+% stacked CFR models
+if CFR_model_flag~=0,
+  model = CFR_model;
+  extra_weight = extra_weight;
+else,
+  extra_weight = 1;
+  model = model1;
+  model.A = model1.S;
+  model.obj = model1.c;
+  model.rhs = model1.b;
+  if exist('model1.csense','var') && ~isempty(model1.csense)
+      model.sense = model1.csense;
+      model.sense(ismember(model.sense,'E')) = '=';
+      model.sense(ismember(model.sense,'L')) = '<';
+      model.sense(ismember(model.sense,'G')) = '>';
+  else
+      model.sense =repmat( '=',[size(model1.S,1),1]);
+  end
+  model.lb = model1.lb;
+  model.ub = model1.ub;
+  model.vtype = repmat('C',size(model1.S,2),1);
+  model.modelsense = 'max';
+  nrows = size(model.A,1);
+  ncols = size(model.A,2);
 end
-model.lb = model1.lb;
-model.ub = model1.ub;
-model.vtype = repmat('C',size(model1.S,2),1);
-model.modelsense = 'max';
-nrows = size(model.A,1);
-ncols = size(model.A,2);
 M = 10000;
 %epsilon2 = 0;
 objpos = find(model.c);
-nrxns = length(model.rxns);
 % solve fluxes without any constraints
 solg_uncon = gurobi(model,params);
 fluxstate_uncon = solg_uncon.x(1:nrxns);
@@ -122,7 +143,7 @@ for j = 1:length(onreactions)
     model.rhs(rowpos) = -M;
     model.sense(rowpos) = '>';
     model.vtype(colpos) = 'B';
-    model.obj(colpos) = 1*rho(j);
+    model.obj(colpos) = 1*rho(j)*extra_weight;
     model.lb(colpos) = 0;
     model.ub(colpos) = 1;
     
@@ -137,7 +158,7 @@ for j = 1:length(onreactions)
     model.rhs(rowpos) = M;
     model.sense(rowpos) = '<';
     model.vtype(colpos) = 'B';
-    model.obj(colpos) = 1*rho(j);
+    model.obj(colpos) = 1*rho(j)*extra_weight;
     model.lb(colpos) = 0;
     model.ub(colpos) = 1;
     
@@ -163,7 +184,7 @@ for jj = 1:length(offreactions)
     % set si to be positive
     model.lb(colpos) = 0;
     model.ub(colpos) = 1000;
-    model.obj(colpos) = -1*kappa(jj); % minimized
+    model.obj(colpos) = -1*kappa(jj)*extra_weight; % minimized
     
     % constraint 2
     %     xi - ri <= eps2
@@ -179,7 +200,7 @@ for jj = 1:length(offreactions)
     % set ri to be positive
     model.lb(colpos) = 0;
     model.ub(colpos) = 1000;
-    model.obj(colpos) = -1*kappa(jj); % minimized
+    model.obj(colpos) = -1*kappa(jj)*extra_weight; % minimized
 end
 
 solg1 = gurobi(model,params);
@@ -192,7 +213,7 @@ catch
     grate = NaN;
     solverobj = NaN;
 end
-
+model_out = model;
 
 % optional. do gene deletion analysis
 if genedelflag
@@ -256,6 +277,9 @@ if FVAflag,
 
 
   objind = find(model.obj~=0);
+  disp('test!!!!!!')
+  disp(objind)
+
   %model.lb(objind) = solg1.x(objind);
   %model.ub(objind) = solg1.x(objind);
   %model.sense =repmat( '=',[size(model1.S,1),1]);
@@ -279,7 +303,7 @@ if FVAflag,
       m3.obj(kk,1) = 1;
       m3.modelsense = 'min';
       solg_min = gurobi(m3,params);
-      disp(solg_min)
+      disp(solg_min);
       %disp(solg_min.x(kk))
       %disp(solg_min.objval)
       disp('get min')
@@ -287,18 +311,20 @@ if FVAflag,
       m3.obj(kk,1) = 1;
       m3.modelsense = 'max';
       solg_max = gurobi(m3,params);
-      disp(solg_max)
+      disp(solg_max);
       try
-        min_v = solg_min.x(kk);
+        min_v = solg_min.x(kk)
       catch
       %if strcmp(solg_min.status, 'INFEASIBLE'),
       %  infct = infct+1;
-        min_v = solg1.x(kk);
+        disp('catch')
+        min_v = solg1.x(kk)
       end
       try
-        max_v = solg_max.x(kk);
+        max_v = solg_max.x(kk)
       catch
-        max_v = solg1.x(kk);
+        disp('catch')
+        max_v = solg1.x(kk)
       %else,
       %  disp(solg_min)
       %  %disp(solg_min.x(kk))

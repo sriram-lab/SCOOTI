@@ -102,7 +102,8 @@ class regression_methods:
     def get_models(self, feature_sel, method_select, get_pvalues=False):
 
         model_coef = {}
-        for i in tqdm(range(len(self.df_res.columns))):
+        #for i in tqdm(range(len(self.df_res.columns))):
+        for i in range(len(self.df_res.columns)):
             # data
             X, y = self.df_var, self.df_res.iloc[:, i]
             # model settings
@@ -175,13 +176,20 @@ class regression_methods:
         return vstack(meta_X), asarray(meta_y)
 
     def SuperLearner(self):
+        
+        # check if the model is overfitting or not
+        def meta_model_CV(model):
+            from sklearn.model_selection import cross_val_score
+            scores = cross_val_score(model, X, y, cv=5)
+            return scores
 
         # fit a meta model
         def fit_meta_model(X, y):
             model = LinearRegression(positive=True, fit_intercept=False)
             model.fit(X, y)
+            scores = meta_model_CV(model)
             # print(model.coef_)
-            return model
+            return model, scores
         
         # get models
         weights_lm = self.get_models(True, 'Coefficient', get_pvalues=False)
@@ -193,17 +201,28 @@ class regression_methods:
         
         # fit meta-learner models
         meta_coef = {}
-        for i in tqdm(range(len(self.df_res.columns))):
+        scores_df = {}
+        #for i in tqdm(range(len(self.df_res.columns))):
+        for i in range(len(self.df_res.columns)):
             # data
             X, y = self.df_var, self.df_res.iloc[:, i]
             # get out of fold predictions
             meta_X, meta_y = self.get_out_of_fold_predictions(X, y)
             print('Meta ', meta_X.shape, meta_y.shape)
             # fit the meta model
-            meta_model = fit_meta_model(meta_X, meta_y)
+            meta_model, scores = fit_meta_model(meta_X, meta_y)
             meta_coef[i] = meta_model.coef_
+            scores_df[i] = scores
+
         
         # calculate the final coefficients by the new weight
+        scores_df = pd.DataFrame(scores_df)
+        print(scores_df.shape)
+        print(weights_lm.shape)
+        
+
+
+        scores_df.columns = weights_lm.columns
         integrate_res = weights_lm.copy()
         for col in weights_lm.columns:
             integrate_res[col] = np.sum([model_w[col].mul(meta_coef[col][i]).to_numpy() for i, model_w in enumerate(model_res_list)], axis=0)
@@ -211,8 +230,12 @@ class regression_methods:
         #RFElm_res = weights_lm
         #lasso_res = weights_lasso
         model_res_list.append(integrate_res)
-        
+        model_res_list.append(scores_df)
+
+
+
         return model_res_list#meta_coef, weights_lm, weights_lasso
+    
 
     ## evaluate a list of models on a dataset
     #def evaluate_models(X, y, models):

@@ -1000,57 +1000,6 @@ def min_18_cells_sigGenes(
             }).to_csv(cell_dir+'min_18_GSE122927_P'+f'_{k}_upgenes.csv')
 
 
-
-def scCellCycleHelaTransitions_sigGenes(
-        datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/'
-        ):
-
-    # single cell cycle path
-    SC_paths = '/nfs/turbo/umms-csriram/daweilin/data/cellCycleMetabolism/scMatrix/'
-    
-    # find regulators
-    fr = findRegulators(SC_paths)
-    fr.merge_adata(rename_cellNames=True)
-    genedf = fr.genedf
-
-    # get top and last genes for each cell
-    up1, dw1 = fr.get_top_last_genes(
-            split_str='_', ratio=0.2, prefix_define=f'A549-TGFB1', save_files=True, zscores=False, th=1
-            )
-    # transitions for G1S
-    ref_cells = pd.Series(
-            genedf.index
-            ).apply(lambda x: x.split('_')[2]).str.contains('G1').to_numpy()
-
-    exp_cells = pd.Series(
-            genedf.index
-            ).apply(lambda x: x.split('_')[2]).str.contains('S').to_numpy()
-
-    fr.get_transition_genes(ref_cells, exp_cells, split_str='_', method='AVGSTD', std_num=2)
-
-    # transitions for SG2
-    ref_cells = pd.Series(
-            genedf.index
-            ).apply(lambda x: x.split('_')[2]).str.contains('S').to_numpy()
-
-    exp_cells = pd.Series(
-            genedf.index
-            ).apply(lambda x: x.split('_')[2]).str.contains('G2').to_numpy()
-
-    fr.get_transition_genes(ref_cells, exp_cells, split_str='_', method='AVGSTD', std_num=2)
-
-
-    # transitions for G2G1
-    ref_cells = pd.Series(
-            genedf.index
-            ).apply(lambda x: x.split('_')[2]).str.contains('G2').to_numpy()
-
-    exp_cells = pd.Series(
-            genedf.index
-            ).apply(lambda x: x.split('_')[2]).str.contains('G1').to_numpy()
-
-    fr.get_transition_genes(ref_cells, exp_cells, split_str='_', method='AVGSTD', std_num=2)
-
 def QPcells_sigGenes(
         datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/'
         ):
@@ -1103,6 +1052,57 @@ def QPcells_sigGenes(
     pd.DataFrame({
         'upgenes':genedf.columns[dwgenedf].to_numpy()
         }).to_csv(cell_dir+'johnson_18_GSE117444_P'+'_upgenes.csv')
+
+def scCellCycleHelaTransitions_sigGenes(
+        datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/'
+        ):
+
+    # single cell cycle path
+    SC_paths = '/nfs/turbo/umms-csriram/daweilin/data/cellCycleMetabolism/scMatrix/'
+    
+    # find regulators
+    fr = findRegulators(SC_paths)
+    fr.merge_adata(rename_cellNames=True)
+    genedf = fr.genedf
+
+    # get top and last genes for each cell
+    up1, dw1 = fr.get_top_last_genes(
+            split_str='_', ratio=0.2, prefix_define=f'A549-TGFB1', save_files=True, zscores=False, th=1
+            )
+    # transitions for G1S
+    ref_cells = pd.Series(
+            genedf.index
+            ).apply(lambda x: x.split('_')[2]).str.contains('G1').to_numpy()
+
+    exp_cells = pd.Series(
+            genedf.index
+            ).apply(lambda x: x.split('_')[2]).str.contains('S').to_numpy()
+
+    fr.get_transition_genes(ref_cells, exp_cells, split_str='_', method='AVGSTD', std_num=2)
+
+    # transitions for SG2
+    ref_cells = pd.Series(
+            genedf.index
+            ).apply(lambda x: x.split('_')[2]).str.contains('S').to_numpy()
+
+    exp_cells = pd.Series(
+            genedf.index
+            ).apply(lambda x: x.split('_')[2]).str.contains('G2').to_numpy()
+
+    fr.get_transition_genes(ref_cells, exp_cells, split_str='_', method='AVGSTD', std_num=2)
+
+
+    # transitions for G2G1
+    ref_cells = pd.Series(
+            genedf.index
+            ).apply(lambda x: x.split('_')[2]).str.contains('G2').to_numpy()
+
+    exp_cells = pd.Series(
+            genedf.index
+            ).apply(lambda x: x.split('_')[2]).str.contains('G1').to_numpy()
+
+    fr.get_transition_genes(ref_cells, exp_cells, split_str='_', method='AVGSTD', std_num=2)
+
 
 def scCellCycleHelaTransitions_sigGenes(
         datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/'

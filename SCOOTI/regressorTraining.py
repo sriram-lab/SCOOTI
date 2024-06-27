@@ -49,7 +49,13 @@ class regressorTraining:
             input_type='flux',
             cluster_path='',
             rank=False,
-            objList_path=''
+            stack_model=False,
+            objList_path='',
+            learner='L',
+            geneKO=False,
+            geneList_path='',
+            learning_rate=0.001,
+            epo=10000
             ):
         self.save_root_path = save_root_path
         self.input_type = input_type
@@ -66,6 +72,12 @@ class regressorTraining:
         self.method = method
         self.cluster_path = cluster_path
         self.objList_path = objList_path
+        self.stack_model = stack_model
+        self.learner = learner
+        self.geneKO=geneKO
+        self.geneList_path=''
+        self.learning_rate=0.001
+        self.epo=10000
         # parameters for regressions
         #suffix = 'cfr_recon3d_dmemf12_paraScan_k10_r0.001'
         kappa_arr_s = f'{kappa_arr}'.replace(' ', '').replace(',', '_')
@@ -79,37 +91,59 @@ class regressorTraining:
         self.metaLearner = self.run_training(rank=rank)
 
     @staticmethod
-    def get_unconstrained_models(root_path, norm):
+    def get_unconstrained_models(root_path, norm, medium):
         print('Start processing the unconstrained models...')
         # unconstrained models
         # root_path = '/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/pfba/Recon3D/DMEMF12/ori_models/'
         uncon_res = unconstrained_models(
                 root_path,
                 norm=norm,
-                medium='DMEMF12'
+                medium=medium
                 )
 
         return uncon_res
    
     @staticmethod
-    def get_constrained_models(root_path, norm, kappa_arr, rho_arr):
+    def get_constrained_models(root_path, norm, kappa_arr, rho_arr, medium, stack_model, geneKO=False, geneList_path=''):
         print('Start processing the constrained models...')
         # GSE159929 scRNAseq datasets
         # root_paths = f'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/Enrichr/Disease_Perturbations_Recon3D/'
-        con_res = constrained_models(
-                root_path+'/', 
-                CFR_paraScan=True,
-                norm=norm,
-                CFR_k=kappa_arr,
-                CFR_r=rho_arr,# input_path_pattern='NCI60'
-                )
+        
+        print(geneKO)
+        if geneKO:
+            # get gene knockout results
+            con_res = load_geneKO_models(
+                    root_path, medium=medium,
+                    return_variables=True,
+                    norm=norm, # False
+                    CFR_paraScan=True,# DFA_paraScan=False,
+                    #randomScan=False,
+                    #topology_use=False,
+                    geneList_path=geneList_path,
+                    file_suffix='_CFR-geneDel.mat',
+                    ind_labels=False,
+                    CFR_k=kappa_arr,
+                    CFR_r=rho_arr, 
+                    )
+            con_res = con_res[con_res.index!='gh_rxn']
+        else:
+            con_res = constrained_models(
+                    root_path+'/', 
+                    CFR_paraScan=True,
+                    norm=norm,
+                    CFR_k=kappa_arr,
+                    CFR_r=rho_arr,# input_path_pattern='NCI60'
+                    stack_model=stack_model
+                    )
+            
+
         return con_res
 
     
     def run_training(self, rank=True):
         # get unconstrained models
         self.unconstrained_models = self.get_unconstrained_models(
-                self.unconstrained_models_path, self.uncon_norm
+                self.unconstrained_models_path, self.uncon_norm, self.medium
                 )
         if len(self.objList_path)>0:
             objList = pd.read_csv(self.objList_path, index_col=0)
@@ -117,7 +151,9 @@ class regressorTraining:
         # get constrained models
         if self.method=='compass':
             # load fluxes
-            self.constrained_models = pd.read_csv(self.constrained_models_path, index_col=0)
+            self.constrained_models = pd.read_csv(
+                    self.constrained_models_path, index_col=0
+                    )
             # check if the dimension of flux data are the same
             overlaps = np.intersect1d(
                     self.constrained_models.index.to_numpy(),
@@ -125,14 +161,39 @@ class regressorTraining:
                     )
             print(len(self.unconstrained_models), len(overlaps))
             # just in case
-            #con_res = con_res[con_res.index.isin(overlaps)].reindex(overlaps)
-            #uncon_res = uncon_res[uncon_res.index.isin(overlaps)].reindex(overlaps)
+            self.constrained_models = self.constrained_models[self.constrained_models.index.isin(overlaps)].reindex(overlaps)
+            self.unconstrained_models = self.unconstrained_models[self.unconstrained_models.index.isin(overlaps)].reindex(overlaps)
+        elif self.method=='init':
+            # load fluxes
+            self.constrained_models = self.get_constrained_models(
+                    self.constrained_models_path,
+                    self.con_norm,
+                    self.kappa_arr,
+                    self.rho_arr,
+                    self.medium,
+                    self.stack_model,
+                    self.geneKO,
+                    self.geneList_path
+                    )
+            # check if the dimension of flux data are the same
+            overlaps = np.intersect1d(
+                    self.constrained_models.index.to_numpy(),
+                    self.unconstrained_models.index.to_numpy()
+                    )
+            print(len(self.unconstrained_models), len(overlaps))
+            # just in case
+            self.constrained_models = self.constrained_models[self.constrained_models.index.isin(overlaps)].reindex(overlaps)
+            self.unconstrained_models = self.unconstrained_models[self.unconstrained_models.index.isin(overlaps)].reindex(overlaps)
         else:
             self.constrained_models = self.get_constrained_models(
                     self.constrained_models_path,
                     self.con_norm,
                     self.kappa_arr,
-                    self.rho_arr
+                    self.rho_arr,
+                    self.medium,
+                    self.stack_model,
+                    self.geneKO,
+                    self.geneList_path
                     )
 
         # convert data into ranks
@@ -148,6 +209,9 @@ class regressorTraining:
         save_root_path = self.save_root_path
         suffix = self.suffix
         cluster_path = self.cluster_path
+        learner = self.learner
+        learning_rate = self.learning_rate
+        epo = self.epo
         # execute regression
         from multiprocessing import Pool, cpu_count, set_start_method
         
@@ -169,7 +233,9 @@ class regressorTraining:
             prefix = 'flux'
             print('Start loading models...')
             # loading datasets
+            print(uncon_res.shape, con_res.shape)
             uncon_models, con_models = remove_all_zeros(uncon_res, con_res)
+            print(uncon_models.shape, con_models.shape)
             pg_uncon_models, pg_con_models = uncon_models, con_models
         else:
             prefix = 'st'
@@ -201,16 +267,20 @@ class regressorTraining:
                 pg_uncon_models,
                 pd.DataFrame(pg_con_models[col_name]),
                 input_type,
-                cluster_path
+                cluster_path,
+                learner,
+                learning_rate,
+                epo
                 ) for col_name in con_models.columns]
         
             # +-------------+
             # +Testing block+
             # +-------------+
-            # model_training(uncon_models, con_models, expName, suffix, pg_uncon_models, pg_con_models, input_type)
+            #print('testing')
+            #model_training(uncon_models, con_models, expName, suffix, pg_uncon_models, pg_con_models, input_type)
             print('Mapping...')
             # pool.map returns results as a list
-            results_list = pool.starmap(model_training, seq)
+            results_list = tqdm(pool.starmap(model_training, seq))
             if cluster_path=='':
                 # return list of processed columns, concatenated together as a new dataframe
                 RFElm_df = pd.concat((resl[0] for resl in results_list), axis=1)
@@ -218,6 +288,8 @@ class regressorTraining:
                 EN_df = pd.concat((resl[2] for resl in results_list), axis=1)
                 LL_df = pd.concat((resl[3] for resl in results_list), axis=1)
                 integrate_df = pd.concat((resl[4] for resl in results_list), axis=1)
+                CVscores = pd.concat((resl[5] for resl in results_list), axis=1)
+                foldCorr = pd.concat((resl[6] for resl in results_list), axis=1)
             else:
                 # return list of processed columns, concatenated together as a new dataframe
                 cluster_dfs = []
@@ -243,6 +315,12 @@ class regressorTraining:
             
             integrate_df.columns = con_models.columns
             integrate_df.to_csv(f'{save_root_path}/{prefix}_sl_{self.expName}_{self.suffix}.csv')
+
+            CVscores.columns = con_models.columns
+            CVscores.to_csv(f'{save_root_path}/{prefix}_CVscores_{self.expName}_{self.suffix}.csv')
+
+            foldCorr.columns = con_models.columns
+            foldCorr.to_csv(f'{save_root_path}/{prefix}_foldCorr_{self.expName}_{self.suffix}.csv')
         else:
             for jj in range(len(cluster_dfs)):
                 cluster_dfs[jj].columns = con_models.columns
@@ -256,36 +334,115 @@ class regressorTraining:
 
 
         return integrate_df
+
+
     
+    
+class unconstrained_models_sampling_regressorTraining(regressorTraining):
 
-#unconModel='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/pfba/DMEMF12/'
-#conModel='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/BulkRNAseq/AVGSTD_1/NCI60/'
-#savePath='/nfs/turbo/umms-csriram/daweilin/regression_models/BulkRNAseq_paraScan/'
-#kappaArr=[0.001]
-#rhoArr=[10]
-#expName='NCI60'
-#medium='DMEMF12'
-#method='cfr'
-#model='recon1'
-#inputType='flux'
-#
-#
-#regression_exe = regressorTraining(
-#    unconModel,
-#    conModel,
-#    savePath,
-#    kappa_arr=kappaArr,
-#    rho_arr=rhoArr,
-#    expName=expName,
-#    uncon_norm=True,
-#    con_norm=False,
-#    medium=medium,
-#    method=method,
-#    model=model,
-#    input_type=inputType
-#)
+    def __init__(
+            self,
+            unconstrained_models_path_root,
+            constrained_models_path,
+            save_root_path,
+            kappa_arr=[10, 1, 0.1, 0.01, 0.001],
+            rho_arr=[10, 1, 0.1, 0.01, 0.001],
+            expName='regression',
+            uncon_norm=True,
+            con_norm=False,
+            medium='DMEMF12',
+            method='cfr',
+            model='recon1',
+            input_type='flux',
+            cluster_path='',
+            rank=False,
+            stack_model=False,
+            learner='L',
+            geneKO=False,
+            geneList_path=''
+            ):
+        # get directories of all unconstrained_models
+        unconstrained_models_paths = [unconstrained_models_path_root+path+'/' for path in os.listdir(unconstrained_models_path_root) if os.path.isdir(os.path.join(unconstrained_models_path_root, path))]
+        # running regression
+        for unconstrained_models_path in unconstrained_models_paths:
+            new_expName = unconstrained_models_path.split('/')[-2]
+            super().__init__(
+                    unconstrained_models_path,
+                    constrained_models_path,
+                    save_root_path,
+                    kappa_arr=kappa_arr,
+                    rho_arr=rho_arr,
+                    expName=expName+f'-{new_expName}',
+                    uncon_norm=uncon_norm,
+                    con_norm=con_norm,
+                    medium=medium,
+                    method=method,
+                    model=model,
+                    input_type='flux',
+                    cluster_path='',
+                    rank=False,
+                    stack_model=False,
+                    objList_path='',
+                    learner='L',
+                    geneKO=False,
+                    geneList_path=''
+                    )
 
 
+
+
+class constrained_model_sampling_regressorTraining(regressorTraining):
+
+    def __init__(
+            self,
+            unconstrained_models_path,
+            constrained_models_path_root,
+            save_root_path,
+            kappa_arr=[10, 1, 0.1, 0.01, 0.001],
+            rho_arr=[10, 1, 0.1, 0.01, 0.001],
+            expName='regression',
+            uncon_norm=True,
+            con_norm=False,
+            medium='DMEMF12',
+            method='cfr',
+            model='recon1',
+            input_type='flux',
+            cluster_path='',
+            rank=False,
+            stack_model=False,
+            objList_path='',
+            learner='L',
+            geneKO=False,
+            geneList_path=''
+            ):
+        # get directories of all constrained_models
+        constrained_models_paths = [
+                constrained_models_path_root+path+'/' for path in os.listdir(constrained_models_path_root) if os.path.isdir(os.path.join(constrained_models_path_root, path))
+                ]
+        # running regression
+        for constrained_models_path in constrained_models_paths:
+            new_expName = constrained_models_path.split('/')[-2]
+            super().__init__(
+                    unconstrained_models_path,
+                    constrained_models_path,
+                    save_root_path,
+                    kappa_arr=kappa_arr,
+                    rho_arr=rho_arr,
+                    expName=expName+f'-{new_expName}',
+                    uncon_norm=uncon_norm,
+                    con_norm=con_norm,
+                    medium=medium,
+                    method=method,
+                    model=model,
+                    input_type='flux',
+                    cluster_path='',
+                    rank=False,
+                    stack_model=False,
+                    objList_path='',       
+                    learner='L',
+                    geneKO=False,
+                    geneList_path=''
+                    )
 
 
 

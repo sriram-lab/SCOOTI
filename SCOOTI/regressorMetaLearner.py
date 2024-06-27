@@ -52,14 +52,55 @@ from sklearn.linear_model import ElasticNet
 #import SCOOBI.regression_stats as regss
 
 
+from sklearn.metrics import mean_squared_error
+from sklearn.exceptions import ConvergenceWarning
+from tqdm import tqdm
 
+warnings.simplefilter('ignore', ConvergenceWarning)
+sns.set_style("whitegrid")
+
+
+class Adaline:
+    def __init__(self, learning_rate=0.001, epochs=10000):
+        self.learning_rate = learning_rate
+        self.epochs = epochs
+
+    def fit(self, X, y):
+        # inittiate the weights with random array
+        self.weights = np.random.random(X.shape[1]+1)
+
+        stop = 0.001
+        Error=[stop +1]
+        step = 0
+        # check the stop condition for the network
+        while (Error[-1] > stop or Error[-1]-Error[-2] > 0.0001) and step<self.epochs:
+            step += 1
+            output = self.net_input(X)
+            errors = y - output
+            self.weights[1:] += self.learning_rate * X.T.dot(errors)
+            self.weights[0] += self.learning_rate * errors.sum()
+            # Store sum of square errors
+            Error.append((errors**2).sum())    
+        #print('Error :',Error[-1], Error[1])
+
+    def net_input(self, X):
+        return np.dot(X, self.weights[1:]) + self.weights[0]
+
+    def predict(self, X):
+        return self.net_input(X)
 
 
 
 class regression_methods:
     
     def __init__(
-            self, df_variables, df_response, cluster_label_path=''
+            self,
+            df_variables,
+            df_response,
+            cluster_label_path='',
+            learner='L',
+            learning_rate=0.001,
+            epo=10000
             ):
         self.df_var = df_variables
         self.df_res = df_response
@@ -80,6 +121,9 @@ class regression_methods:
             self.cluster_label_names = []
         self.models = None
         self.meta_model = None
+        self.learner = learner
+        self.learning_rate = learning_rate
+        self.epo = epo
     
     @staticmethod
     def selector_models(X, y):
@@ -240,20 +284,73 @@ class regression_methods:
 
         return vstack(meta_X), asarray(meta_y)
 
+    ## fit a meta model
+    #@staticmethod
+    #def fit_meta_model(X, y):
+    #    print('fitting meta model...')
+    #    model = LinearRegression(positive=True, fit_intercept=False)
+    #    model.fit(X, y)
+    #    #from sklearn.model_selection import cross_val_score
+    #    #scores = cross_val_score(model, X, y, cv=5)
+    #    #print(scores)
+
+    #    # 5 fold CV
+    #    kfold = KFold(n_splits=5, shuffle=True, random_state=1000)
+    #    scores = []
+    #    for train_ix, test_ix in kfold.split(X):
+    #        train_X, test_X = X[train_ix, :], X[test_ix, :]
+    #        train_y, test_y = y[train_ix], y[test_ix]
+    #        y_pred = model.predict(test_X)
+    #        mse = mean_squared_error(test_y, y_pred)
+    #        scores.append(mse)  # Just to keep consistent with the structure
+    #    # print(model.coef_)
+    #    return model, scores
+
+
     # fit a meta model
     @staticmethod
-    def fit_meta_model(X, y):
-        model = LinearRegression(positive=True, fit_intercept=False)
-        model.fit(X, y)
-        # print(model.coef_)
-        return model
+    def fit_meta_model(X, y, learner, learning_rate=0.001, epo=10000):
+        if learner=='L':
+            print('fitting linear meta model...')
+            meta_model = LinearRegression(positive=True, fit_intercept=False)
+            meta_model.fit(X, y)
+
+        else: # ADALINE
+            print('Fitting Adaline meta model...')
+            meta_model = Adaline(learning_rate=learning_rate, epochs=epo)
+            meta_model.fit(X, y)
+
+        # 5 fold CV
+        kfold = KFold(n_splits=5, shuffle=True, random_state=1000)
+        scores = []
+        submodels = []
+        for train_ix, test_ix in kfold.split(X):
+            train_X, test_X = X[train_ix, :], X[test_ix, :]
+            train_y, test_y = y[train_ix], y[test_ix]
+            y_pred = meta_model.predict(test_X)
+            mse = mean_squared_error(test_y, y_pred)
+            scores.append(mse)  # Just to keep consistent with the structure
+            # calculate robustness
+            if learner=='L':
+                submodel = LinearRegression(positive=True, fit_intercept=False)
+            else:
+                submodel = Adaline(learning_rate=learning_rate, epochs=epo)
+            # fit fold data
+            submodel.fit(train_X, train_y)
+            submodels.append(submodel)
+
+        
+        #print(f'Mean Squared Error: {mse}')
+        return meta_model, scores, submodels
+
 
     # fit all base models on the entire dataset
     def fit_base_models(self):
         # fit and make predictions with each sub-model
         res_collect = []
         df_res_tmp = pd.DataFrame(self.df_res)
-        for i in tqdm(range(len(df_res_tmp.columns))):
+        #for i in tqdm(range(len(df_res_tmp.columns))):
+        for i in range(len(df_res_tmp.columns)):
             # data
             X, y = self.df_var, df_res_tmp.iloc[:, i]
             # fit the meta model
@@ -308,6 +405,7 @@ class regression_methods:
 
         # fit meta-learner models
         meta_coef = {}
+        scores_collect = {}
         # fit and make predictions with each sub-model
         for i in tqdm(range(len(self.df_res.columns))):
             # empty lists
@@ -354,8 +452,15 @@ class regression_methods:
             self.df_res = ori_res.copy()
             print('Meta ', meta_X.shape, meta_y.shape)
             # fit the meta model
-            meta_model = self.fit_meta_model(meta_X, meta_y)
-            meta_coef[i] = meta_model.coef_
+            meta_model, scores = self.fit_meta_model(
+                    meta_X, meta_y, self.learner, learning_rate=self.learning_rate, epo=self.epo
+                    )
+            if self.learner=='L':
+                meta_coef[i] = meta_model.coef_
+            else:
+                meta_coef[i] = meta_model.weights[1:]  # Adaline does not have a coef_ attribute
+            # collect CV scores
+            scores_collect[i] = scores
         
         # calculate the final coefficients by the new weight
         integrate_res = cluster_model_res_list[0].copy()
@@ -384,23 +489,57 @@ class regression_methods:
         
         # fit meta-learner models
         meta_coef = {}
+        scores_collect = {}
+        subWeights_collect = {}
         meta_model_collect = []
         df_res_tmp = pd.DataFrame(self.df_res)
-        for i in tqdm(range(len(df_res_tmp.columns))):
+        #for i in tqdm(range(len(df_res_tmp.columns))):
+        for i in range(len(df_res_tmp.columns)):
             # data
             X, y = self.df_var, df_res_tmp.iloc[:, i]
             # get out of fold predictions
             meta_X, meta_y = self.get_out_of_fold_predictions(X, y)
             #print('Meta ', meta_X.shape, meta_y.shape)
             # fit the meta model
-            meta_model = self.fit_meta_model(meta_X, meta_y)
+            meta_model, scores, submodels = self.fit_meta_model(
+                    meta_X, meta_y, self.learner, learning_rate=self.learning_rate, epo=self.epo
+                    )
+            if self.learner=='L':
+                meta_coef[i] = meta_model.coef_
+            else:
+                meta_coef[i] = meta_model.weights[1:]  # Adaline does not have a coef_ attribute
             meta_model_collect.append(meta_model)
-            meta_coef[i] = meta_model.coef_
-        
+            scores_collect[i] = scores
+            subWeights_collect[i] = submodels
+
+        # calculate correlations of predicted coefficients based on different folds
+        mean_corrs = []
+        for col in model_res_list[0].columns:
+            submodels = subWeights_collect[col]
+            subWeights = []
+            for submodel in submodels:
+                if self.learner=='L':
+                    subcoef = submodel.coef_
+                else:
+                    subcoef = submodel.weights[1:]  # Adaline does not have a coef_ attribute
+                subWeight = np.sum([model_w[col].mul(subcoef[i]).to_numpy() for i, model_w in enumerate(model_res_list)], axis=0)
+                subWeights.append(pd.DataFrame(subWeight))
+            corr = pd.concat(subWeights, axis=1).corr()
+            mean_corr = pd.DataFrame(corr.mean(axis=1))
+            mean_corr.columns = [col]
+            mean_corrs.append(mean_corr)
+
+        # merge correlations
+        mean_corrs = pd.concat(mean_corrs, axis=1)
+
         # only works for one-column response
         self.meta_model = meta_model
         
         # calculate the final coefficients by the new weight
+        scores_df = pd.DataFrame(scores_collect)
+        print(scores_df.shape)
+        print(model_res_list[0].shape)
+        scores_df.columns = model_res_list[0].columns
         integrate_res = model_res_list[0].copy()
         for col in model_res_list[0].columns:
             integrate_res[col] = np.sum([model_w[col].mul(meta_coef[col][i]).to_numpy() for i, model_w in enumerate(model_res_list)], axis=0)
@@ -408,6 +547,12 @@ class regression_methods:
         # replace index with the metabolite name
         for i in range(len(model_res_list)):
            model_res_list[i].index = self.df_var.columns
+
+        # append scores
+        model_res_list.append(scores_df)
+
+        # append correlations
+        model_res_list.append(mean_corrs)
 
         return model_res_list
 
