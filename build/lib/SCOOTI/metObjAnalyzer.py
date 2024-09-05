@@ -13,8 +13,8 @@ import seaborn as sns
 import cobra
 import sys
 from SCOOTI.regressionAnalyzer import *
-from SCOOTI.stat_tests import *
-from SCOOTI.MatplotProp import CanvasStyle, PltProps, Significance
+from SCOOTI.GeneralMethods.stat_tests import *
+from SCOOTI.GeneralMethods.MatplotProp import CanvasStyle, PltProps, Significance
 PltProps()
 import warnings; warnings.simplefilter('ignore')
 import scipy.stats as ss
@@ -590,10 +590,14 @@ class metObjAnalyzer:
         self.labels = labels
         
         if metType_cluster:
-            # cluster the metabolites by their types
+            # categoris of metabolites
+            print('[WARINING!!] The coefficient matrix has been summed up by the type of metabolites')
+            print('[WARINING!!] The self.prefix has been changed')
             metDict = mets_category()
-            self.coef_df['metTypes'] = metDict[self.coef_df.index]
+            self.coef_df['metTypes'] = [metDict[ele] for ele in self.coef_df.index.to_numpy()]
             self.coef_df = self.coef_df.groupby('metTypes').sum()
+            self.prefix = self.prefix+'MetsType'
+
         
 
     def get_randomObj_coef(self, th=50, sample_size=100000):
@@ -648,9 +652,12 @@ class metObjAnalyzer:
             entropy=True,
             distance=True,
             compare=True,
+            y_ub=1,
             umap_para=[5, 50],
             recluster_min_size=10,
             method='average',
+            ref_col='',
+            cutoff=0.01
             ):
         """Analysis of inferred metabolic objectives.
 
@@ -836,43 +843,29 @@ class metObjAnalyzer:
             # + Allocaiton of metabolites +
             # +++++++++++++++++++++++++++++
             # comparison between 1C2C and 2CBC
-            ref_col = col2
+            ref_col = col2 if ref_col=='' else ref_col
             overlap_allocation_plot(
                     self.coef_df,
                     self.labels,
                     ref_col,
                     prefix=self.prefix+f'_{col1}_{col2}',
                     norm=True,
-                    cutoff=0.0#.0001
+                    cutoff=cutoff,#.0001
+                    groupbar=True
                     )
             
-            # rank of coefficients
-            for col in cols:
-                allocation_plot(
-                        self.coef_df,
-                        self.labels,
-                        col,
-                        prefix=self.prefix,
-                        norm=False,
-                        cutoff=0.001
-                        )
+            ## rank of coefficients
+            #for col in cols:
+            #    allocation_plot(
+            #            self.coef_df,
+            #            self.labels,
+            #            col,
+            #            prefix=self.prefix,
+            #            norm=False,
+            #            cutoff=cutoff
+            #            )
 
             if compare==True:
-                # +----------------------+
-                # + Significant Features +
-                # +----------------------+
-                # boxplot
-                boxplot_fig(
-                        self.coef_df,
-                        mets_category(),
-                        self.labels, col2, col1, col2,
-                        f'{self.prefix}_coef_{col1}vs{col2}',
-                        value_ordering=True, fc=1, portion=0.1,
-                        norm=True, plottype='stripplot',
-                        save_root_path=self.save_root_path
-                        )
-                
-                
                 # +------------------------+
                 # + Proportion of Features +
                 # +------------------------+
@@ -888,29 +881,70 @@ class metObjAnalyzer:
                     cutoff=0.1,
                     )
 
+                # +----------------------+
+                # + Significant Features +
+                # +----------------------+
+                # boxplot/stripplot
+                # This method compares the coefficients with the original scales
+                # which means no idea of allocation involved in the analysis
+                # Since we compare the coefficients in two different functions,
+                # non-paramatric tests are applied instead of ttest.
+                try:
+                    boxplot_fig(
+                            self.coef_df,
+                            mets_category(),
+                            self.labels, col2, col1, col2,
+                            f'{self.prefix}_coef_{col1}vs{col2}',
+                            value_ordering=True,
+                            fc=1,
+                            portion=0.1,
+                            norm=True,
+                            # the normalization is for visualization
+                            # it does not affect the analysis
+                            plottype='stripplot',
+                            save_root_path=self.save_root_path,
+                            y_ub=y_ub
+                            )
+                except:
+                    print('No significant metabolites or no metabolites meet the criteria.')
+
         elif len(cols)==3:
 
             # get labels
             col1, col2, col3 = cols[0], cols[1], cols[2]
-            
+            # allocation
+            ref_col = col2 if ref_col=='' else ref_col
+            overlap_allocation_plot(
+                    self.coef_df,
+                    self.labels,
+                    ref_col,
+                    prefix=self.prefix+f'_{col1}_{col2}',
+                    norm=True,
+                    cutoff=cutoff,#.0001
+                    groupbar=True
+                    )
             if compare==True:
 
                 plot_df = self.coef_df.copy() 
                 # +----------------------+
                 # + Significant Features +
                 # +----------------------+
-                # boxplot
-                boxplot_fig(
-                    plot_df,
-                    mets_category(),
-                    np.array(self.labels),
-                    col2, col1, col2,
-                    f'{self.prefix}_coef_{col1}vs{col2}vs{col3}',
-                    col3=col3, norm=True, fc=1, portion=0.1,
-                    plottype='stripplot', value_ordering=True,
-                    xlabel='Normalized coefficient',
-                    save_root_path=self.save_root_path
-                        )
+                try:
+                    # boxplot
+                    boxplot_fig(
+                        plot_df,
+                        mets_category(),
+                        np.array(self.labels),
+                        col2, col1, col2,
+                        f'{self.prefix}_coef_{col1}vs{col2}vs{col3}',
+                        col3=col3, norm=True, fc=1, portion=0.1,
+                        plottype='stripplot', value_ordering=True,
+                        xlabel='Normalized coefficient',
+                        save_root_path=self.save_root_path,
+                        y_ub=y_ub
+                            )
+                except Exception as e:
+                    print('WARNING:', e)
 
                 # +------------------------+
                 # + Proportion of Features +
@@ -942,10 +976,13 @@ class metObjAnalyzer:
             triangle=False,
             pareto3D=False,
             pareto2DAnalysis=False,
-            archetypeAnalysis=False,
+            archetypeAnalysis_w_control=False,
+            archetypeAnalysis_RSS=False,
+            archetypeAnalysis_PCA=False,
             sample_trait_func=None,
             control_trait_func=None,
-            norm=True,
+            allocation_norm=True,
+            row_norm=False
             ):
         """Analysis of inferred metabolic objectives.
 
@@ -1009,7 +1046,7 @@ class metObjAnalyzer:
         tradeoff_df = input_df.copy().T
         tradeoff_df['cellType'] = self.labels.to_numpy()
         # normalize coefficients in each cell
-        if norm:
+        if allocation_norm:
             tradeoff_df.iloc[:,:-1] = tradeoff_df.iloc[:, :-1].div(
                     tradeoff_df.iloc[:, :-1].sum(axis=1), axis=0
                     ).fillna(0)
@@ -1022,7 +1059,7 @@ class metObjAnalyzer:
             tradeoff_df = tradeoff_df.drop(
                     columns=['gthox', 'gthrd']
                     )
-            tradeoff_df['cellType'] = labels.to_numpy()
+            tradeoff_df['cellType'] = self.labels.to_numpy()
         
         
         # +--------------------------------+
@@ -1043,7 +1080,8 @@ class metObjAnalyzer:
                 theory_ref=False,
                 cellType_curvefit=True,
                 pareto_line='connected',
-                hue_order=[col for col in cols]
+                hue_order=[col for col in cols],
+                row_norm=row_norm
                 )
 
         # +------------------------------+
@@ -1098,7 +1136,8 @@ class metObjAnalyzer:
             print('Loading sampling flux data...')
             sampling_objFlux = read_sampling_objFlux(
                     path=self.samplingFlux_path,
-                    medium=self.medium
+                    medium=self.medium,
+                    allocation_norm=allocation_norm
                     )
             sampling_objFlux.columns = pd.Series(
                     sampling_objFlux.columns
@@ -1118,7 +1157,8 @@ class metObjAnalyzer:
                     theory_ref=True,
                     cellType_curvefit=False,
                     pareto_line='connected',
-                    hue_order=[col for col in cols]
+                    hue_order=[col for col in cols],
+                    row_norm=row_norm
                     )
 
 
@@ -1133,14 +1173,15 @@ class metObjAnalyzer:
                 print('Loading sampling flux data...')
                 sampling_objFlux = read_sampling_objFlux(
                         path=self.samplingFlux_path,
-                        medium=self.medium
+                        medium=self.medium,
+                        allocation_norm=allocation_norm
                         )
                 sampling_objFlux.columns = pd.Series(
                         sampling_objFlux.columns
                         ).replace({'biomass_objective':'gh'})
             # normalize coefficients in each cell
             tradeoff_df_norm = tradeoff_df.copy()
-            if norm:
+            if allocation_norm:
                 tradeoff_df_norm.iloc[:,:-1] = tradeoff_df.iloc[:, :-1].div(
                         tradeoff_df.iloc[:, :-1].sum(axis=1), axis=0
                         ).fillna(0)
@@ -1158,7 +1199,7 @@ class metObjAnalyzer:
             # merge the ratio of fluxes and ratio of inferred coefficients
             # [updates: outer join for archetypes]
             sel_df = input_df.copy()
-            if norm:
+            if allocation_norm:
                 sel_tmp_df = sel_df.div(sel_df.sum(axis=0), axis=1)
                 arch_tmp_df = archetype_df.div(archetype_df.sum(axis=0), axis=1)
             merge_tmp = pd.concat((
@@ -1336,7 +1377,6 @@ class metObjAnalyzer:
                 root_path=self.uncon_model_path,
                 medium=self.medium,
                 )
-        
         self.wrxns = wrxns
         wobjs.index = pd.Series(wobjs.index).apply(lambda x: x.split('[')[0])
         wobjs = wobjs.groupby(wobjs.index).sum()
@@ -1344,6 +1384,7 @@ class metObjAnalyzer:
             wobjs = wobjs.div(wobjs[wobjs.index=='Obj'].values, axis=1)
         wobjs = wobjs[wobjs.index!='Obj']
         wobjs = wobjs[wobjs.any(axis=1)]
+        wobjs.index =  pd.Series(wobjs.index).replace({'biomass_objective':'gh'})
         self.wobjs = wobjs
         
         if clustering:

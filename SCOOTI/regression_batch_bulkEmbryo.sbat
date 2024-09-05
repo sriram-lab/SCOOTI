@@ -1,0 +1,37 @@
+#!/bin/bash
+#SBATCH --job-name=para_scan
+#SBATCH --mail-user=daweilin@umich.edu
+#SBATCH --mail-type=BEGIN,END
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=5G
+#SBATCH --time=2-00:00:00
+#SBATCH --account=csriram99
+#SBATCH --partition=standard
+#SBATCH --output=./%x-%j.log
+
+
+
+declare -a commands
+
+conda activate venv
+module load gurobi
+#START_NUM=1
+#END_NUM=66
+
+# General settings
+unconModel=/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/pfba/KSOM/
+conModel=/nfs/turbo/umms-csriram/daweilin/fluxPrediction/bulkEmbryo2CBC/metabolism/
+savePath=/nfs/turbo/umms-csriram/daweilin/regression_models/bulkEmbryo2CBC/
+geneListPath=/home/daweilin/StemCell/unique_gene_list.mat
+kappa=0
+#0.01
+rho=0
+#10
+dkappa=10
+# run model
+for i in 0.0001; do for j in 100000; do
+  python /home/daweilin/StemCell/Project_mESC_JinZhang/SCOOTI/SCOOTI/SCOOTI_trainer.py --unconModel $unconModel --conModel $conModel --savePath $savePath --kappaArr $kappa --rhoArr $rho --dkappa $dkappa --expName bulkEmbryo1C2C --unconNorm T --conNorm F --medium KSOM --method dfa --model recon1 --inputType flux --rank F --stackModel F --sampling F --learner L --geneKO F --geneListPath $geneListPath --learningRate $i --epo $j
+done; done
+
+

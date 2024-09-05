@@ -21,7 +21,8 @@ from scipy.stats import mannwhitneyu
 config = cobra.Configuration()
 config.solver = "glpk"
 
-from .stat_tests import *
-from .MatplotProp import CanvasStyle, PltProps, Significance
+
+from . import GeneralMethods
+from .GeneralMethods import *
 from .regressionAnalyzer import *
 from .regressorCollection import *

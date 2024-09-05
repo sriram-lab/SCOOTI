@@ -15,8 +15,10 @@ import seaborn as sns
 import cobra
 import openpyxl
 import sys
+
+from sklearn.preprocessing import quantile_transform
 #from .GeneralMethods.AnalysisKits import *
-from SCOOTI.MatplotProp import CanvasStyle, PltProps, Significance
+from SCOOTI.GeneralMethods.MatplotProp import CanvasStyle, PltProps, Significance
 PltProps()
 import warnings; warnings.simplefilter('ignore')
 from statsmodels.stats.multitest import fdrcorrection
@@ -74,7 +76,6 @@ def load_files_gen(filenames):
 
 # generater to load fluxes
 def load_KOmat_gen(files, colnames, geneList_path='/home/daweilin/StemCell/unique_gene_list.mat'):
-
 
     # import scipy for reading .mat
     import scipy
@@ -137,7 +138,6 @@ def unconstrained_models(root_path, norm=False, return_variables=True, medium='D
     """
 
     print('Start processing the unconstrained models...')
-    
     flux_files = [f for f in os.listdir(root_path) if os.path.isfile(os.path.join(root_path, f))]
     df_collect = []
     for file in flux_files:
@@ -153,7 +153,7 @@ def unconstrained_models(root_path, norm=False, return_variables=True, medium='D
                                 file.split('_metadata')[0]
                                 )
                             )
-                    row = df['rxns']
+                    row = df.iloc[:,0]#['rxns']
                     df = pd.DataFrame({colname:df.iloc[:,-1].to_numpy()})
                     df_collect.append(df)
             except:
@@ -1136,7 +1136,11 @@ def coef_distance_diffObj(
         ylabel_colors = []
         for ct in dist_df['cellTypes'].unique():
             print(dist_df[dist_df['cellTypes']==ct]['Distances'])
-            _, p = ss.mannwhitneyu(dist_df[dist_df['cellTypes']==ct]['Distances'], dist_df[dist_df['cellTypes']!=ct]['Distances'])
+            _, p = ss.mannwhitneyu(
+                    dist_df[dist_df['cellTypes']==ct]['Distances'],
+                    dist_df[dist_df['cellTypes']!=ct]['Distances'],
+                    nan_policy='omit'
+                    )
             c = 'tomato' if p<0.05 else 'k'
             ylabel_colors.append(c)
 
@@ -1382,9 +1386,10 @@ def coef_distance_to_biomassObj(
 
     # significance
     if len(np.unique(labels))==2:
-        _, p = ss.f_oneway(
+        _, p = ss.ttest_ind(
                 corrs[corrs['cellTypes']==np.unique(labels)[0]]['Distances'],
                 corrs[corrs['cellTypes']==np.unique(labels)[1]]['Distances'],
+                nan_policy='omit'
                 )
     else: # >2
         _, p = ss.f_oneway(
@@ -2221,7 +2226,7 @@ def allocation_plot(coef_df, labels, cellType, prefix='', norm=True, cutoff=0.0)
 
 
 # importance plot
-def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cutoff=0.0):
+def CVscore_plot(coef_df, labels):
     """The allocation of each metabolite in objectives that are shown with overlapped barplots.
 
     The allocation of coefficients will be represented by
@@ -2264,38 +2269,163 @@ def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cuto
     bp_df = bp_df.reindex(mets_sort)
     # remove rows with lower values
     bp_df = bp_df[bp_df.mean(axis=1)>cutoff]
-
+    # set up the width of the figure
+    if len(bp_df.index.unique())<=5:
+        width = len(bp_df.index.unique())+3
+    else:
+        width = len(bp_df.index.unique())/2
     # rank of coefficients
     sns.set_context("notebook", font_scale=2.)
-    fig, ax = plt.subplots(1,1,figsize=(15,6))
+    if groupbar:
+        # organize the dataframe
+        bp_df.columns = labels
+        bp_df['metabolites'] = bp_df.index
+        bp_df = pd.melt(bp_df, id_vars=['metabolites'])
+        bp_df.columns = ['metabolites', 'cellType', 'allocation']
+        # create a new figure
+        fig, ax = plt.subplots(1,1,figsize=(width,6))
+        colors = ['teal', 'tomato', 'slateblue', 'lightgrey',]
+        cp = sns.color_palette(colors[:len(np.unique(labels))], as_cmap=True)
+        # Draw a nested barplot by celltype
+        g = sns.barplot(
+            data=bp_df, x="metabolites", y="allocation", hue="cellType",
+            palette=cp, alpha=.5, ax=ax, hue_order=labels.unique()
+        )
+        plt.xticks(rotation=90)
+        CanvasStyle(ax, lw=8, ticks_lw=3)
+        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_groupbar_allocations.png')
 
-    #plotting columns
-    i = 0
-    colors = ['teal', 'tomato', 'slateblue', 'lightgrey',]
-    patches = []
-    for celltype in np.unique(labels):
-        plot_df = bp_df[bp_df.columns[labels==celltype]].copy()
-        plot_df['Objectives'] = plot_df.index
-        plot_df = plot_df.melt(id_vars=['Objectives'])
-        ax = sns.barplot(x=plot_df["Objectives"], y=plot_df["value"], color=colors[i], alpha=0.5)
-        patches.append(mpatches.Patch(color=colors[i], label=celltype))
-        i += 1
-     
-    #renaming the axes
-    #ax.set(xlabel="x-axis", ylabel="y-axis")
-    ax.legend(handles=patches)
-    ax.set_xlabel('')
-    ax.set_ylabel('Allocation')
-    plt.xticks(rotation=90)
-    CanvasStyle(ax, lw=8, ticks_lw=3)
-    plt.savefig(f'/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/{prefix}_overlapped_allocations.png')
+    else:
+        fig, ax = plt.subplots(1,1,figsize=(width,6))
+        #plotting columns
+        i = 0
+        colors = ['teal', 'tomato', 'slateblue', 'lightgrey',]
+        patches = []
+        for celltype in np.unique(labels):
+            plot_df = bp_df[bp_df.columns[labels==celltype]].copy()
+            plot_df['Objectives'] = plot_df.index
+            plot_df = plot_df.melt(id_vars=['Objectives'])
+            ax = sns.barplot(x=plot_df["Objectives"], y=plot_df["value"], color=colors[i], alpha=0.5)
+            patches.append(mpatches.Patch(color=colors[i], label=celltype))
+            i += 1
+         
+        #renaming the axes
+        #ax.set(xlabel="x-axis", ylabel="y-axis")
+        ax.legend(handles=patches)
+        ax.set_xlabel('')
+        ax.set_ylabel('Allocation')
+        plt.xticks(rotation=90)
+
+        # standard format
+        CanvasStyle(ax, lw=8, ticks_lw=3)
+        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_overlapped_allocations.png')
+# importance plot
+def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cutoff=0.0, groupbar=True):
+    """The allocation of each metabolite in objectives that are shown with overlapped barplots.
+
+    The allocation of coefficients will be represented by
+    c/Sigma(c) if norm is set true
+
+    Parameters
+    ----------
+    coef_df : {pandas.DataFrame} of shape (n_metabolites, n_samples),
+        the coefficients of metabolic objectives for each samples
+
+    labels : {array-like} of shape (n_samples,),
+        the labels of samples/columns
+
+    cellType : {string},
+        the label used as a reference
+
+    prefix : {string}, default=''
+        experiment names for saving files
+
+    norm : {bool}, default=True
+        normalize coefficients by the sum of all the coefficients
+
+    cutoff : {float}, default=0.0
+        thresholds to show the allocation/coefficients of metabolites
+        
+
+    Returns
+    -------
+    None
+    """
+    import matplotlib.patches as mpatches
+    # coefficients
+    bp_df = coef_df.copy()
+    bp_df = bp_df[bp_df.any(axis=1)]
+    # normalization
+    if norm==True:
+        bp_df = bp_df.div(bp_df.sum(axis=0), axis=1)
+
+    mets_sort = bp_df[bp_df.columns[labels==ref_col]].mean(axis=1).sort_values(ascending=False).index
+    bp_df = bp_df.reindex(mets_sort)
+    # remove rows with lower values
+    bp_df = bp_df[bp_df.mean(axis=1)>cutoff]
+    # set up the width of the figure
+    if len(bp_df.index.unique())<=5:
+        width = len(bp_df.index.unique())+3
+    else:
+        width = len(bp_df.index.unique())/2
+    # rank of coefficients
+    sns.set_context("notebook", font_scale=2.)
+    if groupbar:
+        # organize the dataframe
+        bp_df.columns = labels
+        bp_df['metabolites'] = bp_df.index
+        bp_df = pd.melt(bp_df, id_vars=['metabolites'])
+        bp_df.columns = ['metabolites', 'cellType', 'allocation']
+        # create a new figure
+        fig, ax = plt.subplots(1,1,figsize=(width,6))
+        colors = ['teal', 'tomato', 'slateblue', 'lightgrey',]
+        cp = sns.color_palette(colors[:len(np.unique(labels))], as_cmap=True)
+        # Draw a nested barplot by celltype
+        g = sns.barplot(
+            data=bp_df, x="metabolites", y="allocation", hue="cellType",
+            palette=cp, alpha=.5, ax=ax, hue_order=labels.unique()
+        )
+        plt.xticks(rotation=90)
+        CanvasStyle(ax, lw=8, ticks_lw=3)
+        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_groupbar_allocations.png')
+
+    else:
+        fig, ax = plt.subplots(1,1,figsize=(width,6))
+        #plotting columns
+        i = 0
+        colors = ['teal', 'tomato', 'slateblue', 'lightgrey',]
+        patches = []
+        for celltype in np.unique(labels):
+            plot_df = bp_df[bp_df.columns[labels==celltype]].copy()
+            plot_df['Objectives'] = plot_df.index
+            plot_df = plot_df.melt(id_vars=['Objectives'])
+            ax = sns.barplot(x=plot_df["Objectives"], y=plot_df["value"], color=colors[i], alpha=0.5)
+            patches.append(mpatches.Patch(color=colors[i], label=celltype))
+            i += 1
+         
+        #renaming the axes
+        #ax.set(xlabel="x-axis", ylabel="y-axis")
+        ax.legend(handles=patches)
+        ax.set_xlabel('')
+        ax.set_ylabel('Allocation')
+        plt.xticks(rotation=90)
+
+        # standard format
+        CanvasStyle(ax, lw=8, ticks_lw=3)
+        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_overlapped_allocations.png')
+
+
+
+    
+    
+
 
 # visualization of comparisons (single comparison)
 def boxplot_fig(
         input_df, mets_category, labels, col_str, col1, col2,
         prefix, value_ordering=True, pv=0.05, fc=1, col3='', portion=0.0,
         norm=False, plottype='boxplot', xlabel='Normalized coefficients',
-        save_root_path='./'
+        save_root_path='./', y_ub=1
         ):
 
     """
@@ -2438,7 +2568,7 @@ def boxplot_fig(
         # make fontsize bigger
         sns.set_context("notebook", font_scale=2.)
         # calculating width of the figure
-        if len(plot_df.Objective.unique())<4:
+        if len(plot_df.Objective.unique())<=5:
             width = len(plot_df.Objective.unique())+3
         else:
             width = len(plot_df.Objective.unique())
@@ -2493,6 +2623,8 @@ def boxplot_fig(
                     )
             ax.set_ylabel(xlabel)
             ax.set_xlabel('')
+            if y_ub!=1:
+                ax.set_ylim([-0.001, y_ub])
             handles, labels = ax.get_legend_handles_labels()
             # enlarge dot size
             for dot in handles:
@@ -3679,9 +3811,11 @@ Methods for model validation
 
 
 """
-
-
-def biomass_gene_essentiality(ko_df, sel_para, method='zscore', th=1):
+def biomass_gene_essentiality(
+        ko_df, sel_para, paras, biomass_reaction_name='BIOMASS_maintenance', method='zscore', th=1,
+        model_name='Recon3D',
+        geneID_symbol_path='/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json'
+        ):
     
     """
     
@@ -3708,16 +3842,39 @@ def biomass_gene_essentiality(ko_df, sel_para, method='zscore', th=1):
 
     # Biomass as objectives
     # correlations between WT and knockouts
-    paras = pd.Series(ko_df.columns).apply(
-            lambda x: '_'.join(x.split('_')[-3:-1])
+    #paras = pd.Series(ko_df.columns).apply(
+    #        lambda x: '_'.join(x.split('_')[-3:-1])
+    #        )
+
+    # get parameters
+    col_prefix = pd.Series(ko_df.columns).apply(
+            lambda x: x.split('_r')[0].split('_k')[-1]
             )
-    genes = pd.Series(ko_df.columns).apply(
-            lambda x: '_'.join(x.split('_')[:-3])+'_'+x.split('_')[-1]
+    col_suffix = pd.Series(ko_df.columns).apply(
+            lambda x: x.split('_r')[-1].split('_')[0]
             )
-    geneNames = pd.Series(ko_df.columns).apply(
-            lambda x: x.split('_')[-1]
-            )
-    ko_df = ko_df[ko_df.index=='biomass_objective']
+    paras = pd.Series([f'k{ele1}_r{ele2}' for ele1, ele2 in zip(col_prefix, col_suffix)])
+    # process the gene names
+    if model_name=='Recon3D':
+        # get gene map
+        geneMap = geneID_symbol_map(path=geneID_symbol_path, model_name=model_name)
+        geneNames = pd.Series(ko_df.columns).apply(lambda x: '_'.join(x.split('_')[-2:]))
+        geneNames = geneNames.replace(geneMap)
+        geneNames.iloc[0] = 'WT'
+        print(geneNames)
+    elif model_name=='Recon2.2':
+        # get gene map
+        geneMap = geneID_symbol_map(path=geneID_symbol_path, model_name=model_name)
+        geneNames = pd.Series(ko_df.columns).apply(lambda x: '_'.join(x.split('_')[-1:]))
+        geneNames = geneNames.replace(geneMap)
+        geneNames.iloc[0] = 'WT'
+        print(geneNames)
+    else:
+        geneNames = pd.Series(ko_df.columns).apply(lambda x: x.split('_')[-1])
+    
+    # get biomass reaction fluxes
+    ko_df = ko_df[ko_df.index==biomass_reaction_name]
+    print('check reaction slice', ko_df)
 
     if method=='percentage':
         fc_dict = {}
@@ -3737,17 +3894,20 @@ def biomass_gene_essentiality(ko_df, sel_para, method='zscore', th=1):
    
     else: #'zscore'
         fc_dict = {}
+        print('Check', ko_df)
         plot_df = ko_df[ko_df.columns[paras==sel_para]]
         gene_arr = geneNames[paras==sel_para]
         fc = plot_df.iloc[:, 1:].apply(
                 lambda x: x.sub(plot_df.iloc[:,0]),
                 )
+        print(ko_df)
         fc_dict[sel_para] = fc.iloc[0,:].to_numpy()
         
         # convert correlation dictionary into a dataframe
         biomass_fc_df = pd.DataFrame(fc_dict).fillna(0)
         biomass_fc_df.index = gene_arr[1:]#pd.Series(genes[paras==para]).apply(lambda x: x.split('_')[-1]).to_numpy()[1:]
         if th==0:
+            print(biomass_fc_df)
             # convert biomass 
             biomass_growthGenes = biomass_fc_df.index[
                     biomass_fc_df[sel_para]<0]
@@ -3886,7 +4046,7 @@ def metObj_gene_essentiality(
 def geneEssentiality_evaluation(tb, sigGenes_dict, method_labels, sel_para, plot=False):
 
     # import packages
-    from stat_tests import hypergeom_test, ranksumtest
+    #from stat_tests import hypergeom_test, ranksumtest
     import scipy
     geneList = scipy.io.loadmat('/home/daweilin/StemCell/unique_gene_list.mat')
     # unique genes with unknown labels and wilde type columns
@@ -4144,7 +4304,7 @@ def GESA_analyais(pc_df, reclusters, label_col, exptb, gesa_name='trophectoderm'
 
     """
 
-    from stat_tests import hypergeom_test
+    #from stat_tests import hypergeom_test
     # supportive function for functional analysis
     def funcAnalysis_test(cellType, sheetname, gesaList, file_type='.xlsx'):
     
@@ -5201,7 +5361,8 @@ def triangle_plot(data_df, ref_df, met1, met2, met3, fname, hue_order=[]):
 def read_sampling_objFlux(
         input_df='',
         path='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/RandomObjCoef/embryo_ksom_7/',
-        medium='KSOM'
+        medium='KSOM',
+        allocation_norm=True,
         ):
 
     # Objective coef sampling
@@ -5223,8 +5384,8 @@ def read_sampling_objFlux(
     res.index = pd.Series(res.index).apply(lambda x: x.split('[')[0])
     res = res.groupby(res.index).sum().T
     res['cellType'] = ['Simulation']*len(res.index)
-    res.iloc[:,:-1] = res.iloc[:,:-1].div(res.iloc[:,:-1].sum(axis=1), axis=0).fillna(0)
-
+    if allocation_norm:
+        res.iloc[:,:-1] = res.iloc[:,:-1].div(res.iloc[:,:-1].sum(axis=1), axis=0).fillna(0)
 
     return res
 
@@ -5411,6 +5572,7 @@ def ObjectiveTradeOffs(
         theory_ref=False,
         pareto_line='curvefit',
         hue_order=[],
+        row_norm=False
         ):
     
     from scipy.optimize import curve_fit
@@ -5493,7 +5655,10 @@ def ObjectiveTradeOffs(
         plt.savefig(f'{save_root_path}/{prefix}_objCoef_pairplot.png')
 
     # normalization
-    #plot_df.iloc[:,:-1] = plot_df.iloc[:,:-1].div(plot_df.iloc[:,:-1].sum(axis=1), axis=0).fillna(0)
+    if row_norm:
+        #plot_df.iloc[:,:-1] = plot_df.iloc[:,:-1].div(plot_df.iloc[:,:-1].sum(axis=0), axis=1).fillna(0)
+
+        plot_df.iloc[:,:-1] = plot_df.iloc[:,:-1].div(plot_df.iloc[:,:-1].sum(axis=0), axis=1).fillna(0)
     if theory_ref==True:
         # merge with reference tradeoffs
         res = sampling_objFlux#read_sampling_objFlux()
@@ -5564,7 +5729,12 @@ def ObjectiveTradeOffs(
                             pareto = res
                         placeholder = plot_df.copy()
                         plot_df = pd.concat((pareto, plot_df[pareto.columns]), axis=0)
-                        plot_df[[met, y]] = plot_df[[met, y]].div(plot_df[[met, y]].max(axis=0), axis=1)
+                        plot_df[met] = quantile_transform(plot_df[met].to_numpy().reshape(-1, 1), n_quantiles=1000, random_state=0).flatten()
+                        plot_df[y] = quantile_transform(plot_df[y].to_numpy().reshape(-1,1), n_quantiles=1000, random_state=0).flatten()
+                        #plot_df[[met, y]] = plot_df[[met, y]].sub(
+                        #        plot_df[[met, y]].mean(axis=0), axis=1
+                        #        ).div(plot_df[[met, y]].std(axis=0), axis=1)
+                        #plot_df[[met, y]] = plot_df[[met, y]].div(plot_df[[met, y]].max(axis=0), axis=1)
                         pareto = plot_df[plot_df['cellType']=='Pareto']
                         if pareto_line=='connected':
                             pareto = pareto.sort_values(by=[met])
@@ -5634,10 +5804,12 @@ def ObjectiveTradeOffs(
 
                         # setup title
                         #ax.set_title(f'{prefix} Objective Tradeoffs', fontsize=20)
-                        ax.set_xlim([-0.05, plot_df[met].max()+0.05])
-                        ax.set_ylim([-0.05, plot_df[y].max()+0.05])
-                        ax.set_xticks(np.linspace(0, plot_df[met].max(), 6))
-                        ax.set_yticks(np.linspace(0, plot_df[y].max(), 6))
+                        #ax.set_yscale('log')
+                        #ax.set_xscale('log')
+                        #ax.set_xlim([-0.05, plot_df[met].max()+0.05])
+                        #ax.set_ylim([-0.05, plot_df[y].max()+0.05])
+                        #ax.set_xticks(np.linspace(0, plot_df[met].max(), 6))
+                        #ax.set_yticks(np.linspace(0, plot_df[y].max(), 6))
                         CanvasStyle(ax, lw=4, ticks_lw=3)
                         ax.legend(bbox_to_anchor=(1.01, 1), loc='upper left', facecolor='w', frameon=False)
                         #ax.set_ylim([-0.005, 0.05])

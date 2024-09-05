@@ -48,6 +48,11 @@ parser.add_argument(
         default='10,1,0.1,0.01,0.001',
         help="Parameter rho for CFR; 0 for non-CFR models"
         )
+parser.add_argument(
+        "--dkappaArr",
+        default='10,1,0.1,0.01,0.001',
+        help="Parameter kappa for DFA; 0 for non-CFR models"
+        )
 parser.add_argument("--expName", default='regression', help="Name of the experiment")
 parser.add_argument(
         "--unconNorm", choices=['T', 'F'], default='T', help="Normalization"
@@ -55,7 +60,7 @@ parser.add_argument(
 parser.add_argument(
         "--conNorm", choices=['T', 'F'], default='F', help="Normalization"
         )
-parser.add_argument("--medium", default='DNENF12', help="Medium name")
+parser.add_argument("--medium", default='', help="Medium name, '', KSOM, or DMEMF12")
 parser.add_argument("--method", default='cfr', help="Method name; CFR, DFA, COMPASS, or INIT")
 parser.add_argument("--model", default='recon1', help="Name of the metabolic model")
 parser.add_argument(
@@ -129,6 +134,8 @@ if args.kappaArr:
 if args.rhoArr:
     rhoArr = [float(s) for s in args.rhoArr.split(',')]
 
+if args.dkappaArr:
+    dkappaArr = [float(s) for s in args.dkappaArr.split(',')]
 # adjust the inputs
 args.unconNorm = True if args.unconNorm=='T' else False
 args.conNorm = True if args.conNorm=='T' else False
@@ -146,6 +153,7 @@ if args.sampling=='U':
         args.savePath,
         kappa_arr=kappaArr,
         rho_arr=rhoArr,
+        dkappa_arr=dkappaArr,
         expName=args.expName,
         uncon_norm=args.unconNorm,
         con_norm=args.conNorm,
@@ -172,6 +180,7 @@ elif args.sampling=='C':
         args.savePath,
         kappa_arr=kappaArr,
         rho_arr=rhoArr,
+        dkappa_arr=dkappaArr,
         expName=args.expName,
         uncon_norm=args.unconNorm,
         con_norm=args.conNorm,
@@ -196,6 +205,7 @@ else:
         args.savePath,
         kappa_arr=kappaArr,
         rho_arr=rhoArr,
+        dkappa_arr=dkappaArr,
         expName=args.expName,
         uncon_norm=args.unconNorm,
         con_norm=args.conNorm,

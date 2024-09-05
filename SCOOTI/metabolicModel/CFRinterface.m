@@ -1,6 +1,5 @@
-function CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_path, out_name, upsheet, dwsheet, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, media_perturbation, FVAflag,model_name, CFR_model, extra_weight, algorithm)
+function CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_path, out_name, upsheet, dwsheet, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, media_perturbation, FVAflag, model_name, CFR_model, extra_weight, algorithm)
 
-  
   sample_name = sprintf('%s%s', upsheet, dwsheet);
 
 %% Load metabolic network model
@@ -21,20 +20,22 @@ function CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_pa
   excelname = filename;
   
 %% change culture medium
-  % media = readtable('FINAL_MEDIUM_MAP.xlsx','Sheet','KSOM_AA_Jin');
-  media = readtable('FINAL_MEDIUM_MAP_RECON1.xlsx','Sheet',medium);
-  EX_mets = media(:,3);
-  EX_rxns = media(:,6);
-  [len, ~] = size(EX_rxns);
-  m2 = model;
-  
-  for i=1:len,
-      ex_rxn_ind = findRxnIDs(model, EX_rxns{i,:});
-      if ex_rxn_ind>0;
-          m2 = changeRxnBounds(m2, model.rxns{ex_rxn_ind}, EX_mets{i,:}, 'l');
-      end
+  if strcmp(medium, '')==0,
+    % media = readtable('FINAL_MEDIUM_MAP.xlsx','Sheet','KSOM_AA_Jin');
+    media = readtable('FINAL_MEDIUM_MAP_RECON1.xlsx','Sheet',medium);
+    EX_mets = media(:,3);
+    EX_rxns = media(:,6);
+    [len, ~] = size(EX_rxns);
+    m2 = model;
+    
+    for i=1:len,
+        ex_rxn_ind = findRxnIDs(model, EX_rxns{i,:});
+        if ex_rxn_ind>0;
+            m2 = changeRxnBounds(m2, model.rxns{ex_rxn_ind}, EX_mets{i,:}, 'l');
+        end
+    end
+    model = m2;
   end
-  model = m2;
   
 %% Set objectives for multi- or single-objective problems
   model = objective_setting_function(model, obj, obj_c, obj_type, model_name, algorithm);
@@ -416,8 +417,6 @@ function CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_pa
       else, % CFR
         % with constraint
         [uncon_flux, fluxstate, grate_naive, geneko_flux, rxnko_growthrate, solverobj_naive, grate_min, grate_max, model_out]=constrain_flux_regulation(model, uplist, dwlist, kappa, rho, 1E-3, 0, genekoflag, rxnkoflag, [], [], FVAflag, recon_model, extra_weight);
-
-
 
         % save context-specific models
         %if length(CFR_model)==0,

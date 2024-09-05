@@ -1,4 +1,4 @@
-function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, model_name, obj_candidate_list_file, input_obj_tb, paraLen, random_para, init_objective, genekoflag, rxnkoflag, FVAflag, pfba, medium_perturbation, data_dir, prefix_name, medium, late_stage, early_stage, simulation, constraint, save_root_path, CFR_model_path, pairwise_CFR_model, extraWeight, algorithm)
+function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, model_name, obj_candidate_list_file, input_obj_tb, paraLen, random_para, init_objective, genekoflag, rxnkoflag, FVAflag, pfba, medium_perturbation, data_dir, prefix_name, medium, late_stage, early_stage, simulation, constraint, save_root_path, CFR_model_path, pairwise_CFR_model, extraWeight, algorithm, data_series, prefix_series, medium_series)
   % multiObj_CBM.m calls CFRinterface/DFAinterface to run CFR/DFA modeling and generate flux prediction based on transcriptomics/metabolomics data.
   %   This code is capable of predicting fluxes with GEMs Recon1/Recon2.2/Recon3D, multi-objectives, gene knockouts, and with/without pFBA.
   % Inputs:
@@ -48,10 +48,29 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
       crho = CFR_rho;
   end
   if (~exist('extraWeight','var')) || (isempty(extraWeight))
-      extraWeight = 0;
+      extraWeight = 1;
   end
   if (~exist('algorithm','var')) || (isempty(algorithm))
       algorithm = 'iMAT';
+  end
+  if (~exist('data_series','var')) || (isempty(data_series))
+    data_series = {};
+    prefix_series = {};
+    medium_series = {};
+  else,
+    disp('filename test')
+    disp(data_series)
+    data_series_tmp = strsplit(data_series, ',')
+    prefix_series_tmp = strsplit(prefix_series, ',');
+    medium_series_tmp = strsplit(medium_series, ',');
+    data_series = {}
+    prefix_series = {}
+    medium_series = {}
+    for kk=1:length(data_series_tmp),
+      data_series(kk, 1) = data_series_tmp(1, kk);
+      prefix_series(kk, 1) = prefix_series_tmp(1, kk);
+      medium_series(kk, 1) = medium_series_tmp(1, kk);
+    end
   end
 %% Part 1: metabolic model
   % initialize COBRA toolbox
@@ -91,7 +110,10 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   %% Significant genes/proteins/metabolites
   if constraint==1,
     % data input setting
-    [data_series, prefix_series, medium_series] = batch_input_preprocess(data_dir, prefix_name, medium);
+    if length(data_series)==0,
+      [data_series, prefix_series, medium_series] = batch_input_preprocess(data_dir, prefix_name, medium);
+    end
+
     ctrl = 1 %set to 1 if we want to apply constraints
   else, % CFR without constraint
     data_series = {'./metabolicModel/buffer_constraint.xlsx'};
@@ -112,6 +134,7 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
       end
     end
   end
+  disp(CFR_models)
 
 %% Part 3: Parameter settings for CBM 
   if strcmp(simulation, 'DFA')==1, % optimize reactions/new demand reactions
@@ -263,10 +286,19 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
       disp(out_name)
       
       if strcmp(simulation, 'DFA')==1, 
+
+        late_stage = prefix
         disp('DFA...')
         %rho = 0
         % change culture medium KSOM_AA_Jin or DMEMF12_MGSA
-        DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, prefix, early_stage, late_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FVAflag, model_name);
+        if length(CFR_models)==0,
+          DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, late_stage, early_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FVAflag, model_name, '', 0, algorithm);
+        else,
+          for iii=1:length(CFR_models),
+            out_name_mod = sprintf('%s_recon%d', out_name, iii);
+            DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, late_stage, early_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FVAflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
+          end
+        end
       else,
       %simulation=='CFR' | simulation=='model',
         % CFR with fluxes
@@ -279,6 +311,7 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
             %parpool(36);
             %parfor iii=1:length(CFR_models),
             for iii=1:length(CFR_models),
+              disp(iii)
               out_name_mod = sprintf('%s_recon%d', out_name, iii);
               if pairwise_CFR_model==1,
                 % match sample names

@@ -3,7 +3,6 @@ regressorTraining.py
 =================================================================
 A module enables regression models to learn from metabolic fluxes
 """
-
 # packages
 import pandas as pd
 import pickle
@@ -40,6 +39,7 @@ class regressorTraining:
             save_root_path,
             kappa_arr=[10, 1, 0.1, 0.01, 0.001],
             rho_arr=[10, 1, 0.1, 0.01, 0.001],
+            dkappa_arr=[10, 1, 0.1, 0.01, 0.001],
             expName='regression',
             uncon_norm=True,
             con_norm=False,
@@ -63,6 +63,7 @@ class regressorTraining:
         self.constrained_models_path = constrained_models_path
         self.kappa_arr = kappa_arr
         self.rho_arr = rho_arr
+        self.dkappa_arr = dkappa_arr
         self.unconstrained_models = pd.DataFrame()
         self.constrained_models = pd.DataFrame()
         self.uncon_norm = uncon_norm
@@ -74,10 +75,10 @@ class regressorTraining:
         self.objList_path = objList_path
         self.stack_model = stack_model
         self.learner = learner
-        self.geneKO=geneKO
-        self.geneList_path=''
-        self.learning_rate=0.001
-        self.epo=10000
+        self.geneKO = geneKO
+        self.geneList_path = geneList_path
+        self.learning_rate = learning_rate
+        self.epo = epo
         # parameters for regressions
         #suffix = 'cfr_recon3d_dmemf12_paraScan_k10_r0.001'
         kappa_arr_s = f'{kappa_arr}'.replace(' ', '').replace(',', '_')
@@ -104,43 +105,52 @@ class regressorTraining:
         return uncon_res
    
     @staticmethod
-    def get_constrained_models(root_path, norm, kappa_arr, rho_arr, medium, stack_model, geneKO=False, geneList_path=''):
+    def get_constrained_models(root_path, norm, kappa_arr, rho_arr, dkappa_arr, medium, stack_model, geneKO=False, geneList_path='', method='cfr'):
         print('Start processing the constrained models...')
         # GSE159929 scRNAseq datasets
         # root_paths = f'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/Enrichr/Disease_Perturbations_Recon3D/'
         
-        print(geneKO)
-        if geneKO:
-            # get gene knockout results
-            con_res = load_geneKO_models(
-                    root_path, medium=medium,
-                    return_variables=True,
-                    norm=norm, # False
-                    CFR_paraScan=True,# DFA_paraScan=False,
-                    #randomScan=False,
-                    #topology_use=False,
-                    geneList_path=geneList_path,
-                    file_suffix='_CFR-geneDel.mat',
-                    ind_labels=False,
-                    CFR_k=kappa_arr,
-                    CFR_r=rho_arr, 
-                    )
-            con_res = con_res[con_res.index!='gh_rxn']
-        else:
+        if method=='dfa':
             con_res = constrained_models(
                     root_path+'/', 
-                    CFR_paraScan=True,
+                    DFA_paraScan=True,
                     norm=norm,
-                    CFR_k=kappa_arr,
-                    CFR_r=rho_arr,# input_path_pattern='NCI60'
+                    DFA_k=dkappa_arr,
                     stack_model=stack_model
                     )
+        else:
+            print(geneKO)
+            if geneKO:
+                # get gene knockout results
+                con_res = load_geneKO_models(
+                        root_path, medium=medium,
+                        return_variables=True,
+                        norm=norm, # False
+                        CFR_paraScan=True,# DFA_paraScan=False,
+                        #randomScan=False,
+                        #topology_use=False,
+                        geneList_path=geneList_path,
+                        file_suffix='_CFR-geneDel.mat',
+                        ind_labels=False,
+                        CFR_k=kappa_arr,
+                        CFR_r=rho_arr, 
+                        )
+                con_res = con_res[con_res.index!='gh_rxn']
+            else:
+                con_res = constrained_models(
+                        root_path+'/', 
+                        CFR_paraScan=True,
+                        norm=norm,
+                        CFR_k=kappa_arr,
+                        CFR_r=rho_arr,# input_path_pattern='NCI60'
+                        stack_model=stack_model
+                        )
             
 
         return con_res
 
     
-    def run_training(self, rank=True):
+    def run_training(self, rank=False):
         # get unconstrained models
         self.unconstrained_models = self.get_unconstrained_models(
                 self.unconstrained_models_path, self.uncon_norm, self.medium
@@ -150,6 +160,8 @@ class regressorTraining:
             self.unconstrained_models = self.unconstrained_models[objList.iloc[:, 0]]
         # get constrained models
         if self.method=='compass':
+            # remove rows
+            self.unconstrained_models = self.unconstrained_models.iloc[:-44,:]
             # load fluxes
             self.constrained_models = pd.read_csv(
                     self.constrained_models_path, index_col=0
@@ -170,6 +182,7 @@ class regressorTraining:
                     self.con_norm,
                     self.kappa_arr,
                     self.rho_arr,
+                    self.dkappa_arr,
                     self.medium,
                     self.stack_model,
                     self.geneKO,
@@ -190,10 +203,12 @@ class regressorTraining:
                     self.con_norm,
                     self.kappa_arr,
                     self.rho_arr,
+                    self.dkappa_arr,
                     self.medium,
                     self.stack_model,
                     self.geneKO,
-                    self.geneList_path
+                    self.geneList_path,
+                    self.method
                     )
 
         # convert data into ranks
@@ -254,7 +269,32 @@ class regressorTraining:
         start = time.time()
         
         num_processes = min(con_models.shape[1], cpu_count())
-        
+
+        # testing
+        #print(cluster_path)
+        #print(learning_rate)
+        #print(learner)
+        #print(epo)
+        #print('debug')
+        #print(num_processes)
+        #print('debug')
+
+        #print('testing')
+        #col_name = con_models.columns[1]
+        #model_training(
+        #        uncon_models,
+        #        pd.DataFrame(con_models[col_name]),
+        #        expName,
+        #        suffix,
+        #        pg_uncon_models,
+        #        pd.DataFrame(pg_con_models[col_name]),
+        #        input_type,
+        #        cluster_path,
+        #        learner,
+        #        learning_rate,
+        #        epo
+        #        )
+        #print('finishing up testing')
         # 'with' context manager takes care of pool.close() and pool.join() for us
         with Pool(num_processes) as pool:
             
@@ -357,9 +397,12 @@ class unconstrained_models_sampling_regressorTraining(regressorTraining):
             cluster_path='',
             rank=False,
             stack_model=False,
+            objList_path='',
             learner='L',
             geneKO=False,
-            geneList_path=''
+            geneList_path='',
+            learning_rate=0.001,
+            epo=10000
             ):
         # get directories of all unconstrained_models
         unconstrained_models_paths = [unconstrained_models_path_root+path+'/' for path in os.listdir(unconstrained_models_path_root) if os.path.isdir(os.path.join(unconstrained_models_path_root, path))]
@@ -383,9 +426,11 @@ class unconstrained_models_sampling_regressorTraining(regressorTraining):
                     rank=False,
                     stack_model=False,
                     objList_path='',
-                    learner='L',
-                    geneKO=False,
-                    geneList_path=''
+                    learner=learner,
+                    geneKO=geneKO,
+                    geneList_path=geneList_path,
+                    learning_rate=learning_rate,
+                    epo=epo
                     )
 
 
@@ -413,7 +458,9 @@ class constrained_model_sampling_regressorTraining(regressorTraining):
             objList_path='',
             learner='L',
             geneKO=False,
-            geneList_path=''
+            geneList_path='',
+            learning_rate=0.001,
+            epo=10000
             ):
         # get directories of all constrained_models
         constrained_models_paths = [
@@ -439,9 +486,11 @@ class constrained_model_sampling_regressorTraining(regressorTraining):
                     rank=False,
                     stack_model=False,
                     objList_path='',       
-                    learner='L',
-                    geneKO=False,
-                    geneList_path=''
+                    learner=learner,
+                    geneKO=geneKO,
+                    geneList_path=geneList_path,
+                    learning_rate=learning_rate,
+                    epo=epo
                     )
 
 

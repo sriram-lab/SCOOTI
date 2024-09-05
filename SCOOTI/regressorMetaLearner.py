@@ -61,32 +61,50 @@ sns.set_style("whitegrid")
 
 
 class Adaline:
-    def __init__(self, learning_rate=0.001, epochs=10000):
-        self.learning_rate = learning_rate
-        self.epochs = epochs
+    def __init__(self, learning_rate=0.001, epo=10000, binary=False, nonneg=True):
+        self.learning_rate = float(learning_rate)
+        self.epo = int(epo)
+        self.binary = binary
+        self.nonneg = nonneg
 
     def fit(self, X, y):
+        if self.binary:
+            y = np.where(np.abs(y)==0, -1, 1)
         # inittiate the weights with random array
         self.weights = np.random.random(X.shape[1]+1)
 
         stop = 0.001
         Error=[stop +1]
         step = 0
+        print(self.epo)
+        print(self.learning_rate)
+        print(self.nonneg)
+        print(self.binary)
         # check the stop condition for the network
-        while (Error[-1] > stop or Error[-1]-Error[-2] > 0.0001) and step<self.epochs:
+        while (Error[-1] > stop or Error[-1]-Error[-2] > 0.0001) and step<self.epo:
             step += 1
             output = self.net_input(X)
             errors = y - output
             self.weights[1:] += self.learning_rate * X.T.dot(errors)
             self.weights[0] += self.learning_rate * errors.sum()
+            if self.nonneg:
+                self.weights = np.maximum(0, self.weights)
             # Store sum of square errors
-            Error.append((errors**2).sum())    
+            Error.append((errors**2).sum())
         #print('Error :',Error[-1], Error[1])
+        print(stop)
+        print(Error[-1])
+        print(Error[-2])
+        print(step)
+        print(self.epo)
+        print(self.learning_rate)
+
 
     def net_input(self, X):
         return np.dot(X, self.weights[1:]) + self.weights[0]
 
     def predict(self, X):
+
         return self.net_input(X)
 
 
@@ -172,7 +190,7 @@ class regression_methods:
         # coefficient
         Xtmp = X.copy()
         # make unselected features 0
-        Xtmp[Xtmp.columns[selector.support_]] = 0
+        Xtmp[Xtmp.columns[selector.support_==0]] = 0
         # fit the model again with modified variables
         model = LinearRegression(
                 positive=True, # non-negative coefficients
@@ -317,7 +335,7 @@ class regression_methods:
 
         else: # ADALINE
             print('Fitting Adaline meta model...')
-            meta_model = Adaline(learning_rate=learning_rate, epochs=epo)
+            meta_model = Adaline(learning_rate=learning_rate, epo=epo)
             meta_model.fit(X, y)
 
         # 5 fold CV
@@ -334,7 +352,7 @@ class regression_methods:
             if learner=='L':
                 submodel = LinearRegression(positive=True, fit_intercept=False)
             else:
-                submodel = Adaline(learning_rate=learning_rate, epochs=epo)
+                submodel = Adaline(learning_rate=learning_rate, epo=epo)
             # fit fold data
             submodel.fit(train_X, train_y)
             submodels.append(submodel)
@@ -356,7 +374,6 @@ class regression_methods:
             # fit the meta model
             model_dict = self.get_models(X, y)
             res_collect.append(model_dict)
-
         # make coefficients into tables
         model_coef_collect = []
         for j in range(len(model_dict)):
@@ -466,9 +483,9 @@ class regression_methods:
         integrate_res = cluster_model_res_list[0].copy()
         #for col in cluster_model_res_list[0].columns:
         #print(np.concatenate([model_w[col].mul(meta_coef[col][i]).to_numpy() for i, model_w in enumerate(cluster_model_res_list)], axis=0))
-        for i in range(len(cluster_model_res_list)):
-            print('debug')
-            print(cluster_model_res_list[i].shape)
+        #for i in range(len(cluster_model_res_list)):
+        #    print('debug')
+        #    print(cluster_model_res_list[i].shape)
             
         #return cluster_model_res_list, meta_coef
         # calculate the final coefficients by the new weight

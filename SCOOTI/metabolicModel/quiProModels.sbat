@@ -3,7 +3,7 @@
 #SBATCH --mail-user=daweilin@umich.edu
 #SBATCH --mail-type=BEGIN,END
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=30
 #SBATCH --mem-per-cpu=5G
 #SBATCH --time=2-00:00:00
 #SBATCH --account=csriram99
@@ -33,12 +33,12 @@ input_obj_tb=\'\'
 
 # parameter settings
 DFA_kappa=-1
-CFR_kappa=-1
-CFR_rho=-1
-paraLen=5 # how many kappa/rho used for scanning
+CFR_kappa=0.1
+CFR_rho=10
+paraLen=1 # how many kappa/rho used for scanning
 random_para=0 # bool, 1 to enable random sampling
 init_objective=1 # 1 for none, 2 for biomass objective
-genekoflag=1 # bool
+genekoflag=0 # bool
 rxnkoflag=0 # bool
 FVAflag=0 # bool
 pfba=1 # 0 for fba and 1 for pfba (minimize sum of fluxes)
@@ -48,14 +48,14 @@ algorithm=\'MOOMIN\'
 
 # path to access the significant genes data
 #data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/sigGenes/prolif_qui/\'
-data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/Tzelepis2016/sigMat/\'
+data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/sigMat/\'
 prefix_name=\'ESCMOOMIN\' # name of the experiment pls set to 'model' for unconstraint models
 medium=\'DMEMF12\' # KSOM for embryos and DMEMF12 for cell culture
 late_stage=\'upgenes\' # suffix of the file names of significant up-genes
 early_stage=\'dwgenes\' # suffix of the file names of significant down-genes
 simulation=\'MOOMIN\' # CFR for transcriptomics and proteomics; DFA for metabolomics
 constraint=1 # apply constraints to the model
-save_root_path=\'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/Tzelepis2016/Recon1_MOOMIN_batch/\' # path to save predicted fluxes
+save_root_path=\'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/prolif_qui_MOOMIN_FDR/\' # path to save predicted fluxes
 CFR_model_path=\'\'
 extraWeight=0
 
