@@ -122,7 +122,7 @@ geneListPath=./unique_gene_list.mat
 kappa=0.1
 rho=10
 # run model
-python /home/daweilin/StemCell/Project_mESC_JinZhang/SCOOTI/SCOOTI/SCOOTI_trainer.py --unconModel $unconModel --conModel $conModel --savePath $savePath --kappaArr $kappa --rhoArr $rho --expName QuiProlif --unconNorm T --conNorm F --medium DMEMF12 --method CFR --model recon1 --inputType flux --rank F --stackModel F --sampling F --learner L --geneKO F --geneListPath $geneListPath
+python SCOOTI_trainer.py --unconModel $unconModel --conModel $conModel --savePath $savePath --kappaArr $kappa --rhoArr $rho --expName QuiProlif --unconNorm T --conNorm F --medium DMEMF12 --method CFR --model recon1 --inputType flux --rank F --stackModel F --sampling F --learner L --geneKO F --geneListPath $geneListPath
 ```
 
 # Metabolic Objective Analysis
