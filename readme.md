@@ -4,7 +4,7 @@
 
 - [Overview](#overview)
 - [System Requirements](#system-requirements)
-- [Generate Constrained Models with Omics Data](#generate-constrained-models-with-omics-data)
+- [Omic-based Constrained Models](#omic-based-constrained-models)
 - [Inference of Metabolic Objectives](#identify-metabolic-objectives)
 - [Metabolic Objective Analysis](#metabolic-objective-analysis)
 - [License](#license)
@@ -56,7 +56,7 @@ gurobi
 cobratoolbox
 ```
 
-# Generate Constrained Models with Omics Data
+# Omics-based Constrained Models
 Constrained models are predicted metabolic fluxes with respect to transcriptomics data. This reflects the control of the metabolic genes. Here, we show the example to generate constrained models for proliferative and quiescent states in a bash file.
 ```
 #!/bin/bash
