@@ -2,7 +2,10 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   % multiObj_CBM.m calls CFRinterface/DFAinterface to run CFR/DFA modeling and generate flux prediction based on transcriptomics/metabolomics data.
   %   This code is capable of predicting fluxes with GEMs Recon1/Recon2.2/Recon3D, multi-objectives, gene knockouts, and with/without pFBA.
   % Inputs:
-  %   jj : integer, index number that is used to scan parameters
+  %   jj : integer, index number that is used to scan parameters. Default value is set to 1
+  %   DFA_kappa : float, parameter to minimize flux activity coefficients
+  %   CFR_kappa : float, parameter to reduce the upper bound of reactions associated with downregulated genes
+  %   CFR_rho : float, parameter to increase the lower bound of reactions associated with upregulated genes
   %   COBRA_path : string, path to access the openCOBRA toolbox
   %   GEM_path : string, path to access the genome-scale metabolic models like Recon1
   %   model_name : string, name of the GEM, options including Recon1, Recon2.2, and Recon3D
@@ -24,19 +27,28 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   %   simulation : string, indicate which type of modeling method. options including CFR and DFA
   %   constraint : bool, enable adding constraints or not
   %   save_root_path : string, path to save the results of predicted fluxes
-  %   CFR_model_path : 
-  %   pairwise_CFR_model :
-  %   extraWeight :
+  %   CFR_model_path : string. path to access the constrained CFR models. This is only for stacking/multiomics integration
+  %   pairwise_CFR_model : bool, match the name of the contrained CFR models or not
+  %   extraWeight : float, apply to scale the importance of contrained CFR models for stacking different constraints
+  %   algorithm : string, default value is iMAT but options including iMAT, MOOMIN, INIT (currently not working)
+  %   data_series : string, default value is an empty string and the input paths should be separated by ","
+  %   prefix_series : string, default value is an empty string and the input paths should be separated by ","
+  %   medium_series : string, default value is an empty string and the input paths should be separated by ","
   % Output: 
   %   None; however, the predicted fluxes will be saved
  
 %% Part 0. default settings for DFA and CFR parameters
+  if (~exist('jj','var')) || (isempty(jj))
+      jj = 1;
+  end
+  if (~exist('input_obj_tb','var')) || (isempty(input_obj_tb))
+      input_obj_tb = '';
+  end
   if (~exist('DFA_kappa','var')) || (isempty(DFA_kappa))
       dkappa = 1;
   else,
       dkappa = DFA_kappa;
   end
-  
   if (~exist('CFR_kappa','var')) || (isempty(CFR_kappa))
       ckappa = 1;
   else,
@@ -50,16 +62,53 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   if (~exist('extraWeight','var')) || (isempty(extraWeight))
       extraWeight = 1;
   end
+  if (~exist('CFR_model_path','var')) || (isempty(CFR_model_path))
+      CFR_model_path = {};
+  end
+  if (~exist('pairwise_CFR_model','var')) || (isempty(pairwise_CFR_model))
+      pairwise_CFR_model = 0;
+  end
+  if (~exist('init_objective','var')) || (isempty(init_objective))
+      init_objective = 1;
+  end
   if (~exist('algorithm','var')) || (isempty(algorithm))
       algorithm = 'iMAT';
+  end
+  if strcmp(prefix_name, 'model')
+    simulation = 'CFR'
+    dkappa = -1
+    ckappa = 1
+    crho = 1
+    constraint = 0
+    paraLen=1
+    random_para=0
+  end
+  if (~exist('genekoflag','var')) || (isempty(genekoflag))
+      genekoflag = 0;
+  end
+  if (~exist('rxnkoflag','var')) || (isempty(rxnkoflag))
+      rxnkoflag = 0;
+  end
+  if (~exist('FVAflag','var')) || (isempty(FVAflag))
+      FVAflag = 0;
+  end
+  if (~exist('medium_perturbation','var')) || (isempty(medium_perturbation))
+      medium_perturbation = 0;
+  end
+  if (~exist('pfba','var')) || (isempty(pfba))
+      pfba = 1;
+  end
+  if (~exist('late_stage','var')) || (isempty(late_stage))
+      late_stage = 'upgenes';
+  end
+  if (~exist('early_stage','var')) || (isempty(early_stage))
+      early_stage = 'dwgenes';
   end
   if (~exist('data_series','var')) || (isempty(data_series))
     data_series = {};
     prefix_series = {};
     medium_series = {};
   else,
-    disp('filename test')
-    disp(data_series)
     data_series_tmp = strsplit(data_series, ',')
     prefix_series_tmp = strsplit(prefix_series, ',');
     medium_series_tmp = strsplit(medium_series, ',');
@@ -175,6 +224,12 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   %delete(gcp('nocreate'));
   %parpool(32);
   %disp(length(data_series))
+  poolobj = gcp("nocreate"); % If no pool, do not create new one.
+  if isempty(poolobj)
+      poolsize = 0;
+  else
+      poolsize = poolobj.NumWorkers
+  end
 %% Parfor...
   %for data_index=1:length(data_series),
   for data_index=1:length(data_series),

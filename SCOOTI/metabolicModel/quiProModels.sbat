@@ -25,7 +25,7 @@ COBRA_path=\'/home/daweilin/cobratoolbox/\'
 # path to access the metabolic model
 GEM_path=\'./GEMs/Shen2019.mat\'
 # name of the model
-model_name=\'Recon1\' 
+model_name=\'Recon2.2\' 
 # leave it blank if no user-defined objectives
 obj_candidate_list_file=\'./obj52_metabolites_recon1.csv\'
 # objective values
@@ -48,14 +48,14 @@ algorithm=\'MOOMIN\'
 
 # path to access the significant genes data
 #data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/sigGenes/prolif_qui/\'
-data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/sigMat/\'
-prefix_name=\'ESCMOOMIN\' # name of the experiment pls set to 'model' for unconstraint models
+data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/\'
+prefix_name=\'prolifQui\' # name of the experiment pls set to 'model' for unconstraint models
 medium=\'DMEMF12\' # KSOM for embryos and DMEMF12 for cell culture
 late_stage=\'upgenes\' # suffix of the file names of significant up-genes
 early_stage=\'dwgenes\' # suffix of the file names of significant down-genes
-simulation=\'MOOMIN\' # CFR for transcriptomics and proteomics; DFA for metabolomics
+simulation=\'CFR\' # CFR for transcriptomics and proteomics; DFA for metabolomics
 constraint=1 # apply constraints to the model
-save_root_path=\'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/prolif_qui_MOOMIN_FDR/\' # path to save predicted fluxes
+save_root_path=\'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/prolif_qui/\' # path to save predicted fluxes
 CFR_model_path=\'\'
 extraWeight=0
 

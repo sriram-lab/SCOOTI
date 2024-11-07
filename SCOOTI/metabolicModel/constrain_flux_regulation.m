@@ -1,4 +1,4 @@
-function [fluxstate_uncon, fluxstate_gurobi, grate, geneko_flux, rxnko_growthrate, solverobj, grate_wt_min, grate_wt_max, model_out] =  constrain_flux_regulation(model1,onreactions,offreactions,kappa,rho,epsilon,mode,genedelflag,rxndelflag,epsilon2,minfluxflag,FVAflag,CFR_model,extra_weight)
+function [fluxstate_uncon, fluxstate_gurobi, grate, geneko_flux, rxnko_growthrate, solverobj, grate_wt_min, grate_wt_max, model_out] =  constrain_flux_regulation(model1,onreactions,offreactions,kappa,rho,epsilon,mode,genedelflag,rxndelflag,epsilon2,minfluxflag,CFR_model,extra_weight)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -253,94 +253,6 @@ else
 end
 
 
-% optional. do FVA to get ranges of variables that achieve the same objective values
-%disp('Processing FVA...')
-
-grate_wt_min = 0;
-grate_wt_max = 0;
-if FVAflag,
-
-  % FVA with gurobi
-  disp('Processing FVA...')
-
-  %params.outputflag = 0;
-  %model = load('cancer_model.mat')
-  %model = model.model;
-  %objind = find(contains(model.rxns, 'biomass'));
-  %model.c(objind) = 1;
-  %model1 = model;
-  %model.A = model1.S;
-  %model.obj = model1.c;
-  %model.rhs = model1.b;
-  %model.lb = model1.lb;
-  %model.ub = model1.ub;
-
-
-  objind = find(model.obj~=0);
-  disp('test!!!!!!')
-  disp(objind)
-
-  %model.lb(objind) = solg1.x(objind);
-  %model.ub(objind) = solg1.x(objind);
-  %model.sense =repmat( '=',[size(model1.S,1),1]);
-  %model.vtype = repmat('C',size(model1.S,2),1);
-  %model.modelsense = 'min';
-  %solg2 = gurobi(model, params);
-  
-  m3 = model;
-
-  %m3.rhs(find(model.obj~=0)) = solg1.x(find(model.obj~=0));
-  %m3.sense(find(model.obj~=0)) = repmat( '=',[length(find(model.obj~=0)),1]);
-
-  m3.lb(find(model.obj~=0)) = solg1.x(find(model.obj~=0));
-  m3.ub(find(model.obj~=0)) = solg1.x(find(model.obj~=0));
-  grate_wt = 0;
-  grate_wt_min = 0;
-  grate_wt_max = 0;
-  infct = 0;
-  for kk = 1:nrxns,%length(model.rxns),
-      m3.obj = m3.obj*0;
-      m3.obj(kk,1) = 1;
-      m3.modelsense = 'min';
-      solg_min = gurobi(m3,params);
-      disp(solg_min);
-      %disp(solg_min.x(kk))
-      %disp(solg_min.objval)
-      disp('get min')
-
-      m3.obj(kk,1) = 1;
-      m3.modelsense = 'max';
-      solg_max = gurobi(m3,params);
-      disp(solg_max);
-      try
-        min_v = solg_min.x(kk)
-      catch
-      %if strcmp(solg_min.status, 'INFEASIBLE'),
-      %  infct = infct+1;
-        disp('catch')
-        min_v = solg1.x(kk)
-      end
-      try
-        max_v = solg_max.x(kk)
-      catch
-        disp('catch')
-        max_v = solg1.x(kk)
-      %else,
-      %  disp(solg_min)
-      %  %disp(solg_min.x(kk))
-      %  %disp(solg_min.objval)
-      %  disp('get min')
-      %  m3.modelsense = 'max';
-      %  solg_max = gurobi(m3,params);
-      %  min_v = solg_min.x(kk);
-      %  max_v = solg_max.x(kk);
-      end
-      grate_wt_min(kk,1) = min_v;%min(min_v, max_v);
-      grate_wt_max(kk,1) = max_v;%max(min_v, max_v);
-      %grate_wt(kk,1) = solg1.x(kk);
-  end
-  infct
-end
 %
 close('all')
 

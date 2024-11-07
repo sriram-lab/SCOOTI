@@ -12,24 +12,7 @@ import gzip
 from tqdm import tqdm
 from SCOOTI.regressionAnalyzer import *
 
-# for COMPASS
-def transition_expression(df_early, df_late):
-    # get fold changes of gene expression
-    expDiff = df_late.div(
-            df_early.mean(axis=1), axis=0
-            ).fillna(0)
-    infexpDiff = expDiff==np.inf
-    expDiff[infexpDiff] = expDiff.replace(
-            np.inf, 0
-            ).max().max()
-    from sklearn.preprocessing import quantile_transform
-    normExpDiff = quantile_transform(
-            expDiff, n_quantiles=1000
-            )
-    normExpDiff = pd.DataFrame(normExpDiff)
-    normExpDiff.index = expDiff.index
-    normExpDiff.columns = expDiff.columns
-    return normExpDiff
+
 # for MOOMIN
 def posterior_probability(p_values, prior=0.05, alpha_H1=1, beta_H1=19, alpha_H0=1, beta_H0=1):
     """
@@ -65,33 +48,62 @@ def posterior_probability(p_values, prior=0.05, alpha_H1=1, beta_H1=19, alpha_H0
     return posterior_H1
 
 # class for single-cell datasets
-class findRegulators:
-    """
-    A class used to identify up- and down-regulated genes from single-cell datasets
+class findSigGenes:
+    """Acquiring up- and down-regulated genes from single-cell or bulk omics data
 
-    ...
-
+    The object consists the following methods.
+    1) Preprocessing single-cell data: 
+        read single-cell data with 10xformat (a folder with matrix.mtx, genes.tsv, and barcoodes.tsv)
+    2) Convert tables of single-cell data into 10x format:
+        read tables saved with .csv/.xlsx files (with chunks) and convert them into 10x format 
+    3) Get significant genes via the comparisons among unique labels:
+        read tables and statistically compare the differences of the gene/protein expression
+    4) Get significant genes in a sample:
+        instead of comparing the data across columns, the method focuses on comparing expression levels
+        with z-scores or percentiles.
+    
+    
+    Parameters
+    ----------
+    folder_path : {string},
+        path to access the directory where the single cell data is saved.
+    
     Attributes
     ----------
-    folder_path : str
+    folder_path : {string},
         the path to access the single-cell datasets
-    adata : anndata format
+    adata : {anndata format},
         the data table with the format of anndata
-    genedf : pandas DataFrame
+    genedf : {pandas.DataFrame},
         the data table of genes by cells with expression levels as values
 
-    Methods
-    -------
-    read_scRNAseq()
-        read single-cell data with the function of read_10x_mtx function which requires a .mtx, a gene list, and a barcode list
-    merge_adata()
-        pass
-    get_genedf()
-    get_genes_from_processed_data(csv_suffix, metadata_suffix)
-        read single-cell data from attributes and output class attribute genedf
-    get_transition_genes()
-        convert the attribute genedf to two lists, up- and down-regulated genes and save into .csv files
-    """    
+    
+    Examples
+    --------
+    >>> from SCOOTI.GeneralMethods.findSigGenes import findSigGenes
+    >>> # path to access single-cell data
+    >>> path = './data/scEmbryo/GSE136714/single_cell/'
+    >>> # initiate the class objective
+    >>> fr = findSigGenes(path)
+    >>> # read data
+    >>> fr.read_scRNAseq()
+    >>> # get gene expression table 
+    >>> # transpose: False, index: cells, columns: genes
+    >>> genedf = fr.get_genedf(transpose=False)
+    >>> # Zygote
+    >>> ref_cells = pd.Series(
+    >>>                 genedf.index
+    >>>             ).apply(lambda x: x.split('_')[0]).str.contains('Zygote').to_numpy()
+    >>> # 2C
+    >>> exp_cells = pd.Series(
+    >>>                 genedf.index
+    >>>             ).apply(lambda x: x.split('_')[0]).to_numpy()=='2cell'
+    >>> # Get significant genes by the comparisons between zygote and 2cell
+    >>> # method "AVGSTD" relies on 2 STD as thresholds to filter significant genes
+    >>> upgene, dwgene = fr.get_transition_genes(
+    >>>                 ref_cells, exp_cells, split_str='_', method='AVGSTD', save_files=True
+    >>>             )
+    """
     def __init__(self, folder_path):
 
         self.folder_path = folder_path
@@ -174,7 +186,9 @@ class findRegulators:
             suffix='',
             sep='\t',
             transpose=False,
-            chunksize=1000
+            chunksize=1000,
+            column_slice=0,
+            column_slice_func=None
             ):
         
         fpath = self.folder_path
@@ -194,7 +208,13 @@ class findRegulators:
                     df_gen = pd.read_csv(fpath+file, sep=sep, chunksize=chunksize)
                     mtx_collect = []
                     gene_collect = []
-                    for df in tqdm(df_gen): 
+                    print('Iterate thru the object')
+                    print('column_slice', column_slice)
+                    for df in tqdm(df_gen):
+                        print(df)
+                        if column_slice:
+                            df = column_slice_func(df)
+                            print(df.shape)
                         if transpose:
                             df = df.T
                         genes = df.iloc[:, 0]

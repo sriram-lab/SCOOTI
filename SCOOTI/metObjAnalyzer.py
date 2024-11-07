@@ -657,7 +657,8 @@ class metObjAnalyzer:
             recluster_min_size=10,
             method='average',
             ref_col='',
-            cutoff=0.01
+            cutoff=0.01,
+            special_labels=[]
             ):
         """Analysis of inferred metabolic objectives.
 
@@ -879,6 +880,7 @@ class metObjAnalyzer:
                     value_ordering=True,
                     save_root_path=self.save_root_path,
                     cutoff=0.1,
+                    special_labels=special_labels
                     )
 
                 # +----------------------+
@@ -903,7 +905,7 @@ class metObjAnalyzer:
                             # it does not affect the analysis
                             plottype='stripplot',
                             save_root_path=self.save_root_path,
-                            y_ub=y_ub
+                            y_ub=y_ub,
                             )
                 except:
                     print('No significant metabolites or no metabolites meet the criteria.')
@@ -921,7 +923,8 @@ class metObjAnalyzer:
                     prefix=self.prefix+f'_{col1}_{col2}',
                     norm=True,
                     cutoff=cutoff,#.0001
-                    groupbar=True
+                    groupbar=True,
+                    special_labels=special_labels
                     )
             if compare==True:
 
@@ -956,7 +959,8 @@ class metObjAnalyzer:
                     np.array(self.labels),
                     f'{self.prefix}_coef_{col1}vs{col2}vs{col3}',
                     cols, cutoff=0.1,
-                    save_root_path=self.save_root_path
+                    save_root_path=self.save_root_path,
+                    special_labels=special_labels
                     )
 
         else:

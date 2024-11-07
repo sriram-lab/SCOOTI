@@ -1963,7 +1963,7 @@ def parallel_plots(
 # proportion plot comparisons for two stages
 def lollipop_fig(
         input_df, mets_category, labels, prefix, cols, cutoff=0.1, value_ordering=True,
-        save_root_path='./'
+        save_root_path='./', special_labels=[]
         ):
     """Visualize metabolic objectives with lollipop plots
     
@@ -2056,6 +2056,8 @@ def lollipop_fig(
         reind = np.repeat(reind, len(cols))
         plot_df.index = plot_df['Objective']
         plot_df = plot_df.T[reind].T
+
+        extra_c = ['r' if ele else 'k' for ele in tmp_max.index.isin(special_labels)]
         
     # create an empty plot
     hue_order = cols
@@ -2087,6 +2089,16 @@ def lollipop_fig(
             borderaxespad=0.,
             frameon=False
             )
+
+    # mark yticklabels with colors by foldchange thresholds
+    #extra_c = plot_df['Objective'].apply(lambda x: 'r' if x in special_labels else 'k')
+
+    #extra_c = ['r' if ele else 'k' for ele in plot_df['Objective'].isin(special_labels)]
+    ticklabels = g.axes.get_xticklabels()
+    for i, tick_label in enumerate(ticklabels):
+        print(tick_label.get_text())
+        tick_label.set_color(extra_c[i])
+
     plt.xticks(rotation=90)
     ax.set_ylim([-0.05, 1.05])
     ax.set_xlabel('')
@@ -2320,7 +2332,7 @@ def CVscore_plot(coef_df, labels):
         CanvasStyle(ax, lw=8, ticks_lw=3)
         plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_overlapped_allocations.png')
 # importance plot
-def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cutoff=0.0, groupbar=True):
+def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cutoff=0.0, groupbar=True, special_labels=[]):
     """The allocation of each metabolite in objectives that are shown with overlapped barplots.
 
     The allocation of coefficients will be represented by
@@ -2385,6 +2397,20 @@ def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cuto
             data=bp_df, x="metabolites", y="allocation", hue="cellType",
             palette=cp, alpha=.5, ax=ax, hue_order=labels.unique()
         )
+
+
+        # mark yticklabels with colors by foldchange thresholds
+        #extra_c = bp_df['metabolites'].apply(lambda x: 'r' if x in special_labels else 'k')
+        ticklabels = g.axes.get_xticklabels()
+        for i, tick_label in enumerate(ticklabels):
+            print(tick_label.get_text())
+            extra_c = 'r' if tick_label.get_text() in special_labels else 'k'
+            tick_label.set_color(extra_c)
+        #extra_c = ['r' if ele else 'k' for ele in bp_df['metabolites'].isin(special_labels)]
+        #ticklabels = g.axes.get_xticklabels()
+        #for i, tick_label in enumerate(ticklabels):
+        #    print(extra_c[i])
+        #    tick_label.set_color(extra_c[i])
         plt.xticks(rotation=90)
         CanvasStyle(ax, lw=8, ticks_lw=3)
         plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_groupbar_allocations.png')
@@ -2403,6 +2429,12 @@ def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cuto
             patches.append(mpatches.Patch(color=colors[i], label=celltype))
             i += 1
          
+        # mark yticklabels with colors by foldchange thresholds
+        extra_c = ['r' if ele else 'k' for ele in plot_df['Objective'].isin(special_labels)]
+        ticklabels = ax.axes.get_xticklabels()
+        for i, tick_label in enumerate(ticklabels):
+            print(extra_c[i])
+            tick_label.set_color(extra_c[i])
         #renaming the axes
         #ax.set(xlabel="x-axis", ylabel="y-axis")
         ax.legend(handles=patches)
@@ -3811,6 +3843,45 @@ Methods for model validation
 
 
 """
+# get geneIDs to symbols
+def geneID_symbol_map(path='/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json', model_name='Recon3D'):
+    
+    """
+
+    Description
+    -----------
+    Read .json files and organize the res into a dictionary with gene IDs as keys and gene symbols as values
+
+    Arguments
+    ---------
+    path (str): path to access the .json file which saved the gene IDs used in the models and corresponding symbols
+    
+    example paths
+        Recon3D: '/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json'
+        Recon2.2: '/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon2.2_symbol_to_hgnc.json'
+
+    Returns
+    -------
+    geneMap (dict): dictionary saved the gene IDs used in the models and corresponding symbols
+
+    """
+
+    import json
+    with open(path, 'r') as f:
+        if model_name=='Recon3D':
+            geneMap = pd.DataFrame(json.load(f)['results'])
+            geneMap = dict(zip(geneMap['bigg_id'], geneMap['name']))
+        elif model_name=='Recon2.2':
+            geneMap = pd.DataFrame(json.load(f))
+            geneMap = dict(zip(geneMap['hgnc'], geneMap['symbol']))
+        else:
+            geneMap = {}
+            #geneMap = pd.DataFrame(json.load(f))
+            #geneMap = dict(zip(geneMap['hgnc'], geneMap['symbol']))
+
+    return geneMap
+
+
 def biomass_gene_essentiality(
         ko_df, sel_para, paras, biomass_reaction_name='BIOMASS_maintenance', method='zscore', th=1,
         model_name='Recon3D',

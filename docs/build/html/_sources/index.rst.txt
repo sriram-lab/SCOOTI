@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to SCOOBI's documentation!
+Welcome to SCOOTI's documentation!
 ==================================
 
 .. automodule:: SCOOTI.metObjAnalyzer
@@ -19,7 +19,9 @@ Welcome to SCOOBI's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+   quickstart
+   userguide
+   advancedusage
 
 Indices and tables
 ==================

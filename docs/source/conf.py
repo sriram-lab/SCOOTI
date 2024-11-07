@@ -8,6 +8,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
+sys.path.insert(0, os.path.abspath('../../GeneralMethods/'))
 
 
 project = 'SCOOTI'
@@ -20,11 +21,13 @@ release = '0.1'
 
 extensions = [
             'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    #'sphinx.ext.mathjax',
-    'sphinx.ext.napoleon',
+            'sphinx.ext.doctest',
+            'sphinx.ext.todo',
+            'sphinx.ext.coverage',
+            #'sphinx.ext.mathjax',
+            'sphinx.ext.napoleon',
+            ]
+
     #'sphinx.ext.viewcode',
     #'sphinx.ext.githubpages',
     #'sphinx_markdown_builder',
@@ -32,7 +35,7 @@ extensions = [
     #'myst_parser',
     #'nbsphinx',
     #'nbsphinx_link'
-    ]
+
 templates_path = ['_templates']
 exclude_patterns = []
 

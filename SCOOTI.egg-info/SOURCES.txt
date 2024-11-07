@@ -8,6 +8,7 @@ SCOOTI/metObjAnalyzer.py
 SCOOTI/regressionAnalyzer.py
 SCOOTI/regressorMetaLearner.py
 SCOOTI/regressorTraining.py
+SCOOTI/scHeartFailure.py
 SCOOTI.egg-info/PKG-INFO
 SCOOTI.egg-info/SOURCES.txt
 SCOOTI.egg-info/dependency_links.txt

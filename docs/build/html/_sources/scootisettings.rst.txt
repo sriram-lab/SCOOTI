@@ -1,0 +1,168 @@
+SCOOTI Settings
+===============
+
+Overview
+--------
+SCOOTI includes three different modules, including identifying metabolic regulators, flux predictions, and inference of metabolic objectives. This document will go through the required settings for users to choose the best options for their projects.
+
+Identification of metabolic regulators
+--------------------------------------
+
+.. code-block:: bash
+
+   #!/bin/bash
+
+
+Flux prediction
+---------------
+
+**Usage:**
+.. code-block:: bash
+
+   #!/bin/bash
+
+   matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $COBRA_path,$GEM_path, $model_name, $obj_candidate_list_file, $input_obj_tb, $paraLen, $random_para, $init_objective, $genekoflag, $rxnkoflag, $FVAflag, $pfba, $medium_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $constraint, $save_root_path)"
+
+Input settings
+**************
+
+*multiObj_CBM.m calls CFRinterface/DFAinterface to run CFR/DFA modeling and generate flux prediction based on transcriptomics/metabolomics data.*
+*This code is capable of predicting fluxes with GEMs Recon1/Recon2.2/Recon3D, multi-objectives, gene knockouts, and with/without pFBA.*
+
+**Inputs:**
+  - jj : integer, index number that is used to scan parameters
+  - DFA_kappa : float, parameter to minimize flux activity coefficients
+  - CFR_kappa : float, parameter to reduce the upper bound of reactions associated with downregulated genes
+  - CFR_rho : float, parameter to increase the lower bound of reactions associated with upregulated genes
+  - COBRA_path : string, path to access the openCOBRA toolbox
+  - GEM_path : string, path to access the genome-scale metabolic models like Recon1
+  - model_name : string, name of the GEM, options including Recon1, Recon2.2, and Recon3D
+  - obj_candidate_list_file : string, path to access the candidate of multi-objectives, only applicable for single-objective models
+  - input_obj_tb : string, path to access the file of objective coefficients, only applicable for multiobjective models
+  - paraLen : integer, number to indicate how how many parameters that will be selected for scanning
+  - random_para : bool, enable random sampling of parameters in defined ranges
+  - init_objective : integer, the number is the index of objective list. In the default settings, 1 is no objective and 2 is biomass
+  - genekoflag : bool, enable in silico single-gene knock
+  - rxnkoflag : bool, enable in silico reaction knockout
+  - FVAflag : bool, output a range of flux solution
+  - pfba : bool, minimizing sum of reaction fluxes or not
+  - medium_perturbation : bool, enable in silico single-metabolite depletion
+  - data_dir : string, path to access significant genes/proteins/metabolites as constraints
+  - prefix_name : string, name of experiment. it will be used for 
+  - medium : string, name of sources of extracellular metabolites. options including DMEMF12 and KSOM
+  - late_stage : string, name of late stage which also indicates the suffix of constraint files
+  - early_stage : string, name of early stage which also indicates the suffix of constraint files
+  - simulation : string, indicate which type of modeling method. options including CFR and DFA
+  - constraint : bool, enable adding constraints or not
+  - save_root_path : string, path to save the results of predicted fluxes
+  - CFR_model_path : string. path to access the constrained CFR models. This is only for stacking/multiomics integration
+  - pairwise_CFR_model : bool, match the name of the contrained CFR models or not
+  - extraWeight : float, apply to scale the importance of contrained CFR models for stacking different constraints
+  - algorithm : string, default value is iMAT but options including iMAT, MOOMIN, INIT (currently not working)
+  - data_series : string, default value is an empty string and the input paths should be separated by ","
+  - prefix_series : string, default value is an empty string and the input paths should be separated by ","
+  - medium_series : string, default value is an empty string and the input paths should be separated by ","
+
+**Output:**
+  - None; however, the predicted fluxes will be saved
+
+
+Generate unconstrained models with more metabolites
+***************************************************
+Again, we need to firstly generate the unconstrained models as the variables for SCOOTI.
+
+.. code-block:: bash
+
+   #!/bin/bash
+   # input settings
+   # path to access your matlab-version cobratoolbox
+   COBRA_path='./cobratoolbox/'
+   # path to access the metabolic model
+   GEM_path='./GEMs/Shen2019.mat'
+   # name of the model
+   model_name='Recon1'
+   # leave it blank if no user-defined objectives
+   obj_candidate_list_file='./obj52_metabolites_recon1.csv'
+   # objective values
+   input_obj_tb=''
+   
+   # parameter settings
+   DFA_kappa=-1
+   CFR_kappa=0.1
+   CFR_rho=10
+   paraLen=1 # how many kappa/rho used for scanning
+   random_para=0 # bool, 1 to enable random sampling
+   init_objective=1 # 1 for none, 2 for biomass objective
+   genekoflag=0 # bool
+   rxnkoflag=0 # bool
+   FVAflag=0 # bool
+   pfba=1 # 0 for fba and 1 for pfba (minimize sum of fluxes)
+   medium_perturbation=0 # 1 for depletion or excess of metabolites in medium
+   pairwise_CFR_model=0
+   algorithm='iMAT'
+
+   # path to access the significant genes data
+   data_dir='./sigGenes/prolif_qui/'
+   prefix_name='model' # name of the experiment pls set to 'model' for unconstraint models
+   medium='DMEMF12' # KSOM for embryos and DMEMF12 for cell culture
+   late_stage='upgenes' # suffix of the file names of significant up-genes
+   early_stage='dwgenes' # suffix of the file names of significant down-genes
+   simulation='CFR' # CFR for transcriptomics and proteomics; DFA for metabolomics
+   constraint=1 # apply constraints to the model
+   save_root_path='./fluxPrediction/unconstrained_models/pfba/' # path to save predicted fluxes
+   CFR_model_path=''
+
+   
+   run=1
+   matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $COBRA_path,$GEM_path, $model_name, $obj_candidate_list_file, $input_obj_tb, $paraLen, $random_para, $init_objective, $genekoflag, $rxnkoflag, $FVAflag, $pfba, $medium_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $constraint, $save_root_path)"
+
+
+Generate unconstrained models with more metabolites
+***************************************************
+Again, we need to firstly generate the unconstrained models as the variables for SCOOTI.
+
+.. code-block:: bash
+
+   #!/bin/bash
+   # input settings
+   # path to access your matlab-version cobratoolbox
+   COBRA_path='./cobratoolbox/'
+   # path to access the metabolic model
+   GEM_path='./GEMs/Shen2019.mat'
+   # name of the model
+   model_name='Recon1'
+   # leave it blank if no user-defined objectives
+   obj_candidate_list_file='./obj52_metabolites_recon1.csv'
+   # objective values
+   input_obj_tb=''
+   
+   # parameter settings
+   DFA_kappa=-1
+   CFR_kappa=0.1
+   CFR_rho=10
+   paraLen=1 # how many kappa/rho used for scanning
+   random_para=0 # bool, 1 to enable random sampling
+   init_objective=1 # 1 for none, 2 for biomass objective
+   genekoflag=0 # bool
+   rxnkoflag=0 # bool
+   FVAflag=0 # bool
+   pfba=1 # 0 for fba and 1 for pfba (minimize sum of fluxes)
+   medium_perturbation=0 # 1 for depletion or excess of metabolites in medium
+   pairwise_CFR_model=0
+   algorithm='iMAT'
+
+   # path to access the significant genes data
+   data_dir='./sigGenes/prolif_qui/'
+   prefix_name='model' # name of the experiment pls set to 'model' for unconstraint models
+   medium='DMEMF12' # KSOM for embryos and DMEMF12 for cell culture
+   late_stage='upgenes' # suffix of the file names of significant up-genes
+   early_stage='dwgenes' # suffix of the file names of significant down-genes
+   simulation='CFR' # CFR for transcriptomics and proteomics; DFA for metabolomics
+   constraint=1 # apply constraints to the model
+   save_root_path='./fluxPrediction/unconstrained_models/pfba/' # path to save predicted fluxes
+   CFR_model_path=''
+
+   
+   run=1
+   matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $COBRA_path,$GEM_path, $model_name, $obj_candidate_list_file, $input_obj_tb, $paraLen, $random_para, $init_objective, $genekoflag, $rxnkoflag, $FVAflag, $pfba, $medium_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $constraint, $save_root_path)"
+

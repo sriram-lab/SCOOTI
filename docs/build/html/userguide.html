@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>SCOOTI Settings &#8212; SCOOTI 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Quick Start" href="quickstart.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="scooti-settings">
+<h1>SCOOTI Settings<a class="headerlink" href="#scooti-settings" title="Permalink to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h2>
+<p>SCOOTI includes three different modules, including identifying metabolic regulators, flux predictions, and inference of metabolic objectives. This document will go through the required settings for users to choose the best options for their projects.</p>
+</section>
+<section id="identification-of-metabolic-regulators">
+<h2>Identification of metabolic regulators<a class="headerlink" href="#identification-of-metabolic-regulators" title="Permalink to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+</pre></div>
+</div>
+</section>
+<section id="flux-prediction">
+<h2>Flux prediction<a class="headerlink" href="#flux-prediction" title="Permalink to this heading">¶</a></h2>
+<p><strong>Usage:</strong>
+.. code-block:: bash</p>
+<blockquote>
+<div><p>#!/bin/bash</p>
+<p>matlab -nosplash -noFigureWindows -r “multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $COBRA_path,$GEM_path, $model_name, $obj_candidate_list_file, $input_obj_tb, $paraLen, $random_para, $init_objective, $genekoflag, $rxnkoflag, $FVAflag, $pfba, $medium_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $constraint, $save_root_path)”</p>
+</div></blockquote>
+<section id="input-settings">
+<h3>Input settings<a class="headerlink" href="#input-settings" title="Permalink to this heading">¶</a></h3>
+<p><em>multiObj_CBM.m calls CFRinterface/DFAinterface to run CFR/DFA modeling and generate flux prediction based on transcriptomics/metabolomics data.</em>
+<em>This code is capable of predicting fluxes with GEMs Recon1/Recon2.2/Recon3D, multi-objectives, gene knockouts, and with/without pFBA.</em>
+<strong>Inputs:</strong></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>jj : integer, index number that is used to scan parameters</p></li>
+<li><p>DFA_kappa : float, parameter to minimize flux activity coefficients</p></li>
+<li><p>CFR_kappa : float, parameter to reduce the upper bound of reactions associated with downregulated genes</p></li>
+<li><p>CFR_rho : float, parameter to increase the lower bound of reactions associated with upregulated genes</p></li>
+<li><p>COBRA_path : string, path to access the openCOBRA toolbox</p></li>
+<li><p>GEM_path : string, path to access the genome-scale metabolic models like Recon1</p></li>
+<li><p>model_name : string, name of the GEM, options including Recon1, Recon2.2, and Recon3D</p></li>
+<li><p>obj_candidate_list_file : string, path to access the candidate of multi-objectives, only applicable for single-objective models</p></li>
+<li><p>input_obj_tb : string, path to access the file of objective coefficients, only applicable for multiobjective models</p></li>
+<li><p>paraLen : integer, number to indicate how how many parameters that will be selected for scanning</p></li>
+<li><p>random_para : bool, enable random sampling of parameters in defined ranges</p></li>
+<li><p>init_objective : integer, the number is the index of objective list. In the default settings, 1 is no objective and 2 is biomass</p></li>
+<li><p>genekoflag : bool, enable in silico single-gene knock</p></li>
+<li><p>rxnkoflag : bool, enable in silico reaction knockout</p></li>
+<li><p>FVAflag : bool, output a range of flux solution</p></li>
+<li><p>pfba : bool, minimizing sum of reaction fluxes or not</p></li>
+<li><p>medium_perturbation : bool, enable in silico single-metabolite depletion</p></li>
+<li><p>data_dir : string, path to access significant genes/proteins/metabolites as constraints</p></li>
+<li><p>prefix_name : string, name of experiment. it will be used for</p></li>
+<li><p>medium : string, name of sources of extracellular metabolites. options including DMEMF12 and KSOM</p></li>
+<li><p>late_stage : string, name of late stage which also indicates the suffix of constraint files</p></li>
+<li><p>early_stage : string, name of early stage which also indicates the suffix of constraint files</p></li>
+<li><p>simulation : string, indicate which type of modeling method. options including CFR and DFA</p></li>
+<li><p>constraint : bool, enable adding constraints or not</p></li>
+<li><p>save_root_path : string, path to save the results of predicted fluxes</p></li>
+<li><p>CFR_model_path : string. path to access the constrained CFR models. This is only for stacking/multiomics integration</p></li>
+<li><p>pairwise_CFR_model : bool, match the name of the contrained CFR models or not</p></li>
+<li><p>extraWeight : float, apply to scale the importance of contrained CFR models for stacking different constraints</p></li>
+<li><p>algorithm : string, default value is iMAT but options including iMAT, MOOMIN, INIT (currently not working)</p></li>
+<li><p>data_series : string, default value is an empty string and the input paths should be separated by “,”</p></li>
+<li><p>prefix_series : string, default value is an empty string and the input paths should be separated by “,”</p></li>
+<li><p>medium_series : string, default value is an empty string and the input paths should be separated by “,”</p></li>
+</ol>
+</div></blockquote>
+<dl class="simple">
+<dt><strong>Output:</strong></dt><dd><ol class="arabic simple">
+<li><p>None; however, the predicted fluxes will be saved</p></li>
+</ol>
+</dd>
+</dl>
+</section>
+<section id="generate-unconstrained-models-with-more-metabolites">
+<h3>Generate unconstrained models with more metabolites<a class="headerlink" href="#generate-unconstrained-models-with-more-metabolites" title="Permalink to this heading">¶</a></h3>
+<p>Again, we need to firstly generate the unconstrained models as the variables for SCOOTI.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1"># input settings</span>
+<span class="c1"># path to access your matlab-version cobratoolbox</span>
+<span class="nv">COBRA_path</span><span class="o">=</span><span class="s1">&#39;./cobratoolbox/&#39;</span>
+<span class="c1"># path to access the metabolic model</span>
+<span class="nv">GEM_path</span><span class="o">=</span><span class="s1">&#39;./GEMs/Shen2019.mat&#39;</span>
+<span class="c1"># name of the model</span>
+<span class="nv">model_name</span><span class="o">=</span><span class="s1">&#39;Recon1&#39;</span>
+<span class="c1"># leave it blank if no user-defined objectives</span>
+<span class="nv">obj_candidate_list_file</span><span class="o">=</span><span class="s1">&#39;./obj52_metabolites_recon1.csv&#39;</span>
+<span class="c1"># objective values</span>
+<span class="nv">input_obj_tb</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+
+<span class="c1"># parameter settings</span>
+<span class="nv">DFA_kappa</span><span class="o">=</span>-1
+<span class="nv">CFR_kappa</span><span class="o">=</span><span class="m">0</span>.1
+<span class="nv">CFR_rho</span><span class="o">=</span><span class="m">10</span>
+<span class="nv">paraLen</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># how many kappa/rho used for scanning</span>
+<span class="nv">random_para</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool, 1 to enable random sampling</span>
+<span class="nv">init_objective</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># 1 for none, 2 for biomass objective</span>
+<span class="nv">genekoflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
+<span class="nv">rxnkoflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
+<span class="nv">FVAflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
+<span class="nv">pfba</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># 0 for fba and 1 for pfba (minimize sum of fluxes)</span>
+<span class="nv">medium_perturbation</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># 1 for depletion or excess of metabolites in medium</span>
+<span class="nv">pairwise_CFR_model</span><span class="o">=</span><span class="m">0</span>
+<span class="nv">algorithm</span><span class="o">=</span><span class="s1">&#39;iMAT&#39;</span>
+
+<span class="c1"># path to access the significant genes data</span>
+<span class="nv">data_dir</span><span class="o">=</span><span class="s1">&#39;./sigGenes/prolif_qui/&#39;</span>
+<span class="nv">prefix_name</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="w"> </span><span class="c1"># name of the experiment pls set to &#39;model&#39; for unconstraint models</span>
+<span class="nv">medium</span><span class="o">=</span><span class="s1">&#39;DMEMF12&#39;</span><span class="w"> </span><span class="c1"># KSOM for embryos and DMEMF12 for cell culture</span>
+<span class="nv">late_stage</span><span class="o">=</span><span class="s1">&#39;upgenes&#39;</span><span class="w"> </span><span class="c1"># suffix of the file names of significant up-genes</span>
+<span class="nv">early_stage</span><span class="o">=</span><span class="s1">&#39;dwgenes&#39;</span><span class="w"> </span><span class="c1"># suffix of the file names of significant down-genes</span>
+<span class="nv">simulation</span><span class="o">=</span><span class="s1">&#39;CFR&#39;</span><span class="w"> </span><span class="c1"># CFR for transcriptomics and proteomics; DFA for metabolomics</span>
+<span class="nv">constraint</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># apply constraints to the model</span>
+<span class="nv">save_root_path</span><span class="o">=</span><span class="s1">&#39;./fluxPrediction/unconstrained_models/pfba/&#39;</span><span class="w"> </span><span class="c1"># path to save predicted fluxes</span>
+<span class="nv">CFR_model_path</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+
+
+<span class="nv">run</span><span class="o">=</span><span class="m">1</span>
+matlab<span class="w"> </span>-nosplash<span class="w"> </span>-noFigureWindows<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;multiObj_CBM(</span><span class="nv">$run</span><span class="s2">, </span><span class="nv">$DFA_kappa</span><span class="s2">, </span><span class="nv">$CFR_kappa</span><span class="s2">, </span><span class="nv">$CFR_rho</span><span class="s2">, </span><span class="nv">$COBRA_path</span><span class="s2">,</span><span class="nv">$GEM_path</span><span class="s2">, </span><span class="nv">$model_name</span><span class="s2">, </span><span class="nv">$obj_candidate_list_file</span><span class="s2">, </span><span class="nv">$input_obj_tb</span><span class="s2">, </span><span class="nv">$paraLen</span><span class="s2">, </span><span class="nv">$random_para</span><span class="s2">, </span><span class="nv">$init_objective</span><span class="s2">, </span><span class="nv">$genekoflag</span><span class="s2">, </span><span class="nv">$rxnkoflag</span><span class="s2">, </span><span class="nv">$FVAflag</span><span class="s2">, </span><span class="nv">$pfba</span><span class="s2">, </span><span class="nv">$medium_perturbation</span><span class="s2">, </span><span class="nv">$data_dir</span><span class="s2">, </span><span class="nv">$prefix_name</span><span class="s2">, </span><span class="nv">$medium</span><span class="s2">, </span><span class="nv">$late_stage</span><span class="s2">, </span><span class="nv">$early_stage</span><span class="s2">, </span><span class="nv">$simulation</span><span class="s2">, </span><span class="nv">$constraint</span><span class="s2">, </span><span class="nv">$save_root_path</span><span class="s2">)&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="id1">
+<h3>Generate unconstrained models with more metabolites<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<p>Again, we need to firstly generate the unconstrained models as the variables for SCOOTI.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="c1"># input settings</span>
+<span class="c1"># path to access your matlab-version cobratoolbox</span>
+<span class="nv">COBRA_path</span><span class="o">=</span><span class="s1">&#39;./cobratoolbox/&#39;</span>
+<span class="c1"># path to access the metabolic model</span>
+<span class="nv">GEM_path</span><span class="o">=</span><span class="s1">&#39;./GEMs/Shen2019.mat&#39;</span>
+<span class="c1"># name of the model</span>
+<span class="nv">model_name</span><span class="o">=</span><span class="s1">&#39;Recon1&#39;</span>
+<span class="c1"># leave it blank if no user-defined objectives</span>
+<span class="nv">obj_candidate_list_file</span><span class="o">=</span><span class="s1">&#39;./obj52_metabolites_recon1.csv&#39;</span>
+<span class="c1"># objective values</span>
+<span class="nv">input_obj_tb</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+
+<span class="c1"># parameter settings</span>
+<span class="nv">DFA_kappa</span><span class="o">=</span>-1
+<span class="nv">CFR_kappa</span><span class="o">=</span><span class="m">0</span>.1
+<span class="nv">CFR_rho</span><span class="o">=</span><span class="m">10</span>
+<span class="nv">paraLen</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># how many kappa/rho used for scanning</span>
+<span class="nv">random_para</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool, 1 to enable random sampling</span>
+<span class="nv">init_objective</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># 1 for none, 2 for biomass objective</span>
+<span class="nv">genekoflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
+<span class="nv">rxnkoflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
+<span class="nv">FVAflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
+<span class="nv">pfba</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># 0 for fba and 1 for pfba (minimize sum of fluxes)</span>
+<span class="nv">medium_perturbation</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># 1 for depletion or excess of metabolites in medium</span>
+<span class="nv">pairwise_CFR_model</span><span class="o">=</span><span class="m">0</span>
+<span class="nv">algorithm</span><span class="o">=</span><span class="s1">&#39;iMAT&#39;</span>
+
+<span class="c1"># path to access the significant genes data</span>
+<span class="nv">data_dir</span><span class="o">=</span><span class="s1">&#39;./sigGenes/prolif_qui/&#39;</span>
+<span class="nv">prefix_name</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="w"> </span><span class="c1"># name of the experiment pls set to &#39;model&#39; for unconstraint models</span>
+<span class="nv">medium</span><span class="o">=</span><span class="s1">&#39;DMEMF12&#39;</span><span class="w"> </span><span class="c1"># KSOM for embryos and DMEMF12 for cell culture</span>
+<span class="nv">late_stage</span><span class="o">=</span><span class="s1">&#39;upgenes&#39;</span><span class="w"> </span><span class="c1"># suffix of the file names of significant up-genes</span>
+<span class="nv">early_stage</span><span class="o">=</span><span class="s1">&#39;dwgenes&#39;</span><span class="w"> </span><span class="c1"># suffix of the file names of significant down-genes</span>
+<span class="nv">simulation</span><span class="o">=</span><span class="s1">&#39;CFR&#39;</span><span class="w"> </span><span class="c1"># CFR for transcriptomics and proteomics; DFA for metabolomics</span>
+<span class="nv">constraint</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># apply constraints to the model</span>
+<span class="nv">save_root_path</span><span class="o">=</span><span class="s1">&#39;./fluxPrediction/unconstrained_models/pfba/&#39;</span><span class="w"> </span><span class="c1"># path to save predicted fluxes</span>
+<span class="nv">CFR_model_path</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
+
+
+<span class="nv">run</span><span class="o">=</span><span class="m">1</span>
+matlab<span class="w"> </span>-nosplash<span class="w"> </span>-noFigureWindows<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;multiObj_CBM(</span><span class="nv">$run</span><span class="s2">, </span><span class="nv">$DFA_kappa</span><span class="s2">, </span><span class="nv">$CFR_kappa</span><span class="s2">, </span><span class="nv">$CFR_rho</span><span class="s2">, </span><span class="nv">$COBRA_path</span><span class="s2">,</span><span class="nv">$GEM_path</span><span class="s2">, </span><span class="nv">$model_name</span><span class="s2">, </span><span class="nv">$obj_candidate_list_file</span><span class="s2">, </span><span class="nv">$input_obj_tb</span><span class="s2">, </span><span class="nv">$paraLen</span><span class="s2">, </span><span class="nv">$random_para</span><span class="s2">, </span><span class="nv">$init_objective</span><span class="s2">, </span><span class="nv">$genekoflag</span><span class="s2">, </span><span class="nv">$rxnkoflag</span><span class="s2">, </span><span class="nv">$FVAflag</span><span class="s2">, </span><span class="nv">$pfba</span><span class="s2">, </span><span class="nv">$medium_perturbation</span><span class="s2">, </span><span class="nv">$data_dir</span><span class="s2">, </span><span class="nv">$prefix_name</span><span class="s2">, </span><span class="nv">$medium</span><span class="s2">, </span><span class="nv">$late_stage</span><span class="s2">, </span><span class="nv">$early_stage</span><span class="s2">, </span><span class="nv">$simulation</span><span class="s2">, </span><span class="nv">$constraint</span><span class="s2">, </span><span class="nv">$save_root_path</span><span class="s2">)&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">SCOOTI</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SCOOTI Settings</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identification-of-metabolic-regulators">Identification of metabolic regulators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flux-prediction">Flux prediction</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="quickstart.html" title="previous chapter">Quick Start</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Chandrasekaran Lab, University of Michigan.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.3.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/userguide.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

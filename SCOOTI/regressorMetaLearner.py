@@ -27,7 +27,7 @@ from statsmodels.stats.multitest import fdrcorrection
 import scipy.stats as ss
 import os
 from tqdm import tqdm
-
+import shap
 
 # regression functions for metabolic modeling results
 from sklearn.linear_model import Lasso, LassoLars, ElasticNet, LarsCV, LassoCV, LassoLarsIC, ElasticNetCV, QuantileRegressor, LinearRegression
@@ -573,7 +573,83 @@ class regression_methods:
 
         return model_res_list
 
+# Modify your existing SuperLearner method to calculate SHAP values
+    def SuperLearnerSHAP(self):
+        # get models
+        model_res_list = self.fit_base_models()
+        
+        # Initialize SHAP explainer storage
+        shap_values_dict = {}
 
+        # fit meta-learner models
+        meta_coef = {}
+        scores_collect = {}
+        subWeights_collect = {}
+        meta_model_collect = []
+        df_res_tmp = pd.DataFrame(self.df_res)
+        # For each response column
+        for i in range(len(df_res_tmp.columns)):
+            # data
+            X, y = self.df_var, df_res_tmp.iloc[:, i]
+            # get out of fold predictions
+            meta_X, meta_y = self.get_out_of_fold_predictions(X, y)
+            # fit the meta model
+            meta_model, scores, submodels = self.fit_meta_model(
+                    meta_X, meta_y, self.learner, learning_rate=self.learning_rate, epo=self.epo
+                    )
+            
+            # Collect coefficients
+            if self.learner == 'L':
+                meta_coef[i] = meta_model.coef_
+            else:
+                meta_coef[i] = meta_model.weights[1:]  # Adaline does not have a coef_ attribute
+            meta_model_collect.append(meta_model)
+            scores_collect[i] = scores
+            subWeights_collect[i] = submodels
+            
+            # SHAP Explainer for each base model and meta-learner
+            shap_explainer = shap.Explainer(meta_model, meta_X)
+            shap_values = shap_explainer(meta_X)
+            shap_values_dict[i] = shap_values  # Store SHAP values
+
+        # Calculate correlations of predicted coefficients based on different folds
+        mean_corrs = []
+        for col in model_res_list[0].columns:
+            submodels = subWeights_collect[col]
+            subWeights = []
+            for submodel in submodels:
+                if self.learner == 'L':
+                    subcoef = submodel.coef_
+                else:
+                    subcoef = submodel.weights[1:]
+                subWeight = np.sum([model_w[col].mul(subcoef[i]).to_numpy() for i, model_w in enumerate(model_res_list)], axis=0)
+                subWeights.append(pd.DataFrame(subWeight))
+            corr = pd.concat(subWeights, axis=1).corr()
+            mean_corr = pd.DataFrame(corr.mean(axis=1))
+            mean_corr.columns = [col]
+            mean_corrs.append(mean_corr)
+
+        mean_corrs = pd.concat(mean_corrs, axis=1)
+
+        self.meta_model = meta_model
+
+        # Calculate the final coefficients by the new weight
+        scores_df = pd.DataFrame(scores_collect)
+        integrate_res = model_res_list[0].copy()
+        for col in model_res_list[0].columns:
+            integrate_res[col] = np.sum([model_w[col].mul(meta_coef[col][i]).to_numpy() for i, model_w in enumerate(model_res_list)], axis=0)
+        model_res_list.append(integrate_res)
+
+        # Replace index with the metabolite name
+        for i in range(len(model_res_list)):
+            model_res_list[i].index = self.df_var.columns
+
+        # Append scores, correlations, and SHAP values
+        model_res_list.append(scores_df)
+        model_res_list.append(mean_corrs)
+        model_res_list.append(shap_values_dict)  # Add SHAP values to the final result
+
+        return model_res_list
 #"""Testing module
 #"""
 #def testing():

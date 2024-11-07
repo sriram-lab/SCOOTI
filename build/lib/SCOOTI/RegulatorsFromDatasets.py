@@ -56,6 +56,37 @@ def update_medium_compassRecon1():
 
 
 
+def scHeartFailure():
+    
+    # single cell embryo path
+    path = '/nfs/turbo/umms-csriram/daweilin/data/GSE183852_humanHeartFailure/GSE183852_Integrated_Counts.csv.gz'
+    usecols = ['gene', 'TWCM-11-103', 'TWCM-13-285']
+    with pd.read_csv(path, chunksize=100) as reader:
+        for chunk in reader:
+            print(chunk)
+            cols = pd.Series(
+                    chunk.columns
+                    ).apply(
+                            lambda x: '_'.join(x.split('_')[:-1])
+                            )
+            cols[0] = 'gene'
+            chunk = chunk[chunk.columns[cols.isin(usecols)]]
+            chunk.head()
+            break
+    
+    fr = findRegulators(path)
+    fr.table_to_10xformat(
+        gene_cols=[],
+        barcode_cols=[],
+        suffix='',
+        sep='\t',
+        transpose=False,
+        chunksize=1000
+    )
+
+    path = '/nfs/turbo/umms-csriram/daweilin/data/GSE183852_humanHeartFailure/GSE183852_Integrated_Counts/barcodes.tsv'
+    df = pd.read_csv(path)
+
 
 def scEmbryoTransitions_sigGenes(
         datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/'
@@ -163,6 +194,14 @@ def scEmbryo_sigGenes(datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/
     fr.get_transition_genes(split_str='~')
     
 
+    up1, dw1 = fr.get_top_last_genes(
+            split_str='_',
+            ratio=0.4,
+            prefix_define=f'scEmbryo',
+            save_files=False,
+            zscores=False,
+            th=1
+            )
 #
 def scEmbryo_transition_expression():
 

@@ -1,8 +1,3 @@
-"""
-regressorDiseaseAnalysis_stackModels.py
-=======================================================
-Analysis of metabolic objectives and fluxes in diseases
-"""
 
 # for ipython
 #%load_ext autoreload
@@ -28,6 +23,146 @@ config.solver = "glpk"
 
 # set up the number of samples
 sample_num = 10
+
+def assign_coef_singleObj(
+        objective_candidates,
+        gem_tmp,
+        objectives,
+        GEM_path,
+        sample_num=1000,
+        rootpath='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/fluxSampling1000/'
+        ):
+    
+    for i, candidate in enumerate(objective_candidates):
+        gem_tmp2 = gem_tmp.copy()
+        pFBA.add_pfba(gem_tmp2, candidate)
+        #gem_tmp.objective = candidate
+        obj_c = np.zeros(len(objectives['metabolites']))
+        obj_c[i] = 1
+        # sampling
+        optgp_samples = sample(gem_tmp2, sample_num, processes=20)
+        rxns = [r.id for r in gem_tmp2.reactions]
+        optgp_samples = pd.DataFrame(
+                optgp_samples,
+                columns=rxns
+                )
+        optgp_samples = optgp_samples.sample(frac=1)
+        optgp_samples['Obj'] = optgp_samples[candidate].to_numpy()
+        optgp_samples.index = np.arange(len(optgp_samples))
+        optgp_samples = optgp_samples.T
+        print(optgp_samples)
+        for col in optgp_samples.columns:
+            # create new folder for each sampled flux models
+            if not os.path.exists(rootpath+f'fs_{col}'):
+                os.makedirs(rootpath+f'fs_{col}')
+            # get metadata
+            out_name = f'model_ct1_obj{i+1}_data1'
+            excelname = processing_metadata(
+                    candidate,#gem_tmp2,
+                    objectives['metabolites'].to_numpy(),
+                    obj_c,
+                    rootpath+f'/fs_{col}/',
+                    GEM_path,
+                    data_path='',
+                    sample_name='',
+                    out_name=out_name,
+                    upsheet='',
+                    dwsheet='',
+                    ctrl=0,
+                    kappa=1,
+                    rho=1,
+                    medium='DMEMF12',
+                    genekoflag=False,
+                    rxnkoflag=False,
+                    media_perturbation=False,
+                    )
+            # save flux data
+            df = pd.DataFrame(optgp_samples[col])
+            df.columns = ['upgene']
+            print(df)
+            df.to_csv(
+                    f'{excelname}_fluxes.csv.gz', compression='gzip'
+                    )
+
+
+
+def assign_coef_multiObj(
+        obj_coef,
+        gem_tmp,
+        objectives,
+        GEM_path,
+        sample_num=1000,
+        rootpath='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/fluxSampling1000/',
+        ):
+    # copy the coefficients
+    obj_df = obj_coef.copy()
+    # rename the objectives to match the reactions in the GEM
+    obj_df.index = pd.Series(obj_df.index).apply(
+        lambda x: x+'_demand' if x!='gh' else 'biomass_objective'
+    )
+    # iterate thru each column of coefficients
+    for col in obj_df.columns:
+        # copy a new metabolic model
+        gem_tmp2 = gem_tmp.copy()
+        # zip the coefficients with the metabolites
+        obj_dict = obj_df[col].to_dict()
+        obj_dict = {
+                gem_tmp2.reactions.get_by_id(k):v for k, v in obj_dict.items()
+                    }
+        # change coefficients of objectives and add pfba
+        pFBA.add_pfba(gem_tmp2, obj_dict)
+        # record the coefficients of objetives
+        obj_c = objectives['metabolites'].apply(
+                lambda x: 0 if x not in obj_coef.index.to_numpy() else obj_coef[col].to_dict()[x]
+                )
+        optgp_samples = sample(gem_tmp2, sample_num, processes=20)
+        rxns = [r.id for r in gem_tmp2.reactions]
+        optgp_samples = pd.DataFrame(
+                optgp_samples,
+                columns=rxns
+                )
+        optgp_samples = optgp_samples.sample(frac=1)
+        #print(optgp_samples)
+        optgp_samples['Obj'] = optgp_samples[
+                obj_df[obj_df[col]>0].index.to_numpy()
+                ].sum(axis=1).to_numpy()
+        #print(optgp_samples['Obj'])
+        optgp_samples.index = np.arange(len(optgp_samples))
+        optgp_samples = optgp_samples.T
+        print(optgp_samples)
+        for s in optgp_samples.columns:
+            # create new folder for each sampled flux models
+            if not os.path.exists(rootpath+f'fs_{col}'):
+                os.makedirs(rootpath+f'fs_{col}')
+            # get metadata
+            out_name = f'model_ct1_obj{s}_data1'
+            excelname = processing_metadata(
+                    obj_df[obj_df[col]>0].index.to_numpy()[0],#gem_tmp2,
+                    objectives['metabolites'].to_numpy(),
+                    obj_c,
+                    rootpath+f'/fs_{col}/',
+                    GEM_path,
+                    data_path='',
+                    sample_name='',
+                    out_name=out_name,
+                    upsheet='',
+                    dwsheet='',
+                    ctrl=0,
+                    kappa=1,
+                    rho=1,
+                    medium='DMEMF12',
+                    genekoflag=False,
+                    rxnkoflag=False,
+                    media_perturbation=False,
+                    )
+            # save flux data
+            df = pd.DataFrame(optgp_samples[s])
+            df.columns = ['upgene']
+            print(df)
+            df.to_csv(
+                    f'{excelname}_fluxes.csv.gz',
+                    compression='gzip'
+                    )
 
 
 def processing_metadata(
@@ -91,13 +226,10 @@ def processing_metadata(
     return excelname
     
 
-
-
-
-
 def objective_setting_functionPy(
         root_path='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/fluxSampling/',
-        GEM_path='/home/daweilin/StemCell/Project_mESC_JinZhang/SCOOTI/SCOOTI/metabolicModel/GEMs/Shen2019.mat'
+        GEM_path='/home/daweilin/StemCell/Project_mESC_JinZhang/SCOOTI/SCOOTI/metabolicModel/GEMs/Shen2019.mat',
+        coef_path=''
         ):
 
     from cobra import Model, Reaction, Metabolite
@@ -121,10 +253,11 @@ def objective_setting_functionPy(
     objectives = objectives.iloc[1:,:] # testing
     compartments = ['c', 'm', 'n', 'x', 'r', 'g', 'l']
 
-
     # sampled fluxes
     gem_tmp = gem.copy()
     objective_candidates = []
+    
+
     for i, obj in enumerate(objectives['metabolites']):
         # attributes for the metadata
         #obj_c = np.zeros(len(objectives['metabolites']))
@@ -153,60 +286,71 @@ def objective_setting_functionPy(
             print(len(gem_tmp.reactions))
             #print(gem_tmp.reactions.get_by_id(f'{obj}_demand'))
     
-        #print(gem.objective.expression)
-    for i, candidate in enumerate(objective_candidates):
-        gem_tmp2 = gem_tmp.copy()
-        pFBA.add_pfba(gem_tmp2, candidate)
-        #gem_tmp.objective = candidate
-        obj_c = np.zeros(len(objectives['metabolites']))
-        obj_c[i] = 1
-        #optgp = cobra.sampling.OptGPSampler(gem_tmp2, seed=1)
-        #optgp.n_samples = 100
-        #optgp_samples = optgp.sample(sample_num)
-        optgp_samples = sample(gem_tmp2, 1000, processes=30)
-        rxns = [r.id for r in gem_tmp2.reactions]
-        optgp_samples = pd.DataFrame(
-                optgp_samples,
-                columns=rxns
-                )
-        optgp_samples = optgp_samples.sample(frac=1)
-        optgp_samples['Obj'] = optgp_samples[candidate].to_numpy()
-        optgp_samples.index = np.arange(len(optgp_samples))
-        optgp_samples = optgp_samples.T
-        print(optgp_samples)
-        for col in optgp_samples.columns:
-            # create new folder for each sampled flux models
-            rootpath = '/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/fluxSampling1000/'
-            if not os.path.exists(rootpath+f'fs_{col}'):
-                os.makedirs(rootpath+f'fs_{col}')
-            # get metadata
-            out_name = f'model_ct1_obj{i+1}_data1'
-            excelname = processing_metadata(
-                    candidate,#gem_tmp2,
-                    objectives['metabolites'].to_numpy(),
-                    obj_c,
-                    f'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/fluxSampling1000/fs_{col}/',
-                    GEM_path,
-                    data_path='',
-                    sample_name='',
-                    out_name=out_name,
-                    upsheet='',
-                    dwsheet='',
-                    ctrl=0,
-                    kappa=1,
-                    rho=1,
-                    medium='DMEMF12',
-                    genekoflag=False,
-                    rxnkoflag=False,
-                    media_perturbation=False,
-                    )
-            # save flux data
-            df = pd.DataFrame(optgp_samples[col])
-            df.columns = ['upgene']
-            print(df)
-            df.to_csv(
-                    f'{excelname}_fluxes.csv.gz', compression='gzip'
-                    )
+    # read coefficients
+    obj_coef = pd.read_csv('/nfs/turbo/umms-csriram/daweilin/fluxPrediction/RandomObjCoef/synthetic_data/samplingObjCoef_twoObj.csv', index_col=0)
+
+    # generate multi-objective fluxes
+    assign_coef_multiObj(
+        obj_coef,
+        gem_tmp,
+        objectives,
+        GEM_path,
+        sample_num=100,
+        rootpath='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/multiObj_sampling/'
+        )
+    #for i, candidate in enumerate(objective_candidates):
+    #    gem_tmp2 = gem_tmp.copy()
+    #    pFBA.add_pfba(gem_tmp2, candidate)
+    #    #gem_tmp.objective = candidate
+    #    obj_c = np.zeros(len(objectives['metabolites']))
+    #    obj_c[i] = 1
+    #    #optgp = cobra.sampling.OptGPSampler(gem_tmp2, seed=1)
+    #    #optgp.n_samples = 100
+    #    #optgp_samples = optgp.sample(sample_num)
+    #    optgp_samples = sample(gem_tmp2, 1000, processes=30)
+    #    rxns = [r.id for r in gem_tmp2.reactions]
+    #    optgp_samples = pd.DataFrame(
+    #            optgp_samples,
+    #            columns=rxns
+    #            )
+    #    optgp_samples = optgp_samples.sample(frac=1)
+    #    optgp_samples['Obj'] = optgp_samples[candidate].to_numpy()
+    #    optgp_samples.index = np.arange(len(optgp_samples))
+    #    optgp_samples = optgp_samples.T
+    #    print(optgp_samples)
+    #    for col in optgp_samples.columns:
+    #        # create new folder for each sampled flux models
+    #        rootpath = '/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/fluxSampling1000/'
+    #        if not os.path.exists(rootpath+f'fs_{col}'):
+    #            os.makedirs(rootpath+f'fs_{col}')
+    #        # get metadata
+    #        out_name = f'model_ct1_obj{i+1}_data1'
+    #        excelname = processing_metadata(
+    #                candidate,#gem_tmp2,
+    #                objectives['metabolites'].to_numpy(),
+    #                obj_c,
+    #                f'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/fluxSampling1000/fs_{col}/',
+    #                GEM_path,
+    #                data_path='',
+    #                sample_name='',
+    #                out_name=out_name,
+    #                upsheet='',
+    #                dwsheet='',
+    #                ctrl=0,
+    #                kappa=1,
+    #                rho=1,
+    #                medium='DMEMF12',
+    #                genekoflag=False,
+    #                rxnkoflag=False,
+    #                media_perturbation=False,
+    #                )
+    #        # save flux data
+    #        df = pd.DataFrame(optgp_samples[col])
+    #        df.columns = ['upgene']
+    #        print(df)
+    #        df.to_csv(
+    #                f'{excelname}_fluxes.csv.gz', compression='gzip'
+    #                )
 
     
 if __name__=="__main__":

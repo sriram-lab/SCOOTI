@@ -174,7 +174,9 @@ class findRegulators:
             suffix='',
             sep='\t',
             transpose=False,
-            chunksize=1000
+            chunksize=1000,
+            column_slice=0,
+            column_slice_func=None
             ):
         
         fpath = self.folder_path
@@ -194,7 +196,13 @@ class findRegulators:
                     df_gen = pd.read_csv(fpath+file, sep=sep, chunksize=chunksize)
                     mtx_collect = []
                     gene_collect = []
-                    for df in tqdm(df_gen): 
+                    print('Iterate thru the object')
+                    print('column_slice', column_slice)
+                    for df in tqdm(df_gen):
+                        print(df)
+                        if column_slice:
+                            df = column_slice_func(df)
+                            print(df.shape)
                         if transpose:
                             df = df.T
                         genes = df.iloc[:, 0]

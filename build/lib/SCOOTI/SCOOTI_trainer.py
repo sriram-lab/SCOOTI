@@ -61,7 +61,7 @@ parser.add_argument(
         "--conNorm", choices=['T', 'F'], default='F', help="Normalization"
         )
 parser.add_argument("--medium", default='', help="Medium name, '', KSOM, or DMEMF12")
-parser.add_argument("--method", default='cfr', help="Method name; CFR, DFA, COMPASS, or INIT")
+parser.add_argument("--method", default='cfr', help="Method name; model, CFR, DFA, COMPASS, or INIT")
 parser.add_argument("--model", default='recon1', help="Name of the metabolic model")
 parser.add_argument(
         "--inputType", default='flux', help="Type of inputs; flux, pageRank, or stack"

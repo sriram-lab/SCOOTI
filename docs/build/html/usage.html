@@ -37,9 +37,21 @@
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">¶</a></h1>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h2>
-<p>To use Lumache, first install it using pip:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(.venv)</span> <span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>lumache
+<p>To use SCOOTI, first install it using pip:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(venv)</span> <span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/dwgoblue/SCOOTI.git<span class="w"> </span>--upgrade
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Cobratoolbox is required for SCOOTI to model contrained and unconstrained models. The instruction of cobratoolbox and its installation can be found <a class="reference external" href="https://opencobra.github.io/cobratoolbox/stable/installation.html">https://opencobra.github.io/cobratoolbox/stable/installation.html</a>. In addition, optimization solvers are required for cobratoolbox. We recommend Gurobi solver for the linear version of iMAT and MOOMIN, and CPLEX 20.0.1 for COMPASS.</p>
+</div>
+</section>
+<section id="modeling-metabolic-states">
+<h2>Modeling Metabolic States<a class="headerlink" href="#modeling-metabolic-states" title="Permalink to this heading">¶</a></h2>
+<p>Constrained and unconstrained models are required for SCOOTI to infer metabolic objectives. In this section, we will demonstrate how to use a MATLAB function <cite>multiObj_CBM</cite> to generate these two types of models in bash files.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Cobratoolbox is required for SCOOTI to model contrained and unconstrained models. The instruction of cobratoolbox and its installation can be found <a class="reference external" href="https://opencobra.github.io/cobratoolbox/stable/installation.html">https://opencobra.github.io/cobratoolbox/stable/installation.html</a>. In addition, optimization solvers are required for cobratoolbox. We recommend Gurobi solver for the linear version of iMAT and MOOMIN, and CPLEX 20.0.1 for COMPASS.</p>
 </div>
 </section>
 </section>
@@ -61,6 +73,11 @@
 
 
 <h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="userguide.html">Quick Start</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>

@@ -13,8 +13,8 @@ import seaborn as sns
 import cobra
 import sys
 from SCOOTI.regressionAnalyzer import *
-from SCOOTI.stat_tests import *
-from SCOOTI.MatplotProp import CanvasStyle, PltProps, Significance
+from SCOOTI.GeneralMethods.stat_tests import *
+from SCOOTI.GeneralMethods.MatplotProp import CanvasStyle, PltProps, Significance
 PltProps()
 import warnings; warnings.simplefilter('ignore')
 import scipy.stats as ss
@@ -118,6 +118,19 @@ class regressorTraining:
                     DFA_k=dkappa_arr,
                     stack_model=stack_model
                     )
+        elif method=='model':
+            con_res = load_multiObj_models(
+                    root_path+'/',
+                    medium='DMEMF12', return_variables=True, norm=False,
+                    CFR_paraScan=True, DFA_paraScan=False, randomScan=False,
+                    topology_use=False, stack_model=False,
+                    file_suffix='_fluxes.csv.gz',
+                    ind_labels=True,
+                    biomass_reaction_name='biomass_objective',
+                    CFR_k=[10, 1, 0.1, 0.01, 0.001],
+                    CFR_r=[10, 1, 0.1, 0.01, 0.001], 
+                    DFA_k=[10, 1, 0.1, 0.01, 0.001],
+                    )
         else:
             print(geneKO)
             if geneKO:
@@ -137,6 +150,7 @@ class regressorTraining:
                         )
                 con_res = con_res[con_res.index!='gh_rxn']
             else:
+                print('Ordinary constrained models')
                 con_res = constrained_models(
                         root_path+'/', 
                         CFR_paraScan=True,
@@ -445,6 +459,7 @@ class constrained_model_sampling_regressorTraining(regressorTraining):
             save_root_path,
             kappa_arr=[10, 1, 0.1, 0.01, 0.001],
             rho_arr=[10, 1, 0.1, 0.01, 0.001],
+            dkappa_arr=[10, 1, 0.1, 0.01, 0.001],
             expName='regression',
             uncon_norm=True,
             con_norm=False,
@@ -468,6 +483,8 @@ class constrained_model_sampling_regressorTraining(regressorTraining):
                 ]
         # running regression
         for constrained_models_path in constrained_models_paths:
+
+            print(unconstrained_models_path)
             new_expName = constrained_models_path.split('/')[-2]
             super().__init__(
                     unconstrained_models_path,
