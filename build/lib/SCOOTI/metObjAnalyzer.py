@@ -220,6 +220,7 @@ class metObjAnalyzer:
             The data table of flux predictions is actually the `uncon_res` without exchange reactions.
 
         """
+
         medium = self.medium
         # import unconstrained models (without sampling)
         uncon_res = unconstrained_models(self.uncon_model_path, norm=True, medium=f'{medium}')
@@ -293,6 +294,7 @@ class metObjAnalyzer:
             returns self 
 
         """
+
         # output flux models
         if len(self.flux_df)>0:
             self.flux_df.to_csv(f'{self.save_root_path}/{self.prefix}_fluxPrediction_published.csv')
@@ -328,6 +330,7 @@ class metObjAnalyzer:
             returns self 
 
         """
+
         # get specific cells
         remain_inds = [(labels==label) for label in sel_label_arr]
         remain_inds = sum(remain_inds)
@@ -352,6 +355,9 @@ class metObjAnalyzer:
 
     @staticmethod
     def label_setup(df, label_func):
+        """
+        """
+
         # get labels
         return label_func(df)
 
@@ -377,6 +383,7 @@ class metObjAnalyzer:
         self : object
             Returns self.
         """
+
         # collect models
         fdfs = {}
         for k in self.flux_paths.keys():
@@ -446,6 +453,7 @@ class metObjAnalyzer:
             It is only provided if `self.sel_para` is not given in the class attributes.
             A .csv file with the evaluations is output at the same time.
         """
+
         # Evaluation of constrained models w/o objectives
         # clustering methods
         cf = clustering_func(
@@ -523,6 +531,7 @@ class metObjAnalyzer:
         The function will update the evaluation score for clustering in class attribute
 
         """
+
         # iterate thru all the parameters
         for kappa in kappa_arr:
             for rho in rho_arr:
@@ -534,6 +543,9 @@ class metObjAnalyzer:
         self.save_clustering_result(extra_suffix)
 
     def save_clustering_result(self, extra_suffix=''):
+        """
+        """
+
         # save results
         print('Save the clustering evaluation...')
         self.flux_scores.to_csv(
@@ -562,6 +574,7 @@ class metObjAnalyzer:
         self : object
             Returns self.
         """
+
         # get fluxes of multi-objective models with constraints
         coefs = {}
         for k in self.coef_paths.keys():
@@ -618,6 +631,7 @@ class metObjAnalyzer:
         -------
         None
         """
+
         # Separate dataframes by parameters
         coef_sel = self.coef_df.copy()
         coef_sel = coef_sel[
@@ -707,6 +721,7 @@ class metObjAnalyzer:
         -----
         The figures of the analysis will be saved in the path given by `self.save_root_path`.
         """
+
         # get unique column names
         cols = np.unique(self.labels)
         # +++++++++++++++++++++++++++++++++
@@ -1039,6 +1054,7 @@ class metObjAnalyzer:
         self : object
             Returns self.
         """
+
         # get input data
         input_df = self.coef_df if input_type=='coef' else self.wobjs
         # get unique column names
@@ -1375,6 +1391,7 @@ class metObjAnalyzer:
             a table of evaluation results. Only provided if `validation` is set true.
 
         """
+
         # get flux reconstruction
         wrxns, wobjs = flux_reconstruction(
                 self.coef_df,
@@ -1495,6 +1512,7 @@ class metObjAnalyzer:
         >>>         save_root_path='./result_figs/'
         >>>         )
         """
+
         # umap clustering for cluster separation
         cf = clustering_func(
                     self.coef_df.div(self.coef_df.sum(axis=0), axis=1),

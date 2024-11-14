@@ -2401,7 +2401,7 @@ def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cuto
 
         # mark yticklabels with colors by foldchange thresholds
         #extra_c = bp_df['metabolites'].apply(lambda x: 'r' if x in special_labels else 'k')
-        ticklabels = g.axes.get_xticklabels()
+        ticklabels = g.get_xticklabels()
         for i, tick_label in enumerate(ticklabels):
             print(tick_label.get_text())
             extra_c = 'r' if tick_label.get_text() in special_labels else 'k'

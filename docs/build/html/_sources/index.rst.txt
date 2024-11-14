@@ -6,21 +6,14 @@
 Welcome to SCOOTI's documentation!
 ==================================
 
-.. automodule:: SCOOTI.metObjAnalyzer
-    :members:
-
-.. automodule:: SCOOTI.regressionAnalyzer
-    :members:
-
-.. automodule:: SCOOTI.regressorTraining
-    :members:
-
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Contents
 
+   regressionAnalyzer
+   metObjAnalyzer
    quickstart
-   userguide
+   scootisettings
    advancedusage
 
 Indices and tables

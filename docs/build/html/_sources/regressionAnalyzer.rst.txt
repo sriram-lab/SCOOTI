@@ -1,0 +1,9 @@
+
+Welcome to the documentation of metabolic objective analysis
+============================================================
+
+
+Core Analysis Module
+--------------------
+.. automodule:: SCOOTI.regressionAnalyzer
+    :members:

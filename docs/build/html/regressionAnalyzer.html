@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Welcome to SCOOTI’s documentation! &#8212; SCOOTI 0.1 documentation</title>
+    <title>Welcome to the documentation of metabolic objective analysis &#8212; SCOOTI 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -17,7 +17,8 @@
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Quick Start" href="quickstart.html" />
+    <link rel="next" title="Welcome to the documentation of metabolic objective analysis" href="metObjAnalyzer.html" />
+    <link rel="prev" title="Welcome to SCOOTI’s documentation!" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -34,10 +35,12 @@
 
           <div class="body" role="main">
             
-  <section id="module-SCOOTI.regressionAnalyzer">
-<span id="welcome-to-scooti-s-documentation"></span><h1>Welcome to SCOOTI’s documentation!<a class="headerlink" href="#module-SCOOTI.regressionAnalyzer" title="Permalink to this heading">¶</a></h1>
+  <section id="welcome-to-the-documentation-of-metabolic-objective-analysis">
+<h1>Welcome to the documentation of metabolic objective analysis<a class="headerlink" href="#welcome-to-the-documentation-of-metabolic-objective-analysis" title="Permalink to this heading">¶</a></h1>
+<section id="module-SCOOTI.regressionAnalyzer">
+<span id="core-analysis-module"></span><h2>Core Analysis Module<a class="headerlink" href="#module-SCOOTI.regressionAnalyzer" title="Permalink to this heading">¶</a></h2>
 <section id="regressionanalyzer-py">
-<h2>regressionAnalyzer.py<a class="headerlink" href="#regressionanalyzer-py" title="Permalink to this heading">¶</a></h2>
+<h3>regressionAnalyzer.py<a class="headerlink" href="#regressionanalyzer-py" title="Permalink to this heading">¶</a></h3>
 <p>A collection of methods for analysis of metabolic objectives and flux predictions</p>
 </section>
 <dl class="py function">
@@ -97,7 +100,7 @@ c/Sigma(c) if norm is set true</p>
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.GESA_analyais">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">GESA_analyais</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pc_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reclusters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gesa_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'trophectoderm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cellTypes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['1C2C',</span> <span class="pre">'2CBC']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheetnames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['2C',</span> <span class="pre">'BC']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'UMAP'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pluri_gene_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/daweilin/StemCell/Project_mESC_JinZhang/mcdb/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigGenes_root_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/old_sigGenes/'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_root_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/daweilin/StemCell/Project_mESC_JinZhang/regressor_results_new/'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.GESA_analyais" title="Permalink to this definition">¶</a></dt>
 <dd><section id="description">
-<h2>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#description" title="Permalink to this heading">¶</a></h3>
 <p>1. Determine if significant genes in each data point can be categoried into
 a certain GESA function by hypergeometic tests aka functional analysis
 2. Dimension reudction plots overlaies p-values of functional analysis
@@ -247,7 +250,7 @@ Motevalli Soumehsaraei A Benyamin; Barnard. Archetypal Analysis Package. v1. CSI
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.biomass_gene_essentiality">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">biomass_gene_essentiality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ko_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_para</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paras</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biomass_reaction_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIOMASS_maintenance'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'zscore'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Recon3D'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geneID_symbol_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.biomass_gene_essentiality" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id1">
-<h2>Description<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p>Calculate the changes of biomass objective values with different KO</p></li>
 <li><p>Identify genes resulting in significantly changes with diff criteria</p></li>
@@ -294,7 +297,7 @@ Motevalli Soumehsaraei A Benyamin; Barnard. Archetypal Analysis Package. v1. CSI
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.boxplot_fig">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">boxplot_fig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mets_category</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_ordering</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col3</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">portion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plottype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boxplot'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Normalized</span> <span class="pre">coefficients'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_root_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_ub</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.boxplot_fig" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id2">
-<h2>Description<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Identifies significant metabolites among up to three different samples</p></li>
 <li><p>Calculates based on p-values and fold changes</p></li>
@@ -399,7 +402,7 @@ Motevalli Soumehsaraei A Benyamin; Barnard. Archetypal Analysis Package. v1. CSI
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.clustering_func">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">clustering_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pca_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mets_category</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.clustering_func" title="Permalink to this definition">¶</a></dt>
 <dd><section id="parameter">
-<h2>Parameter<a class="headerlink" href="#parameter" title="Permalink to this heading">¶</a></h2>
+<h3>Parameter<a class="headerlink" href="#parameter" title="Permalink to this heading">¶</a></h3>
 <p>pca_df (pandas dataframe): genes/reactions/objectives by cells/tissues IDs</p>
 <dl class="field-list simple">
 <dt class="field-odd">returns<span class="colon">:</span></dt>
@@ -732,7 +735,7 @@ Note that the coefficients of h2o is ignored by this function.</p>
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.constrained_models">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">constrained_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CFR_paraScan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DFA_paraScan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomScan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_fluxes.csv.gz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_path_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biomass_reaction_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'biomass_objective'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CFR_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[10,</span> <span class="pre">1,</span> <span class="pre">0.1,</span> <span class="pre">0.01,</span> <span class="pre">0.001]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CFR_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[10,</span> <span class="pre">1,</span> <span class="pre">0.1,</span> <span class="pre">0.01,</span> <span class="pre">0.001]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DFA_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[10,</span> <span class="pre">1,</span> <span class="pre">0.1,</span> <span class="pre">0.01,</span> <span class="pre">0.001]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.constrained_models" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id3">
-<h2>Description<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
 <p>Organize constrained modeling of fluxes without objectives</p>
 <dl class="field-list simple">
 <dt class="field-odd">param root_path (string)<span class="colon">:</span></dt>
@@ -813,7 +816,7 @@ Note that the coefficients of h2o is ignored by this function.</p>
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.geneID_symbol_map">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">geneID_symbol_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Recon3D'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.geneID_symbol_map" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id4">
-<h2>Description<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
 <p>Read .json files and organize the res into a dictionary with gene IDs as keys and gene symbols as values</p>
 <dl class="field-list simple">
 <dt class="field-odd">param path (str)<span class="colon">:</span></dt>
@@ -898,7 +901,7 @@ arr2: array with only 1, 0, -1</p>
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.load_multiObj_models">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">load_multiObj_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medium</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'KSOM'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CFR_paraScan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DFA_paraScan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">randomScan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology_use</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'_fluxes.csv.gz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biomass_reaction_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'biomass_objective'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CFR_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[10,</span> <span class="pre">1,</span> <span class="pre">0.1,</span> <span class="pre">0.01,</span> <span class="pre">0.001]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CFR_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[10,</span> <span class="pre">1,</span> <span class="pre">0.1,</span> <span class="pre">0.01,</span> <span class="pre">0.001]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DFA_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[10,</span> <span class="pre">1,</span> <span class="pre">0.1,</span> <span class="pre">0.01,</span> <span class="pre">0.001]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.load_multiObj_models" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id5">
-<h2>Description<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
 <p>Organize any types of models</p>
 <dl class="field-list simple">
 <dt class="field-odd">param root_path (string)<span class="colon">:</span></dt>
@@ -980,7 +983,7 @@ arr2: array with only 1, 0, -1</p>
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.logVariance_allocation">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">logVariance_allocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampleName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataType</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Objective'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/daweilin/StemCell/cancer_model.mat'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.logVariance_allocation" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id6">
-<h2>Parameter<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
+<h3>Parameter<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
 <p>flux_df (pandas.DataFrame): table of reaction fluxes
 obj_df (pandas.DataFrame): table of objective coefficients
 sampleName (str): name of the sample which will be used for the prefix of filenames (e.g. scEmbryo)
@@ -1027,7 +1030,7 @@ replace_dict (dictionary): e.g. {‘1Cto2cell’:’sc1C2C’, ‘2Cto32cell’:
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.metObj_gene_essentiality">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">metObj_gene_essentiality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef_paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sel_para</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'zscore'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Recon3D'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geneID_symbol_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.metObj_gene_essentiality" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id7">
-<h2>Description<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
 <p>Read coefficients of WT and KO strains and identify essential genes</p>
 <dl class="field-list simple">
 <dt class="field-odd">param coef_paths (str)<span class="colon">:</span></dt>
@@ -1120,7 +1123,7 @@ c/Sigma(c) if norm is set true</p>
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.read_mat_model">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">read_mat_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/daweilin/StemCell/cancer_model.mat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_rxnGeneMat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_transport</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.read_mat_model" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id8">
-<h2>Description<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p>read genome-scale metabolic network models (GEMs) from .mat file</p></li>
 <li><p>reorganize the model and save into a python dictionary</p></li>
@@ -1159,7 +1162,7 @@ additional two columns for reactions and subsystems</p></li>
 <dt class="sig sig-object py" id="SCOOTI.regressionAnalyzer.unconstrained_models">
 <span class="sig-prename descclassname"><span class="pre">SCOOTI.regressionAnalyzer.</span></span><span class="sig-name descname"><span class="pre">unconstrained_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_variables</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medium</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DMEMF12'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">biomass_reaction_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'biomass_objective'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SCOOTI.regressionAnalyzer.unconstrained_models" title="Permalink to this definition">¶</a></dt>
 <dd><section id="id9">
-<h2>Description<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h2>
+<h3>Description<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
 <p>Unconstrained modeling of fluxes with different objectives</p>
 <dl class="field-list simple">
 <dt class="field-odd">param root_path (string)<span class="colon">:</span></dt>
@@ -1192,41 +1195,7 @@ additional two columns for reactions and subsystems</p></li>
 </section>
 </dd></dl>
 
-<div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#system-requirements">System Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#unconstrained-models-with-single-objectives">Unconstrained Models with single objectives</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#omics-based-constrained-models">Omics-based Constrained Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#inference-of-metabolic-objectives">Inference of Metabolic Objectives</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#metabolic-objective-analysis">Metabolic Objective Analysis</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="scootisettings.html">SCOOTI Settings</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="scootisettings.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scootisettings.html#identification-of-metabolic-regulators">Identification of metabolic regulators</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scootisettings.html#flux-prediction">Flux prediction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="scootisettings.html#objective-inference">Objective Inference</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="advancedusage.html">Advanced usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="advancedusage.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="advancedusage.html#identifying-up-and-down-regulated-genes">Identifying up- and down-regulated genes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="advancedusage.html#consider-more-metabolites-as-single-objectives">Consider more metabolites as single objectives</a></li>
-</ul>
-</li>
-</ul>
-</div>
 </section>
-<section id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
-<ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
-</ul>
 </section>
 
 
@@ -1236,7 +1205,7 @@ additional two columns for reactions and subsystems</p></li>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">SCOOTI</a></h1>
+<h1 class="logo"><a href="index.html">SCOOTI</a></h1>
 
 
 
@@ -1246,8 +1215,13 @@ additional two columns for reactions and subsystems</p></li>
 
 
 <h3>Navigation</h3>
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Welcome to the documentation of metabolic objective analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-SCOOTI.regressionAnalyzer">Core Analysis Module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="metObjAnalyzer.html">Welcome to the documentation of metabolic objective analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scootisettings.html">SCOOTI Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advancedusage.html">Advanced usage</a></li>
@@ -1256,8 +1230,9 @@ additional two columns for reactions and subsystems</p></li>
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
-  <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="quickstart.html" title="next chapter">Quick Start</a></li>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to SCOOTI’s documentation!</a></li>
+      <li>Next: <a href="metObjAnalyzer.html" title="next chapter">Welcome to the documentation of metabolic objective analysis</a></li>
   </ul></li>
 </ul>
 </div>
@@ -1291,7 +1266,7 @@ additional two columns for reactions and subsystems</p></li>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
-      <a href="_sources/index.rst.txt"
+      <a href="_sources/regressionAnalyzer.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

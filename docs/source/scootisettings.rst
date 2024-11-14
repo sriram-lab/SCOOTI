@@ -83,7 +83,7 @@ Input settings
 **************
 
 *SCOOTI_trainer.py calls regressoirTraining.py to run meta-learner regression with unconstrained models as variables and constrained models as outcomes to infer metabolic objectives.*
-*This code is capable of inferring metabolic objectives with linear regression or ADALINE neuron as the meta-learner.*
+*This code is capable of inferring metabolic objectives with linear regressior or ADALINE neuron as the meta-learner.*
 
 **Inputs settings**
 

@@ -17,6 +17,8 @@
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SCOOTI Settings" href="scootisettings.html" />
+    <link rel="prev" title="Welcome to SCOOTI’s documentation!" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -98,7 +100,7 @@ where <strong>ATP</strong>, <strong>NADPH</strong>, <strong>GSH</strong>, and <s
 </section>
 <section id="unconstrained-models-with-single-objectives">
 <h2>Unconstrained Models with single objectives<a class="headerlink" href="#unconstrained-models-with-single-objectives" title="Permalink to this heading">¶</a></h2>
-<p>Unconstrained models optimized the demand reactions of single metabolites across different compartments. For example, <code class="docutils literal notranslate"><span class="pre">atp[c]+atp[n]+atp[m]--&gt;</span></code>. This represents aare predicted metabolic fluxes with respect to transcriptomics data. This reflects the control of the metabolic genes. Here, we show the example to generate constrained models for proliferative and quiescent states in a bash file.</p>
+<p>Unconstrained models optimized the demand reactions of single metabolites across different compartments. For example, <code class="docutils literal notranslate"><span class="pre">atp[c]+atp[n]+atp[m]--&gt;</span></code> is one of the single objective functions. Optimizing this function is equivalent to maximizing the production of ATP. The bash script below shows the example to generate 52 unconstrained models which optimize 52 different single metabolites recorded in the csv file.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 <span class="c1"># input settings</span>
 <span class="c1"># path to access your matlab-version cobratoolbox</span>
@@ -109,38 +111,15 @@ where <strong>ATP</strong>, <strong>NADPH</strong>, <strong>GSH</strong>, and <s
 <span class="nv">model_name</span><span class="o">=</span><span class="s1">&#39;Recon1&#39;</span>
 <span class="c1"># leave it blank if no user-defined objectives</span>
 <span class="nv">obj_candidate_list_file</span><span class="o">=</span><span class="s1">&#39;./obj52_metabolites_recon1.csv&#39;</span>
-<span class="c1"># objective values</span>
-<span class="nv">input_obj_tb</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
-
-<span class="c1"># parameter settings</span>
-<span class="nv">DFA_kappa</span><span class="o">=</span>-1
-<span class="nv">CFR_kappa</span><span class="o">=</span><span class="m">0</span>.1
-<span class="nv">CFR_rho</span><span class="o">=</span><span class="m">10</span>
-<span class="nv">paraLen</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># how many kappa/rho used for scanning</span>
-<span class="nv">random_para</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool, 1 to enable random sampling</span>
-<span class="nv">init_objective</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># 1 for none, 2 for biomass objective</span>
-<span class="nv">genekoflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
-<span class="nv">rxnkoflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
-<span class="nv">FVAflag</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># bool</span>
-<span class="nv">pfba</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># 0 for fba and 1 for pfba (minimize sum of fluxes)</span>
-<span class="nv">medium_perturbation</span><span class="o">=</span><span class="m">0</span><span class="w"> </span><span class="c1"># 1 for depletion or excess of metabolites in medium</span>
-<span class="nv">pairwise_CFR_model</span><span class="o">=</span><span class="m">0</span>
-<span class="nv">algorithm</span><span class="o">=</span><span class="s1">&#39;iMAT&#39;</span>
 
 <span class="c1"># path to access the significant genes data</span>
 <span class="nv">data_dir</span><span class="o">=</span><span class="s1">&#39;./sigGenes/prolif_qui/&#39;</span>
 <span class="nv">prefix_name</span><span class="o">=</span><span class="s1">&#39;model&#39;</span><span class="w"> </span><span class="c1"># name of the experiment pls set to &#39;model&#39; for unconstraint models</span>
 <span class="nv">medium</span><span class="o">=</span><span class="s1">&#39;DMEMF12&#39;</span><span class="w"> </span><span class="c1"># KSOM for embryos and DMEMF12 for cell culture</span>
-<span class="nv">late_stage</span><span class="o">=</span><span class="s1">&#39;upgenes&#39;</span><span class="w"> </span><span class="c1"># suffix of the file names of significant up-genes</span>
-<span class="nv">early_stage</span><span class="o">=</span><span class="s1">&#39;dwgenes&#39;</span><span class="w"> </span><span class="c1"># suffix of the file names of significant down-genes</span>
-<span class="nv">simulation</span><span class="o">=</span><span class="s1">&#39;CFR&#39;</span><span class="w"> </span><span class="c1"># CFR for transcriptomics and proteomics; DFA for metabolomics</span>
-<span class="nv">constraint</span><span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="c1"># apply constraints to the model</span>
 <span class="nv">save_root_path</span><span class="o">=</span><span class="s1">&#39;./fluxPrediction/unconstrained_models/pfba/&#39;</span><span class="w"> </span><span class="c1"># path to save predicted fluxes</span>
-<span class="nv">CFR_model_path</span><span class="o">=</span><span class="s1">&#39;&#39;</span>
 
-
-<span class="nv">run</span><span class="o">=</span><span class="m">1</span>
-matlab<span class="w"> </span>-nosplash<span class="w"> </span>-noFigureWindows<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;multiObj_CBM(</span><span class="nv">$run</span><span class="s2">, </span><span class="nv">$DFA_kappa</span><span class="s2">, </span><span class="nv">$CFR_kappa</span><span class="s2">, </span><span class="nv">$CFR_rho</span><span class="s2">, </span><span class="nv">$COBRA_path</span><span class="s2">,</span><span class="nv">$GEM_path</span><span class="s2">, </span><span class="nv">$model_name</span><span class="s2">, </span><span class="nv">$obj_candidate_list_file</span><span class="s2">, </span><span class="nv">$input_obj_tb</span><span class="s2">, </span><span class="nv">$paraLen</span><span class="s2">, </span><span class="nv">$random_para</span><span class="s2">, </span><span class="nv">$init_objective</span><span class="s2">, </span><span class="nv">$genekoflag</span><span class="s2">, </span><span class="nv">$rxnkoflag</span><span class="s2">, </span><span class="nv">$FVAflag</span><span class="s2">, </span><span class="nv">$pfba</span><span class="s2">, </span><span class="nv">$medium_perturbation</span><span class="s2">, </span><span class="nv">$data_dir</span><span class="s2">, </span><span class="nv">$prefix_name</span><span class="s2">, </span><span class="nv">$medium</span><span class="s2">, </span><span class="nv">$late_stage</span><span class="s2">, </span><span class="nv">$early_stage</span><span class="s2">, </span><span class="nv">$simulation</span><span class="s2">, </span><span class="nv">$constraint</span><span class="s2">, </span><span class="nv">$save_root_path</span><span class="s2">)&quot;</span>
+<span class="c1"># start the simulation of flux predictions</span>
+matlab<span class="w"> </span>-nosplash<span class="w"> </span>-noFigureWindows<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;multiObj_CBM(~, </span><span class="nv">$COBRA_path</span><span class="s2">, </span><span class="nv">$GEM_path</span><span class="s2">, </span><span class="nv">$model_name</span><span class="s2">, </span><span class="nv">$obj_candidate_list_file</span><span class="s2">, </span><span class="nv">$data_dir</span><span class="s2">, </span><span class="nv">$prefix_name</span><span class="s2">, </span><span class="nv">$medium</span><span class="s2">, </span><span class="nv">$save_root_path</span><span class="s2">)&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -278,15 +257,26 @@ python<span class="w"> </span>SCOOTI_trainer.py<span class="w"> </span>--unconMo
 
 <h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
-<li class="toctree-l1"><a class="reference internal" href="userguide.html">Quick Start</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#system-requirements">System Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unconstrained-models-with-single-objectives">Unconstrained Models with single objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#omics-based-constrained-models">Omics-based Constrained Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inference-of-metabolic-objectives">Inference of Metabolic Objectives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metabolic-objective-analysis">Metabolic Objective Analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="scootisettings.html">SCOOTI Settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advancedusage.html">Advanced usage</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to SCOOTI’s documentation!</a></li>
+      <li>Next: <a href="scootisettings.html" title="next chapter">SCOOTI Settings</a></li>
   </ul></li>
 </ul>
 </div>
@@ -320,7 +310,7 @@ python<span class="w"> </span>SCOOTI_trainer.py<span class="w"> </span>--unconMo
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
       
       |
-      <a href="_sources/tutorial.rst.txt"
+      <a href="_sources/quickstart.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

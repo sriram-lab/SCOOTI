@@ -23,6 +23,9 @@ config.solver = "glpk"
 
 
 from . import GeneralMethods
-from .GeneralMethods import *
+#from .GeneralMethods import *
 from .regressionAnalyzer import *
 from .regressorCollection import *
+from .metObjAnalyzer import *
+
+

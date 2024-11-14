@@ -15,7 +15,7 @@ import gzip
 from tqdm import tqdm
 # essential packages for reading datasets and identifying regulators
 import sys
-from SCOOTI.GeneralMethods.findRegulators import findRegulators, posterior_probability, transition_expression
+from SCOOTI.GeneralMethods.findSigGenes import findSigGenes, posterior_probability, transition_expression
 from SCOOTI.regressionAnalyzer import *
 from statsmodels.stats.multitest import fdrcorrection
 # datasets path
@@ -74,7 +74,7 @@ def scHeartFailure():
             chunk.head()
             break
     
-    fr = findRegulators(path)
+    fr = findSigGenes(path)
     fr.table_to_10xformat(
         gene_cols=[],
         barcode_cols=[],
@@ -99,7 +99,7 @@ def scEmbryoTransitions_sigGenes(
     embryoSC_paths = 'scEmbryo/GSE136714/single_cell/'
     
     # find regulators
-    fr = findRegulators(datasets_repo_path+embryoSC_paths)
+    fr = findSigGenes(datasets_repo_path+embryoSC_paths)
     adata = fr.read_scRNAseq()
     genedf = fr.get_genedf(transpose=False)
 
@@ -188,7 +188,7 @@ def scEmbryo_sigGenes(datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/
     embryoSC_paths = '/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/single_cell/'
 
     # find regulators
-    fr = findRegulators(embryoSC_paths)
+    fr = findSigGenes(embryoSC_paths)
     adata = fr.read_scRNAseq()
     genedf = fr.get_genedf(transpose=False)
     fr.get_transition_genes(split_str='~')
@@ -206,7 +206,7 @@ def scEmbryo_sigGenes(datasets_repo_path='/nfs/turbo/umms-csriram/daweilin/data/
 def scEmbryo_transition_expression():
 
     
-    fr = findRegulators('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/single_cell/')
+    fr = findSigGenes('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/single_cell/')
     fr.read_scRNAseq(
             folder='',
             rename_cellNames=False
@@ -221,7 +221,7 @@ def scEmbryo_transition_expression():
             ]
     dfsel = gdf[cols]
     # find regulators
-    fr = findRegulators('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
+    fr = findSigGenes('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
     # dataframe
     fr.df_to_10xformat(
             gdf,
@@ -249,7 +249,7 @@ def scEmbryo_transition_expression():
     # merge df
     mergedf = pd.concat((sc1C2C, sc2CBC), axis=1)
     # find regulators
-    fr = findRegulators('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
+    fr = findSigGenes('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
     # dataframe
     fr.df_to_10xformat(
             mergedf,
@@ -268,7 +268,7 @@ def scEmbryo_transition_expression():
             ]
     dfsel = df[cols]
     # find regulators
-    fr = findRegulators('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
+    fr = findSigGenes('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
     # dataframe
     fr.df_to_10xformat(
             dfsel,
@@ -296,7 +296,7 @@ def scEmbryo_transition_expression():
     # merge df
     mergedf = pd.concat((sc1C2C, sc2CBC), axis=1)
     # find regulators
-    fr = findRegulators('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
+    fr = findSigGenes('/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/')
     # dataframe
     fr.df_to_10xformat(
             mergedf,
@@ -400,7 +400,7 @@ def scCellCycleHela_sigGenes(
     SC_paths = '/nfs/turbo/umms-csriram/daweilin/data/cellCycleMetabolism/scMatrix/'
     
     # find regulators
-    fr = findRegulators(SC_paths)
+    fr = findSigGenes(SC_paths)
     fr.merge_adata(rename_cellNames=True)
     genedf = fr.genedf
 
@@ -844,7 +844,7 @@ def scCellCycleHelaTransitions_sigGenes(
     SC_paths = '/nfs/turbo/umms-csriram/daweilin/data/cellCycleMetabolism/scMatrix/'
     
     # find regulators
-    fr = findRegulators(SC_paths)
+    fr = findSigGenes(SC_paths)
     fr.merge_adata(rename_cellNames=True)
     genedf = fr.genedf
 

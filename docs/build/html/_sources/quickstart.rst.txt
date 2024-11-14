@@ -91,8 +91,7 @@ Unconstrained models optimized the demand reactions of single metabolites across
    save_root_path='./fluxPrediction/unconstrained_models/pfba/' # path to save predicted fluxes
 
    # start the simulation of flux predictions
-   run=1
-   matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $COBRA_path, $GEM_path, $model_name, $obj_candidate_list_file, $data_dir, $prefix_name, $medium, $save_root_path)"
+   matlab -nosplash -noFigureWindows -r "multiObj_CBM(~, $COBRA_path, $GEM_path, $model_name, $obj_candidate_list_file, $data_dir, $prefix_name, $medium, $save_root_path)"
 
 
 Omics-based Constrained Models

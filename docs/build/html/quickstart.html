@@ -17,7 +17,7 @@
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Advanced usage" href="advancedusage.html" />
+    <link rel="next" title="SCOOTI Settings" href="scootisettings.html" />
     <link rel="prev" title="Welcome to SCOOTI’s documentation!" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -119,8 +119,7 @@ where <strong>ATP</strong>, <strong>NADPH</strong>, <strong>GSH</strong>, and <s
 <span class="nv">save_root_path</span><span class="o">=</span><span class="s1">&#39;./fluxPrediction/unconstrained_models/pfba/&#39;</span><span class="w"> </span><span class="c1"># path to save predicted fluxes</span>
 
 <span class="c1"># start the simulation of flux predictions</span>
-<span class="nv">run</span><span class="o">=</span><span class="m">1</span>
-matlab<span class="w"> </span>-nosplash<span class="w"> </span>-noFigureWindows<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;multiObj_CBM(</span><span class="nv">$run</span><span class="s2">, </span><span class="nv">$COBRA_path</span><span class="s2">, </span><span class="nv">$GEM_path</span><span class="s2">, </span><span class="nv">$model_name</span><span class="s2">, </span><span class="nv">$obj_candidate_list_file</span><span class="s2">, </span><span class="nv">$data_dir</span><span class="s2">, </span><span class="nv">$prefix_name</span><span class="s2">, </span><span class="nv">$medium</span><span class="s2">, </span><span class="nv">$save_root_path</span><span class="s2">)&quot;</span>
+matlab<span class="w"> </span>-nosplash<span class="w"> </span>-noFigureWindows<span class="w"> </span>-r<span class="w"> </span><span class="s2">&quot;multiObj_CBM(~, </span><span class="nv">$COBRA_path</span><span class="s2">, </span><span class="nv">$GEM_path</span><span class="s2">, </span><span class="nv">$model_name</span><span class="s2">, </span><span class="nv">$obj_candidate_list_file</span><span class="s2">, </span><span class="nv">$data_dir</span><span class="s2">, </span><span class="nv">$prefix_name</span><span class="s2">, </span><span class="nv">$medium</span><span class="s2">, </span><span class="nv">$save_root_path</span><span class="s2">)&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -268,6 +267,7 @@ python<span class="w"> </span>SCOOTI_trainer.py<span class="w"> </span>--unconMo
 <li class="toctree-l2"><a class="reference internal" href="#metabolic-objective-analysis">Metabolic Objective Analysis</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="scootisettings.html">SCOOTI Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="advancedusage.html">Advanced usage</a></li>
 </ul>
 
@@ -276,7 +276,7 @@ python<span class="w"> </span>SCOOTI_trainer.py<span class="w"> </span>--unconMo
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Welcome to SCOOTI’s documentation!</a></li>
-      <li>Next: <a href="advancedusage.html" title="next chapter">Advanced usage</a></li>
+      <li>Next: <a href="scootisettings.html" title="next chapter">SCOOTI Settings</a></li>
   </ul></li>
 </ul>
 </div>
