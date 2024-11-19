@@ -4,6 +4,7 @@
 
 - [Overview](#overview)
 - [System Requirements](#system-requirements)
+- [Preparation of Unconstrained Models](#preparation-of-constrained-models)
 - [Omic-based Constrained Models](#omic-based-constrained-models)
 - [Inference of Metabolic Objectives](#identify-metabolic-objectives)
 - [Metabolic Objective Analysis](#metabolic-objective-analysis)
@@ -68,7 +69,7 @@ To use SCOOTI, first install it using pip:
 
 
 
-# Unconstrained Models with Single Objectives
+# Preparation of Unconstrained Models
 
 Unconstrained models optimized the demand reactions of single metabolites across different compartments. For example, ``atp[c]+atp[n]+atp[m]-->`` is one of the single objective functions. Optimizing this function is equivalent to maximizing the production of ATP. The bash script below shows the example to generate 52 unconstrained models which optimize 52 different single metabolites recorded in the csv file.
 
