@@ -1,0 +1,73 @@
+#!/bin/bash
+#SBATCH --job-name=para_scan
+#SBATCH --mail-user=daweilin@umich.edu
+#SBATCH --mail-type=BEGIN,END
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=30
+#SBATCH --mem-per-cpu=5G
+#SBATCH --time=2-00:00:00
+#SBATCH --account=csriram99
+#SBATCH --partition=standard
+#SBATCH --output=./%x-%j.log
+
+
+
+
+declare -a commands
+
+
+# load essential module
+module load matlab gurobi
+
+# input settings
+# path to access your matlab-version cobratoolbox
+COBRA_path=\'/home/daweilin/cobratoolbox/\'
+# path to access the metabolic model
+GEM_path=\'./GEMs/Shen2019.mat\'
+# name of the model
+model_name=\'Recon2.2\' 
+# leave it blank if no user-defined objectives
+obj_candidate_list_file=\'./obj52_metabolites_recon1.csv\'
+# objective values
+input_obj_tb=\'\'
+
+# parameter settings
+DFA_kappa=-1
+CFR_kappa=0.1
+CFR_rho=10
+paraLen=1 # how many kappa/rho used for scanning
+random_para=0 # bool, 1 to enable random sampling
+init_objective=1 # 1 for none, 2 for biomass objective
+genekoflag=0 # bool
+rxnkoflag=0 # bool
+FVAflag=0 # bool
+pfba=1 # 0 for fba and 1 for pfba (minimize sum of fluxes)
+medium_perturbation=0 # 1 for depletion or excess of metabolites in medium
+pairwise_CFR_model=0
+algorithm=\'MOOMIN\'
+
+# path to access the significant genes data
+#data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/sigGenes/prolif_qui/\'
+data_dir=\'/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/\'
+prefix_name=\'prolifQui\' # name of the experiment pls set to 'model' for unconstraint models
+medium=\'DMEMF12\' # KSOM for embryos and DMEMF12 for cell culture
+late_stage=\'upgenes\' # suffix of the file names of significant up-genes
+early_stage=\'dwgenes\' # suffix of the file names of significant down-genes
+simulation=\'CFR\' # CFR for transcriptomics and proteomics; DFA for metabolomics
+constraint=1 # apply constraints to the model
+save_root_path=\'/nfs/turbo/umms-csriram/daweilin/fluxPrediction/prolif_qui/\' # path to save predicted fluxes
+CFR_model_path=\'\'
+extraWeight=0
+
+# for-loop settings
+# if scanning kappa from 1E-3 to 1E1 and rho from 1E-3 to 1E1,
+# there will be 25 combinations in total. 
+START_NUM=1
+END_NUM=$paraLen*$paraLen
+
+# execute parameter scanning
+for (( run=$START_NUM; run<=END_NUM; run++ )); do
+  matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $COBRA_path,$GEM_path, $model_name, $obj_candidate_list_file, $input_obj_tb, $paraLen, $random_para, $init_objective, $genekoflag, $rxnkoflag, $FVAflag, $pfba, $medium_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $constraint, $save_root_path, $CFR_model_path, $pairwise_CFR_model, $extraWeight, $algorithm)"
+done
+
+
