@@ -1,4 +1,4 @@
-function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, model_name, obj_candidate_list_file, input_obj_tb, paraLen, random_para, init_objective, genekoflag, rxnkoflag, FVAflag, pfba, medium_perturbation, data_dir, prefix_name, medium, late_stage, early_stage, simulation, constraint, save_root_path, CFR_model_path, pairwise_CFR_model, extraWeight, algorithm, data_series, prefix_series, medium_series)
+function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, model_name, obj_candidate_list_file, input_obj_tb, paraLen, random_para, init_objective, genekoflag, rxnkoflag, FSflag, pfba, medium_perturbation, data_dir, prefix_name, medium, late_stage, early_stage, simulation, constraint, save_root_path, CFR_model_path, pairwise_CFR_model, extraWeight, algorithm, data_series, prefix_series, medium_series)
   % multiObj_CBM.m calls CFRinterface/DFAinterface to run CFR/DFA modeling and generate flux prediction based on transcriptomics/metabolomics data.
   %   This code is capable of predicting fluxes with GEMs Recon1/Recon2.2/Recon3D, multi-objectives, gene knockouts, and with/without pFBA.
   % Inputs:
@@ -16,7 +16,7 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   %   init_objective : integer, the number is the index of objective list. In the default settings, 1 is no objective and 2 is biomass
   %   genekoflag : bool, enable in silico single-gene knock
   %   rxnkoflag : bool, enable in silico reaction knockout
-  %   FVAflag : bool, output a range of flux solution
+  %   FSflag : bool, output flux sampling from solution space
   %   pfba : bool, minimizing sum of reaction fluxes or not
   %   medium_perturbation : bool, enable in silico single-metabolite depletion
   %   data_dir : string, path to access significant genes/proteins/metabolites as constraints
@@ -89,7 +89,7 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   if (~exist('rxnkoflag','var')) || (isempty(rxnkoflag))
       rxnkoflag = 0;
   end
-  if (~exist('FVAflag','var')) || (isempty(FVAflag))
+  if (~exist('FSflag','var')) || (isempty(FVAflag))
       FVAflag = 0;
   end
   if (~exist('medium_perturbation','var')) || (isempty(medium_perturbation))
@@ -347,11 +347,11 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
         %rho = 0
         % change culture medium KSOM_AA_Jin or DMEMF12_MGSA
         if length(CFR_models)==0,
-          DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, late_stage, early_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FVAflag, model_name, '', 0, algorithm);
+          DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, late_stage, early_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FSflag, model_name, '', 0, algorithm);
         else,
           for iii=1:length(CFR_models),
             out_name_mod = sprintf('%s_recon%d', out_name, iii);
-            DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, late_stage, early_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FVAflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
+            DFAinterface(GEM_path, obj, obj_type, obj_c, save_root_path, data_path, late_stage, early_stage, out_name, ctrl, kappa, genekoflag, rxnkoflag, medium, medium_perturbation, FSflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
           end
         end
       else,

@@ -1,7 +1,7 @@
 """
 SCOOTI_trainer.py
-========================================================
-executable python script to initiate regression training
+===============================================================
+executable regressorTraining.py to initiate regression training
 """
 # packages
 import numpy as np
@@ -11,25 +11,6 @@ from tqdm import tqdm
 from SCOOTI.regressorTraining import *
 import argparse
 
-## test
-#regression_exe = regressorTraining(
-#    '/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/pfba/DMEMF12/',
-#    '/nfs/turbo/umms-csriram/daweilin/fluxPrediction/prolif_qui/',
-#    '/nfs/turbo/umms-csriram/daweilin/regression_models/QuiProlif_CVscores/',
-#    kappa_arr=[0.1],
-#    rho_arr=[10],
-#    expName='test',
-#    uncon_norm=True,
-#    con_norm=False,
-#    medium='DMEMF12',
-#    method='cfr',
-#    model='recon1',
-#    input_type='flux',
-#    cluster_path='',
-#    objList_path='',
-#    rank=False,
-#    stack_model=False,
-#)
 
 
 # parser
@@ -223,23 +204,6 @@ else:
         learning_rate=args.learningRate,
         epo=args.epo
     )
-
-
-#regression_exe = regressorTraining(
-#    unconModel,
-#    conModel,
-#    savePath,
-#    kappa_arr=kappaArr,
-#    rho_arr=rhoArr,
-#    expName=expName,
-#    uncon_norm=True,
-#    con_norm=False,
-#    medium=medium,
-#    method=method,
-#    model=model,
-#    input_type=inputType
-#)
-
 
 
 
