@@ -27,5 +27,3 @@ from . import GeneralMethods
 from .regressionAnalyzer import *
 from .regressorCollection import *
 from .metObjAnalyzer import *
-
-

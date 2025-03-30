@@ -125,7 +125,7 @@ function CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_pa
     if strcmp(model_name, 'Recon3D'),
 
       % convert BiGGIDs to annotations
-      BiGG_map_path = '/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon3D_genes.json';
+      BiGG_map_path = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon3D_genes.json';
       % upregulated genes
       tmp_ups = {};
       ups{:,2} = upper(ups{:,2})
@@ -151,7 +151,7 @@ function CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_pa
     elseif strcmp(model_name, 'Recon2.2'),
 
       % convert BiGGIDs to annotations
-      BiGG_map_path = '/nfs/turbo/umms-csriram/daweilin/data/BiGG/Recon2.2_symbol_to_hgnc.json';
+      BiGG_map_path = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon2.2_symbol_to_hgnc.json';
       % upregulated genes
       tmp_ups = {};
       ups{:,2} = upper(ups{:,2})

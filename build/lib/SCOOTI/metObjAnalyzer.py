@@ -46,7 +46,6 @@ class metObjAnalyzer:
     4) Flux reconstruction:
         reconstruct flux prediction with inferred coefficients.
     
-    
     Parameters
     ----------
     flux_paths : {dictionary},
@@ -97,7 +96,6 @@ class metObjAnalyzer:
 
     labels : {pandas.DataFrame},
         label for each column of flux or coefficient data
-    
     
     Examples
     --------
@@ -351,16 +349,10 @@ class metObjAnalyzer:
         except:
             print('Cannot slice coefficient data.')
     
-
-
     @staticmethod
     def label_setup(df, label_func):
-        """
-        """
-
         # get labels
         return label_func(df)
-
 
     def get_flux(self, kappa=1, rho=1, rank=False, stack_model=False):
         """Load inferred metabolic objectives.
@@ -409,8 +401,6 @@ class metObjAnalyzer:
         print(self.labels)
 
         self.flux_df = flux_df
-
-
 
     def fluxAnalysis(
             self,
@@ -543,9 +533,6 @@ class metObjAnalyzer:
         self.save_clustering_result(extra_suffix)
 
     def save_clustering_result(self, extra_suffix=''):
-        """
-        """
-
         # save results
         print('Save the clustering evaluation...')
         self.flux_scores.to_csv(
