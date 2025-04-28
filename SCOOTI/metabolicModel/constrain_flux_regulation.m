@@ -1,4 +1,4 @@
-function [fluxstate_uncon, fluxstate_gurobi, grate, geneko_flux, rxnko_growthrate, solverobj, grate_wt_min, grate_wt_max, model_out] =  constrain_flux_regulation(model1,onreactions,offreactions,kappa,rho,epsilon,mode,genedelflag,rxndelflag,epsilon2,minfluxflag,CFR_model,extra_weight)
+function [fluxstate_uncon, fluxstate_gurobi, grate, geneko_flux, rxnko_growthrate, solverobj, model_out] =  constrain_flux_regulation(model1,onreactions,offreactions,kappa,rho,epsilon,mode,genedelflag,rxndelflag,epsilon2,minfluxflag,CFR_model,extra_weight)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

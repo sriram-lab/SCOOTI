@@ -89,8 +89,8 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
   if (~exist('rxnkoflag','var')) || (isempty(rxnkoflag))
       rxnkoflag = 0;
   end
-  if (~exist('FSflag','var')) || (isempty(FVAflag))
-      FVAflag = 0;
+  if (~exist('FSflag','var')) || (isempty(FSflag))
+      FSflag = 0;
   end
   if (~exist('medium_perturbation','var')) || (isempty(medium_perturbation))
       medium_perturbation = 0;
@@ -359,7 +359,7 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
         % CFR with fluxes
         if input_objective_weights==0,
           if length(CFR_models)==0,
-            CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, '', 0, algorithm);
+            CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FSflag, model_name, '', 0, algorithm);
           else, % multiple CFR_models
             %for iii=1:length(CFR_models),
             %delete(gcp('nocreate'));
@@ -382,15 +382,15 @@ function multiObj_CBM(jj, DFA_kappa, CFR_kappa, CFR_rho, COBRA_path, GEM_path, m
                 fsample = strsplit(data_path, '/');
                 % run CFR only when the names are matched
                 if strcmp(ftar{end}, fsample{end}),
-                  CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name_mod, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
+                  CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name_mod, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FSflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
                 end % else skip the model
               else, % run all the model without pairing the samples
-                CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name_mod, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
+                CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name_mod, late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FSflag, model_name, CFR_models{iii, 1}, extraWeight, algorithm);
               end % end if pairwise_CFR_model
             end % end for the for loop of CFR models
             end % end for using CFR_models or not
         else, % with input obj weight
-          CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name, get_late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FVAflag, model_name, '', 0, algorithm);
+          CFRinterface(GEM_path, pfba, obj, obj_type, obj_c, save_root_path, data_path, out_name, get_late_stage, early_stage, ctrl, kappa, rho, medium, genekoflag, rxnkoflag, medium_perturbation, FSflag, model_name, '', 0, algorithm);
         end % end for using input obj weight or not
       end % end for DFA or CFR
     end % end for the for-loop of data_series

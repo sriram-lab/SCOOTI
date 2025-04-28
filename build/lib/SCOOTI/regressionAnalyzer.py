@@ -18,7 +18,7 @@ import sys
 
 from sklearn.preprocessing import quantile_transform
 #from .GeneralMethods.AnalysisKits import *
-from SCOOTI.GeneralMethods.MatplotProp import CanvasStyle, PltProps, Significance
+from SCOOTI.utils.MatplotProp import CanvasStyle, PltProps, Significance
 PltProps()
 import warnings; warnings.simplefilter('ignore')
 from statsmodels.stats.multitest import fdrcorrection
@@ -660,7 +660,7 @@ def model_training(
         pg_con_models=[],
         input_type='flux',
         cluster_path='',
-        learner='L',
+        learner='L', # Lasso, L, A
         learning_rate=0.001,
         epo=1000
         ):

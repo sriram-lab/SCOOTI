@@ -17,10 +17,7 @@ import seaborn as sns
 import sys
 #sys.path.append('../GeneralMethods/')
 #from AnalysisKits import *
-from SCOOTI.MatplotProp import CanvasStyle, PltProps
 from SCOOTI.regressionAnalyzer import *
-import networkx as nx
-import pingouin as pg
 PltProps()
 import warnings; warnings.simplefilter('ignore')
 from statsmodels.stats.multitest import fdrcorrection

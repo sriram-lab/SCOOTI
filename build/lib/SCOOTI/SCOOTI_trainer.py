@@ -76,7 +76,7 @@ parser.add_argument(
 
 parser.add_argument(
         "--learner",
-        choices=['L', 'A'], # L: linear regression, A: ADALINE single-layered neural network
+        choices=['L', 'A', 'Lasso', 'MLP'], # L: linear regression, A: ADALINE single-layered neural network
         default='L',
         help="choose different meta-learner to stack the results of base models"
         )

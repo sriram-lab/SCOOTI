@@ -416,7 +416,7 @@ function CFRinterface(model_path, pfba, obj, obj_type, obj_c, root_path, data_pa
         end % end for MOOMIN
       else, % CFR
         % with constraint
-        [uncon_flux, fluxstate, grate_naive, geneko_flux, rxnko_growthrate, solverobj_naive, grate_min, grate_max, model_out]=constrain_flux_regulation(model, uplist, dwlist, kappa, rho, 1E-3, 0, genekoflag, rxnkoflag, [], [], recon_model, extra_weight);
+        [uncon_flux, fluxstate, grate_naive, geneko_flux, rxnko_growthrate, solverobj_naive, model_out]=constrain_flux_regulation(model, uplist, dwlist, kappa, rho, 1E-3, 0, genekoflag, rxnkoflag, [], [], recon_model, extra_weight);
 
         % save context-specific models
         %if length(CFR_model)==0,

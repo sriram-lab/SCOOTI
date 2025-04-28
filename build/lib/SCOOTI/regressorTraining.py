@@ -23,11 +23,14 @@ from tqdm.notebook import tqdm, trange
 # Regression models
 #from SCOOTI.regressorCollection import *
 from SCOOTI.regressorMetaLearner import *
+from SCOOTI.LassoTorch import LassoRegressor
+from SCOOTI.MLPRegressor import TrainValWrapper
 
 # Set cobra solver to glpk in order to avoid err msg
 config = cobra.Configuration()
 config.solver = "glpk"
 
+print('testing bug...')
 
 class regressorTraining:
 
@@ -310,81 +313,105 @@ class regressorTraining:
         #        )
         #print('finishing up testing')
         # 'with' context manager takes care of pool.close() and pool.join() for us
-        with Pool(num_processes) as pool:
-            
-            # we need a sequence to pass pool.map; this line creates a generator (lazy iterator) of columns
-            seq = [(
-                uncon_models,
-                pd.DataFrame(con_models[col_name]),
-                expName,
-                suffix,
-                pg_uncon_models,
-                pd.DataFrame(pg_con_models[col_name]),
-                input_type,
-                cluster_path,
-                learner,
-                learning_rate,
-                epo
-                ) for col_name in con_models.columns]
-        
-            # +-------------+
-            # +Testing block+
-            # +-------------+
-            #print('testing')
-            #model_training(uncon_models, con_models, expName, suffix, pg_uncon_models, pg_con_models, input_type)
-            print('Mapping...')
-            # pool.map returns results as a list
-            results_list = tqdm(pool.starmap(model_training, seq))
-            if cluster_path=='':
-                # return list of processed columns, concatenated together as a new dataframe
-                RFElm_df = pd.concat((resl[0] for resl in results_list), axis=1)
-                lasso_df = pd.concat((resl[1] for resl in results_list), axis=1)
-                EN_df = pd.concat((resl[2] for resl in results_list), axis=1)
-                LL_df = pd.concat((resl[3] for resl in results_list), axis=1)
-                integrate_df = pd.concat((resl[4] for resl in results_list), axis=1)
-                CVscores = pd.concat((resl[5] for resl in results_list), axis=1)
-                foldCorr = pd.concat((resl[6] for resl in results_list), axis=1)
-            else:
-                # return list of processed columns, concatenated together as a new dataframe
-                cluster_dfs = []
-                for jj in range(len(results_list[0])):
-                   cluster_dfs.append(pd.concat((resl[jj] for resl in results_list), axis=1))
-
-        
-        end = time.time()
-
-        if cluster_path=='':
-            # output the models
-            RFElm_df.columns = con_models.columns
-            RFElm_df.to_csv(f'{save_root_path}/{prefix}_rfelm_{self.expName}_{self.suffix}.csv')
-            
-            lasso_df.columns = con_models.columns
-            lasso_df.to_csv(f'{save_root_path}/{prefix}_lasso_{self.expName}_{self.suffix}.csv')
-            
-            EN_df.columns = con_models.columns
-            EN_df.to_csv(f'{save_root_path}/{prefix}_EN_{self.expName}_{self.suffix}.csv')
-            
-            LL_df.columns = con_models.columns
-            LL_df.to_csv(f'{save_root_path}/{prefix}_LL_{self.expName}_{self.suffix}.csv')
-            
-            integrate_df.columns = con_models.columns
+        if self.learner=='Lasso':
+            lasso = LassoRegressor(l1_lambda=1e-2, epochs=300)
+            res = lasso.fit_cv(uncon_models, con_models, k=5)
+            # Get coefficient matrix: shape (n_features, n_targets)
+            integrate_df = lasso.get_coefficients()
             integrate_df.to_csv(f'{save_root_path}/{prefix}_sl_{self.expName}_{self.suffix}.csv')
 
-            CVscores.columns = con_models.columns
-            CVscores.to_csv(f'{save_root_path}/{prefix}_CVscores_{self.expName}_{self.suffix}.csv')
+        elif self.learner=='MLP':
+            print('MLP...')
+            # Initialize your wrapper
+            wrapper = TrainValWrapper(epochs=100, batch_size=1000, patience=10, verbose=False)
+            # Run training with early stopping
+            integrate_df = wrapper.run_train_val(uncon_models, con_models)
+            # Save to file
+            integrate_df.to_csv(f'{save_root_path}/{prefix}_sl_{self.expName}_{self.suffix}.csv')
 
-            foldCorr.columns = con_models.columns
-            foldCorr.to_csv(f'{save_root_path}/{prefix}_foldCorr_{self.expName}_{self.suffix}.csv')
+        elif self.learner=='MLP':
+            print('MLP...')
+            # Initialize your wrapper
+            wrapper = TrainValWrapper(epochs=100, batch_size=1000, patience=10, verbose=False)
+            # Run training with early stopping
+            integrate_df = wrapper.run_train_val(uncon_models, con_models)
+            # Save to file
+            integrate_df.to_csv(f'{save_root_path}/{prefix}_sl_{self.expName}_{self.suffix}.csv')
         else:
-            for jj in range(len(cluster_dfs)):
-                cluster_dfs[jj].columns = con_models.columns
-                if jj==len(cluster_dfs)-1:
-                    cluster_dfs[jj].to_csv(f'{save_root_path}/{prefix}_cluster_weight_{self.expName}_{self.suffix}.csv')
-                elif jj==len(cluster_dfs)-2:
-                    cluster_dfs[jj].to_csv(f'{save_root_path}/{prefix}_sl_{self.expName}_{self.suffix}.csv')
-                    integrate_df = cluster_dfs[jj]
+            with Pool(num_processes) as pool:
+                
+                # we need a sequence to pass pool.map; this line creates a generator (lazy iterator) of columns
+                seq = [(
+                    uncon_models,
+                    pd.DataFrame(con_models[col_name]),
+                    expName,
+                    suffix,
+                    pg_uncon_models,
+                    pd.DataFrame(pg_con_models[col_name]),
+                    input_type,
+                    cluster_path,
+                    learner,
+                    learning_rate,
+                    epo
+                    ) for col_name in con_models.columns]
+            
+                # +-------------+
+                # +Testing block+
+                # +-------------+
+                #print('testing')
+                #model_training(uncon_models, con_models, expName, suffix, pg_uncon_models, pg_con_models, input_type)
+                print('Mapping...')
+                # pool.map returns results as a list
+                results_list = tqdm(pool.starmap(model_training, seq))
+                if cluster_path=='':
+                    # return list of processed columns, concatenated together as a new dataframe
+                    RFElm_df = pd.concat((resl[0] for resl in results_list), axis=1)
+                    lasso_df = pd.concat((resl[1] for resl in results_list), axis=1)
+                    EN_df = pd.concat((resl[2] for resl in results_list), axis=1)
+                    LL_df = pd.concat((resl[3] for resl in results_list), axis=1)
+                    integrate_df = pd.concat((resl[4] for resl in results_list), axis=1)
+                    CVscores = pd.concat((resl[5] for resl in results_list), axis=1)
+                    foldCorr = pd.concat((resl[6] for resl in results_list), axis=1)
                 else:
-                    cluster_dfs[jj].to_csv(f'{save_root_path}/{prefix}_cluster{jj}_{self.expName}_{self.suffix}.csv')
+                    # return list of processed columns, concatenated together as a new dataframe
+                    cluster_dfs = []
+                    for jj in range(len(results_list[0])):
+                       cluster_dfs.append(pd.concat((resl[jj] for resl in results_list), axis=1))
+
+        
+            end = time.time()
+            if cluster_path=='':
+                # output the models
+                RFElm_df.columns = con_models.columns
+                RFElm_df.to_csv(f'{save_root_path}/{prefix}_rfelm_{self.expName}_{self.suffix}.csv')
+                
+                lasso_df.columns = con_models.columns
+                lasso_df.to_csv(f'{save_root_path}/{prefix}_lasso_{self.expName}_{self.suffix}.csv')
+                
+                EN_df.columns = con_models.columns
+                EN_df.to_csv(f'{save_root_path}/{prefix}_EN_{self.expName}_{self.suffix}.csv')
+                
+                LL_df.columns = con_models.columns
+                LL_df.to_csv(f'{save_root_path}/{prefix}_LL_{self.expName}_{self.suffix}.csv')
+                
+                integrate_df.columns = con_models.columns
+                integrate_df.to_csv(f'{save_root_path}/{prefix}_sl_{self.expName}_{self.suffix}.csv')
+
+                CVscores.columns = con_models.columns
+                CVscores.to_csv(f'{save_root_path}/{prefix}_CVscores_{self.expName}_{self.suffix}.csv')
+
+                foldCorr.columns = con_models.columns
+                foldCorr.to_csv(f'{save_root_path}/{prefix}_foldCorr_{self.expName}_{self.suffix}.csv')
+            else:
+                for jj in range(len(cluster_dfs)):
+                    cluster_dfs[jj].columns = con_models.columns
+                    if jj==len(cluster_dfs)-1:
+                        cluster_dfs[jj].to_csv(f'{save_root_path}/{prefix}_cluster_weight_{self.expName}_{self.suffix}.csv')
+                    elif jj==len(cluster_dfs)-2:
+                        cluster_dfs[jj].to_csv(f'{save_root_path}/{prefix}_sl_{self.expName}_{self.suffix}.csv')
+                        integrate_df = cluster_dfs[jj]
+                    else:
+                        cluster_dfs[jj].to_csv(f'{save_root_path}/{prefix}_cluster{jj}_{self.expName}_{self.suffix}.csv')
 
 
         return integrate_df
