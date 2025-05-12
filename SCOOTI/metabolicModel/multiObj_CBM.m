@@ -1,6 +1,5 @@
-addpath(genpath('utils'));
-
 function multiObj_CBM(config)
+  addpath(genpath('utils'));
   % multiObj_CBM.m calls CFRinterface/DFAinterface to run CFR/DFA modeling and generate flux prediction based on transcriptomics/metabolomics data.
   %   This code is capable of predicting fluxes with GEMs Recon1/Recon2.2/Recon3D, multi-objectives, gene knockouts, and with/without pFBA.
   % Inputs:
@@ -69,12 +68,12 @@ end
 
 %% Step 4: Set objective candidates and weights
 if isempty(config.obj_candidate_list_file)
-    config.obj_candidate_list_file = './obj52_metabolites_shen2019.csv';
+    config.obj_candidate_list_file = './metabolicModel/GEMs/obj52_metabolites_shen2019.csv';
 end
 config.obj_candidates = readtable(config.obj_candidate_list_file);
 
 if isempty(config.input_obj_tb)
-    config.input_obj_tb = readtable('./buffer_objective_coefficients.csv');
+    config.input_obj_tb = readtable('./metabolicModel/bufferFiles/buffer_objective_coefficients.csv');
     config.input_objective_weights = 0;
 else
     config.input_obj_tb = readtable(config.input_obj_tb);
@@ -83,20 +82,21 @@ end
 
 %% Step 5: Constraint and data preprocessing
 if config.constraint == 1
-    if isempty(config.data_series)
+    if isempty(config.data_series) || all(cellfun(@isempty, config.data_series))
+      disp('inininin')
         [config.data_series, config.prefix_series, config.medium_series] = ...
             batch_input_preprocess(config.data_dir, config.prefix_name, config.medium);
     end
     config.ctrl = 1;
 else
-    config.data_series = {'./metabolicModel/buffer_constraint.xlsx'};
+    config.data_series = {'./metabolicModel/bufferFiles/buffer_constraint.xlsx'};
     config.prefix_series = {'2CBC_Israel'};
     config.medium_series = {config.medium};
     config.ctrl = 0;
 end
 
 %% Step 6: Load CFR models (if any)
-config.CFR_models = load_CFR_models(config.CFR_model_path);
+CFR_models = load_CFR_models(config.CFR_model_path);
 
 %% Step 7: Set simulation parameters (kappa/rho)
 [config.kappa, config.rho] = determine_kappa_rho(config);
@@ -104,8 +104,24 @@ config.CFR_models = load_CFR_models(config.CFR_model_path);
 %% Step 8: Run simulation for each dataset
 for data_idx = 1:length(config.data_series)
     config.data_idx = data_idx;
-    params = prepare_simulation_parameters(config);
-    dispatch_simulation(config.simulation, params);
+    if ~isempty(CFR_models)
+      config.CFR_model = CFR_models{data_idx};
+    else
+      config.CFR_model = {};
+    end
+
+    if ~config.input_objective_weights & strcmp(config.prefix_name, 'model'),
+      for ii=2:length(config.obj_candidates{:,2}),
+        disp(ii)
+        config.ii = ii;
+        params = prepare_simulation_parameters(config);
+        dispatch_simulation(config.simulation, params);
+      end
+    else
+      config.ii = config.init_objective;
+      params = prepare_simulation_parameters(config);
+      dispatch_simulation(config.simulation, params);
+    end
 end
 end % end for the function
 

@@ -9,6 +9,9 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
       warning('Model name not recognized for BiGG mapping. Skipping annotation.');
       ups_table = ups;
       dws_table = dws;
+      %ups_table = table2cell(ups);
+      %dws_table = table2cell(dws);
+      %disp(ups_table)
       return;
   end
 
@@ -25,5 +28,6 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
       'VariableNames', {'Index', 'Gene'});
   dws_table = array2table([(1:length(dw_genes))', dw_genes], ...
       'VariableNames', {'Index', 'Gene'});
+
 end
 

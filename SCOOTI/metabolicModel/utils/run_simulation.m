@@ -20,6 +20,19 @@ function run_simulation(model, excelname, algorithm, ups, dws, ...
   else
     uplist = filter_gene_list(ups, uk);
     dwlist = filter_gene_list(dws, uk);
+
+    % Convert uplist safely
+    if isstring(uplist)
+        uplist = cellstr(uplist);
+    end
+    
+    % Also ensure dwlist
+    if isstring(dwlist)
+        dwlist = cellstr(dwlist);
+    end
+
+
+    disp(uplist)
   end
 
   if FSflag == 1
@@ -31,12 +44,12 @@ function run_simulation(model, excelname, algorithm, ups, dws, ...
                    out_name, root_path, metadata);
   elseif strcmp(algorithm, 'MOOMIN')
     run_moomin_block(model, ups, excelname, sample_name, ...
-                     out_name, root_path, genekoflag, metadata);
+                     out_name, root_path, genekoflag);
   else
     run_cfr_block(model, uplist, dwlist, excelname, ...
                   sample_name, out_name, root_path, ...
                   kappa, rho, genekoflag, rxnkoflag, ...
-                  recon_model, extra_weight, metadata);
+                  recon_model, extra_weight);
   end
 end
 

@@ -1,9 +1,9 @@
 function dispatch_simulation(simulation_type, params)
   switch simulation_type
     case 'DFA'
-      DFAinterface(params{:});
+      DFAinterface(params);
     case 'CFR'
-      CFRinterface(params{:});
+      CFRinterface(params);
     otherwise
       error('Unsupported simulation type: %s', simulation_type);
   end

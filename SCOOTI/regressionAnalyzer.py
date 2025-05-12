@@ -13,11 +13,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import cobra
-import openpyxl
 import sys
 
 from sklearn.preprocessing import quantile_transform
-#from .GeneralMethods.AnalysisKits import *
 from SCOOTI.utils.MatplotProp import CanvasStyle, PltProps, Significance
 PltProps()
 import warnings; warnings.simplefilter('ignore')
@@ -32,9 +30,7 @@ import statsmodels.api as sm
 from adjustText import adjust_text
 
 # Regression models
-#from SCOOTI.regressorCollection import *
-from SCOOTI.regressorMetaLearner import *
-#from SCOOTI.ADALINEMetaLearner import *
+from SCOOTI.regressors.regressorMetaLearner import *
 # Set cobra solver to glpk in order to avoid err msg
 config = cobra.Configuration()
 config.solver = "glpk"
@@ -2636,7 +2632,7 @@ def boxplot_fig(
 
             plt.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.2))# bbox_to_anchor=(-0.5/len(plot_df.Objective.unique()), 1), col=2)
         else:
-            # create an empty plot
+
             fig, ax = plt.subplots(1,1,figsize=(width+2, 8))
             # stripplot
             g = sns.stripplot(
