@@ -29,6 +29,11 @@ pip install .
 ```
 Make sure your Python version is 3.10.
 
+## Import SCOOTI
+``
+python -c "from SCOOTI._version import version; print(version)"
+``
+
 
 # MATLAB Environment Setup (optional if you don't need metabolic modeling)
 
@@ -57,6 +62,12 @@ Now any code changes will take effect immediately without reinstalling.
 
 # Running the Modules
 ## Run Flux Modeling (MATLAB)
+
+Before you start, please revise the `.json` files to access your cobratoolbox:
+```
+"COBRA_path": ".YOUR_COBRATOOLBOX_PATH", ...
+```
+
 
 Example for unconstrained models:
 
@@ -94,6 +105,7 @@ This will:
 | Python package conflicts | Please make sure you installed packages listed in `requirements.txt` |
 
 # Project Structure Overview
+```
 SCOOTI/
 ├── setup.py               # Python packaging file
 ├── environment.yml        # Conda environment setup
@@ -115,7 +127,7 @@ SCOOTI/
 │   ├── run_trainer.sh      # Bash script to run Python trainer
 │   ├── demo_flux_config.json
 │   └── demo_trainer_config.json
-
+```
 Please cite [this paper](https://doi.org/10.1016/j.cels.2024.12.005) if you use SCOOTI in your work.
 
 
