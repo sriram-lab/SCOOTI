@@ -13,8 +13,8 @@ import seaborn as sns
 import cobra
 import sys
 from SCOOTI.regressionAnalyzer import *
-from SCOOTI.GeneralMethods.stat_tests import *
-from SCOOTI.GeneralMethods.MatplotProp import CanvasStyle, PltProps, Significance
+from SCOOTI.utils.stat_tests import *
+from SCOOTI.utils.MatplotProp import CanvasStyle, PltProps, Significance
 PltProps()
 import warnings; warnings.simplefilter('ignore')
 import scipy.stats as ss
@@ -22,8 +22,7 @@ import os
 from tqdm.notebook import tqdm, trange
 from adjustText import adjust_text
 # Regression models
-#from SCOOTI.regressorCollection import *
-from SCOOTI.regressorMetaLearner import *
+from SCOOTI.regressors.regressorMetaLearner import *
 
 # Set cobra solver to glpk in order to avoid err msg
 config = cobra.Configuration()

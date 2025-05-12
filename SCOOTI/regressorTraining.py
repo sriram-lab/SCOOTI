@@ -22,9 +22,9 @@ import os
 from tqdm.notebook import tqdm, trange
 # Regression models
 #from SCOOTI.regressorCollection import *
-from SCOOTI.regressorMetaLearner import *
-from SCOOTI.LassoTorch import LassoRegressor
-from SCOOTI.MLPRegressor import TrainValWrapper
+from SCOOTI.regressors.regressorMetaLearner import *
+from SCOOTI.regressors.LassoTorch import LassoRegressor
+from SCOOTI.regressors.MLPRegressor import TrainValWrapper
 
 # Set cobra solver to glpk in order to avoid err msg
 config = cobra.Configuration()

@@ -1,0 +1,64 @@
+#!/bin/bash
+#SBATCH --job-name=para_scan
+#SBATCH --mail-user=daweilin@umich.edu
+#SBATCH --mail-type=BEGIN,END
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=30
+#SBATCH --mem-per-cpu=5G
+#SBATCH --time=2-00:00:00
+#SBATCH --account=csriram99
+#SBATCH --partition=standard
+#SBATCH --output=./%x-%j.log
+
+# Load MATLAB and Gurobi
+module load matlab gurobi
+
+# Project-specific paths
+COBRA_PATH='/home/daweilin/cobratoolbox/'
+GEM_PATH='./GEMs/COMPASS_RECON1.mat'
+MODEL_NAME='COMPASSRecon1'
+OBJ_FILE='./obj52_metabolites_compass_recon1.csv'
+SAVE_ROOT='/nfs/turbo/umms-csriram/daweilin/fluxPrediction/unconstrained_models/pfba/compass_recon1_default/'
+
+# Loop settings
+START_NUM=1
+END_NUM=1  # Update if you want to scan multiple parameter combinations
+
+# Run each parameter combo
+for (( run=$START_NUM; run<=$END_NUM; run++ )); do
+  matlab -nodisplay -nosplash -r "try, \
+    addpath(genpath(pwd)); \
+    config = struct(); \
+    config.jj = $run; \
+    config.COBRA_path = '$COBRA_PATH'; \
+    config.GEM_path = '$GEM_PATH'; \
+    config.model_name = '$MODEL_NAME'; \
+    config.obj_candidate_list_file = '$OBJ_FILE'; \
+    config.input_obj_tb = ''; \
+    config.paraLen = 1; \
+    config.random_para = 0; \
+    config.init_objective = 2; \
+    config.genekoflag = 0; \
+    config.rxnkoflag = 0; \
+    config.FSflag = 0; \
+    config.pfba = 1; \
+    config.medium_perturbation = 0; \
+    config.data_dir = ''; \
+    config.prefix_name = 'model'; \
+    config.medium = ''; \
+    config.late_stage = 'upgenes'; \
+    config.early_stage = 'dwgenes'; \
+    config.simulation = 'CFR'; \
+    config.constraint = 0; \
+    config.save_root_path = '$SAVE_ROOT'; \
+    config.CFR_model_path = ''; \
+    config.pairwise_CFR_model = 0; \
+    config.extraWeight = 0; \
+    config.algorithm = 'cfr'; \
+    config.data_series = ''; \
+    config.prefix_series = ''; \
+    config.medium_series = ''; \
+    multiObj_CBM(config); \
+    catch ME, disp(getReport(ME)); exit(1); end; exit;"
+done
+

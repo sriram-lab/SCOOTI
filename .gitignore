@@ -1,0 +1,19 @@
+# MATLAB
+*.asv
+#*.mat
+*.fig
+*.mex*
+*.log
+
+# SLURM Logs
+slurm-*
+
+# System
+.DS_Store
+*.swp
+*.bak
+
+# Output and checkpoints
+/results/
+example/*.log
+

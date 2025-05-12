@@ -1,0 +1,33 @@
+function dispatch_simulation(simulation_type, params)
+  switch simulation_type
+    case 'DFA'
+      DFAinterface(params);
+    case 'CFR'
+      CFRinterface(params);
+    otherwise
+      error('Unsupported simulation type: %s', simulation_type);
+  end
+end
+
+%function dispatch_simulation(sim_type, params)
+%  switch sim_type
+%    case 'DFA'
+%      DFAinterface(params.model, params.obj, 'Demand', params.obj_c, ...
+%                   params.save_root_path, params.data_path, ...
+%                   params.prefix, '', params.out_name, params.ctrl, ...
+%                   params.kappa, params.genekoflag, params.rxnkoflag, ...
+%                   params.medium, params.medium_perturbation, ...
+%                   params.FSflag, params.model_name, '', 0, params.algorithm);
+%
+%    case 'CFR'
+%      CFRinterface(params.model, params.pfba, params.obj, 'Demand', params.obj_c, ...
+%                   params.save_root_path, params.data_path, params.out_name, ...
+%                   params.prefix, '', params.ctrl, params.kappa, params.rho, ...
+%                   params.medium, params.genekoflag, params.rxnkoflag, ...
+%                   params.medium_perturbation, params.FSflag, ...
+%                   params.model_name, '', params.extraWeight, params.algorithm);
+%
+%    otherwise
+%      error('Unsupported simulation type: %s', sim_type);
+%  end
+%end
