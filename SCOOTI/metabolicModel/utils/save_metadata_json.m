@@ -24,53 +24,28 @@ function metadata = save_metadata_json(filename, model, config)
     input_path = sprintf('%s%s', config.uplabel, config.dwlabel);
   end
 
-  disp(config.obj)
-  disp(config.obj_type)
-  disp(config.obj_c)
-  disp(config.save_root_path)
-  disp(input_path)
-  disp(config.out_name)
-  disp(config.ctrl)
-  disp(config.kappa)
-  disp(config.rho)
-  disp(config.medium)
-  disp(config.genekoflag)
-  disp(config.rxnkoflag)
-  disp(config.medium_perturbation)
-  disp(obj_weights)
-  disp(obj_rxns)
-  disp(config.GEM_path)
-  disp(config.uplabel)
-  disp(config.dwlabel)
-  disp(config.CFR_model_path)
-  disp(config.extraWeight)
-  disp(config.algorithm)
   % Build metadata struct
-  metadata = struct(...
-    'obj', config.obj, ...
-    'obj_type', config.obj_type, ...
-    'obj_c', config.obj_c, ...
-    'output_path', config.save_root_path, ...
-    'input_path', input_path, ...
-    'file_name', config.out_name, ...
-    'with_constraint', config.ctrl, ...
-    'CFR_kappa', config.kappa, ...
-    'CFR_rho', config.rho, ...
-    'medium', config.medium, ...
-    'genekoflag', config.genekoflag, ...
-    'rxnkoflag', config.rxnkoflag, ...
-    'media_perturbation', config.medium_perturbation, ...
-    'objWeights', obj_weights, ...
-    'objRxns', obj_rxns, ...
-    'model_path', config.GEM_path, ...
-    'upStage', config.uplabel, ...
-    'dwStage', config.dwlabel, ...
-    'CFRModel', config.CFR_model_path, ...
-    'extraWeight', config.extraWeight, ...
-    'algorithm', config.algorithm ...
-  );
-
-
+  metadata.obj = config.obj
+  metadata.obj_type = config.obj_type
+  metadata.obj_c = config.obj_c
+  metadata.output_path = config.save_root_path
+  metadata.input_path = input_path
+  metadata.file_name = config.out_name
+  metadata.with_constraint = config.ctrl
+  metadata.CFR_kappa = config.kappa
+  metadata.CFR_rho = config.rho
+  metadata.medium = config.medium
+  metadata.genekoflag = config.genekoflag
+  metadata.rxnkoflag = config.rxnkoflag
+  metadata.media_perturbation = config.medium_perturbation
+  metadata.objWeights = obj_weights
+  metadata.objRxns = obj_rxns
+  metadata.model_path = config.GEM_path
+  metadata.upStage = config.uplabel
+  metadata.dwStage = config.dwlabel
+  metadata.CFRModel = config.CFR_model_path
+  metadata.extraWeight = config.extraWeight
+  metadata.algorithm = config.algorithm
 
   % Encode and write to JSON file
   json_str = jsonencode(metadata);
