@@ -17,7 +17,7 @@ setup(
     install_requires=[
         "numpy==1.23.5",
         "pandas==1.5.3",
-        "scikit-learn==1.1.3",
+        "scikit-learn==1.5.1",
         "numba==0.56.4",
         "tqdm",
         "cobra==0.26.3",
