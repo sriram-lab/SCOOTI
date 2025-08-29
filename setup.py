@@ -25,7 +25,7 @@ setup(
         "seaborn==0.12.2",
         "phate==1.0.11",
         "adjustText==0.8",
-        "torch==2.0.1"
+        "torch==2.8.0"
     ],
     python_requires=">=3.8, <3.12",
     classifiers=[
