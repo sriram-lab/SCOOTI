@@ -21,3 +21,4 @@ dependencies:
       - hdbscan
       - openpyxl
       - oapackage
+      - -e .

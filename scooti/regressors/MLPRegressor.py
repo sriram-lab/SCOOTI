@@ -15,6 +15,16 @@ from sklearn.model_selection import KFold
 import pandas as pd
 import numpy as np
 
+# Fix seeds for reproducibility (defaults to 8)
+import os, random
+_SCOOTI_SEED = int(os.environ.get("SCOOTI_SEED", "8"))
+random.seed(_SCOOTI_SEED)
+np.random.seed(_SCOOTI_SEED)
+try:
+    torch.manual_seed(_SCOOTI_SEED)
+except Exception:
+    pass
+
 class GOFluxDataset(Dataset):
     def __init__(self, X: pd.DataFrame, y_col: np.ndarray):
         self.X = torch.tensor(X.values, dtype=torch.float32)
@@ -129,7 +139,9 @@ class TrainValWrapper:
             #if self.verbose and j % 100 == 0:
             #    print(f"Fitting target {j+1}/{y.shape[1]}")
             y_col = y.iloc[:, j].values
-            X_train_df, X_val_df, y_train, y_val = train_test_split(X, y_col, test_size=0.2, random_state=42)
+            X_train_df, X_val_df, y_train, y_val = train_test_split(
+                X, y_col, test_size=0.2, random_state=_SCOOTI_SEED
+            )
             train_loader = DataLoader(GOFluxDataset(X_train_df, y_train), batch_size=self.batch_size, shuffle=True)
             val_loader = DataLoader(GOFluxDataset(X_val_df, y_val), batch_size=self.batch_size, shuffle=False)
             model = BetaRegressor(input_dim=X.shape[1])
@@ -142,4 +154,3 @@ class TrainValWrapper:
         coef_matrix = np.stack(all_coefs, axis=1)
         self.coef_df = pd.DataFrame(coef_matrix, index=self.feature_names, columns=self.target_names)
         return self.coef_df
-

@@ -232,12 +232,12 @@ class regression_methods:
         if model_select=='LassoCV':
             # LASSO
             model = LassoCV(
-                cv=5, positive=True, fit_intercept=False, random_state=0
+                cv=5, positive=True, fit_intercept=False, random_state=8
             ).fit(X, y)
         elif model_select=='ElasticNetCV':
             # ElasticNet
             model = ElasticNetCV(
-                    cv=5, positive=True, fit_intercept=False, random_state=0
+                    cv=5, positive=True, fit_intercept=False, random_state=8
                     ).fit(X, y)
         elif model_select=='LassoLarsIC':
             # LASSO-Lars
@@ -278,7 +278,7 @@ class regression_methods:
     def get_out_of_fold_predictions(self, X, y):
         meta_X, meta_y = list(), list()
         # define split of data
-        kfold = KFold(n_splits=5, shuffle=True, random_state=0)
+        kfold = KFold(n_splits=5, shuffle=True, random_state=8)
         # enumerate splits
         for train_ix, test_ix in kfold.split(X):
             fold_yhats = list()
@@ -336,7 +336,7 @@ class regression_methods:
             meta_model.fit(X, y)
 
         # 5 fold CV
-        kfold = KFold(n_splits=5, shuffle=True, random_state=1000)
+        kfold = KFold(n_splits=5, shuffle=True, random_state=8)
         scores = []
         submodels = []
         for train_ix, test_ix in kfold.split(X):
@@ -425,7 +425,7 @@ class regression_methods:
             # empty lists
             meta_X, meta_y = list(), list()
             # define split of data
-            kfold = KFold(n_splits=5, shuffle=True, random_state=0)
+            kfold = KFold(n_splits=5, shuffle=True, random_state=8)
             # data
             X, y = self.df_var.copy(), self.df_res.iloc[:, i].copy()
             # enumerate splits
