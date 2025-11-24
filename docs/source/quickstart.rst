@@ -3,6 +3,13 @@ Quick Start
 
 Overview
 --------
+
+.. note::
+   Different versions of Gurobi and MATLAB (and solver settings)
+   can produce different feasible flux distributions that achieve
+   the same objective value. As a result, inferred objective
+   coefficients may differ numerically across environments, while
+   qualitative trends should remain similar.
 **SCOOTI: Single-Cell Optimization Objective and Tradeoff Inference** is a data-driven computational framework to identify cell-specific objectives and trade-offs from transcriptomics data.
 
 **SCOOTI** is able to
@@ -56,117 +63,121 @@ MATLAB dependencies
 Installation
 ************
 
-To use SCOOTI, first install it using pip:
+Install via conda or pip (see README). If conda fails on Ubuntu 22.04 for ``phate``/``adjustText``, use pip:
 
 .. code-block:: console
 
-   (venv) $ pip install git+https://github.com/dwgoblue/SCOOTI.git --upgrade
+   (venv) $ pip install -r requirements.txt
 
 .. note::  Cobratoolbox is required for SCOOTI to model contrained and unconstrained models. The instruction of cobratoolbox and its installation can be found `<https://opencobra.github.io/cobratoolbox/stable/installation.html>`_. In addition, optimization solvers are required for cobratoolbox. We recommend Gurobi solver for the linear version of iMAT and MOOMIN, and CPLEX 20.0.1 for COMPASS. 
 
 
 
-Unconstrained Models with single objectives
+Unconstrained Models with Single Objectives
 -------------------------------------------
 Unconstrained models optimized the demand reactions of single metabolites across different compartments. For example, ``atp[c]+atp[n]+atp[m]-->`` is one of the single objective functions. Optimizing this function is equivalent to maximizing the production of ATP. The bash script below shows the example to generate 52 unconstrained models which optimize 52 different single metabolites recorded in the csv file.
 
 
+Use the provided config and runner or the convenience wrapper. Edit ``COBRA_path`` in
+the config if needed for your environment.
+
 .. code-block:: bash
 
-   #!/bin/bash
-   # input settings
-   # path to access your matlab-version cobratoolbox
-   COBRA_path='./cobratoolbox/'
-   # path to access the metabolic model
-   GEM_path='./GEMs/Shen2019.mat'
-   # name of the model
-   model_name='Recon1'
-   # leave it blank if no user-defined objectives
-   obj_candidate_list_file='./obj52_metabolites_recon1.csv'
-   
-   # path to access the significant genes data
-   data_dir='./sigGenes/prolif_qui/'
-   prefix_name='model' # name of the experiment pls set to 'model' for unconstraint models
-   medium='DMEMF12' # KSOM for embryos and DMEMF12 for cell culture
-   save_root_path='./fluxPrediction/unconstrained_models/pfba/' # path to save predicted fluxes
+   # Direct call
+   bash ./scooti/run_flux.sh examples/unconstrained_demo/unconstrained_demo_config.json
 
-   # start the simulation of flux predictions
-   matlab -nosplash -noFigureWindows -r "multiObj_CBM(~, $COBRA_path, $GEM_path, $model_name, $obj_candidate_list_file, $data_dir, $prefix_name, $medium, $save_root_path)"
+   # Convenience wrapper
+   bash examples/unconstrained_demo/run_unconstrained.sh
+
+See also :doc:`unconstrained_models_demo` for detailed notes and expected outputs.
 
 
 Omics-based Constrained Models
 ------------------------------
-Constrained models are predicted metabolic fluxes with respect to transcriptomics data. This reflects the control of the metabolic genes. Here, we show the example to generate constrained models for proliferative and quiescent states in a bash file.
-
+Constrained models are predicted metabolic fluxes with respect to transcriptomics data. Use the demo config and runner below, or see :doc:`constrained_models_demo` for details.
 
 .. code-block:: bash
 
-   #!/bin/bash
-   # input settings
-   # path to access your matlab-version cobratoolbox
-   COBRA_path='./cobratoolbox/'
-   # path to access the metabolic model
-   GEM_path='./GEMs/Shen2019.mat'
-   # name of the model
-   model_name='Recon1'
-   # leave it blank if no user-defined objectives
-   obj_candidate_list_file='./obj52_metabolites_recon1.csv'
-   # objective values
-   input_obj_tb=''
-   
-   # parameter settings
-   DFA_kappa=-1
-   CFR_kappa=0.1
-   CFR_rho=10
-   paraLen=1 # how many kappa/rho used for scanning
-   random_para=0 # bool, 1 to enable random sampling
-   init_objective=1 # 1 for none, 2 for biomass objective
-   genekoflag=0 # bool
-   rxnkoflag=0 # bool
-   FVAflag=0 # bool
-   pfba=1 # 0 for fba and 1 for pfba (minimize sum of fluxes)
-   medium_perturbation=0 # 1 for depletion or excess of metabolites in medium
-   pairwise_CFR_model=0
-   algorithm='iMAT'
+   # Direct call
+   bash ./scooti/run_flux.sh examples/constrained_demo/constrained_demo_config.json
 
-   # path to access the significant genes data
-   data_dir='./sigGenes/prolif_qui/'
-   prefix_name='QuiProlif' # name of the experiment pls set to 'model' for unconstraint models
-   medium='DMEMF12' # KSOM for embryos and DMEMF12 for cell culture
-   late_stage='upgenes' # suffix of the file names of significant up-genes
-   early_stage='dwgenes' # suffix of the file names of significant down-genes
-   simulation='CFR' # CFR for transcriptomics and proteomics; DFA for metabolomics
-   constraint=1 # apply constraints to the model
-   save_root_path='./fluxPrediction/prolif_qui/' # path to save predicted fluxes
-   CFR_model_path=''
-   extraWeight=0
-
-   # for-loop settings
-   # if scanning kappa from 1E-3 to 1E1 and rho from 1E-3 to 1E1,
-   # there will be 25 combinations in total. 
-   START_NUM=1
-   END_NUM=$paraLen*$paraLen
-   
-   # execute parameter scanning
-   for (( run=$START_NUM; run<=END_NUM; run++ )); do
-     matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $COBRA_path,$GEM_path, $model_name, $obj_candidate_list_file, $input_obj_tb, $paraLen, $random_para, $init_objective, $genekoflag, $rxnkoflag, $FVAflag, $pfba, $medium_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $constraint, $save_root_path, $CFR_model_path, $pairwise_CFR_model, $extraWeight, $algorithm)"
-   done
+   # Convenience wrapper
+   bash examples/constrained_demo/run_constrained.sh
 
 Inference of Metabolic Objectives
----------------------------------
-After we prepared the constrained models and unconstrained models, we are able to infer metabolic objectives. Here, we show the example to infer metabolic objectives with meta-learner models for proliferative and quiescent states in a bash file.
+------------------------------
+
+Configurations (JSON)
+---------------------
+
+Unconstrained (examples/quickstart/configs/unconstrained.json)::
+
+  {
+    "jj": 1,
+    "COBRA_path": "~/cobratoolbox",
+    "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+    "model_name": "Recon1",
+    "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
+    "pfba": 1,
+    "data_dir": "",
+    "prefix_name": "model",
+    "medium": "DMEMF12",
+    "simulation": "CFR",
+    "constraint": 0,
+    "save_root_path": "./examples/quickstart/out/unconstrained_models/"
+  }
+
+Constrained (examples/quickstart/configs/constrained.json)::
+
+  {
+    "jj": 1,
+    "COBRA_path": "~/cobratoolbox",
+    "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+    "model_name": "Recon1",
+    "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
+    "data_dir": "./examples/run_flux/example_sigGenes/",
+    "prefix_name": "ProQui",
+    "medium": "DMEMF12",
+    "uplabel": "upgenes",
+    "dwlabel": "dwgenes",
+    "simulation": "CFR",
+    "constraint": 1,
+    "save_root_path": "./examples/quickstart/out/constrained_models/",
+    "kappa": 0.1,
+    "rho": 10,
+    "DFA_kappa": -1
+  }
+
+Inference (examples/quickstart/configs/inference.json)::
+
+  {
+    "unconModel": "./examples/quickstart/out/unconstrained_models/",
+    "conModel": "./examples/quickstart/out/constrained_models/",
+    "savePath": "./examples/quickstart/out/regression_models/",
+    "kappaArr": "10,1,0.1",
+    "rhoArr": "10,1,0.1",
+    "dkappaArr": "10,1,0.1",
+    "expName": "quickstart",
+    "unconNorm": "T",
+    "conNorm": "F",
+    "medium": "DMEMF12",
+    "method": "cfr",
+    "model": "recon1",
+    "inputType": "flux",
+    "fileSuffix": "_fluxes.csv.gz"
+  }
+
+---
+After preparing constrained and unconstrained models, infer metabolic objectives using the provided runner and config:
 
 .. code-block:: bash
 
-   # General settings
-   unconModel=./fluxPrediction/unconstrained_models/pfba/DMEMF12/
-   conModel=./fluxPrediction/prolif_qui/
-   savePath=./regression_models/QuiProlif/
-   geneListPath=./unique_gene_list.mat
-   kappa=0.1
-   rho=10
-   # run model
-   python SCOOTI_trainer.py --unconModel $unconModel --conModel $conModel --savePath $savePath --kappaArr $kappa --rhoArr $rho --expName QuiProlif --unconNorm T --conNorm F --medium DMEMF12 --method CFR --model recon1 --inputType flux --rank F --stackModel F --sampling F --learner L --geneKO F --geneListPath $geneListPath
+   # Generate demo flux predictions (MATLAB)
+   bash ./scooti/run_flux.sh examples/unconstrained_demo/unconstrained_demo_config.json
+   bash ./scooti/run_flux.sh examples/constrained_demo/constrained_demo_config.json
+
+   # Run objective inference (Python)
+   bash scooti/run_trainer.sh examples/run_inference/demo_inference_config.json
 
 Metabolic Objective Analysis
 ----------------------------
@@ -175,42 +186,73 @@ Once we got the metabolic objectives, we can rely on a Python class `metObjAnaly
 
 .. code-block:: python
 
-   #!/usr/bin/env python
-   # -*- coding: utf-8 -*-
-   
-   # initiate a instance with a python object
+   from scooti.metObjAnalyzer import metObjAnalyzer
+
+   # Initiate analyzer for quick checks
    moa = metObjAnalyzer(
-               flux_paths = {
-       'QP':'./fluxPrediction/prolif_qui/',
-                       },
-               coef_paths={
-       'QP':f'./regression_models/QuiProlif_paraScan/flux_sl_BulkRNAseq_QuiProlif_input_norm_outcome_nonorm_k0.1_r10.csv',
-                   },
-               save_root_path='./result_files/',
-               GEM_path='./metabolicModel/GEMs/Shen2019.mat',
-               uncon_model_path='./fluxPrediction/unconstrained_models/pfba/DMEMF12/',
-               col_map={},
-               label_func=label_func,
-               samplingFlux_path='',
-               sel_para='k0.1_r10',
-               prefix='QuiProlif',
-               medium='DMEMF12',
-               )
-   # get coefficients of metabolic objectives
+       flux_paths={
+           'Demo': './examples/constrained_demo/out/constrained_models/',
+       },
+       coef_paths={
+           # Update this path to the CSV produced by run_trainer.sh for your expName/params
+           'Demo': './examples/inference_demo/out/regression_models/flux_sl_inference_demo_cfr_True_False_recon1_DMEMF12_k[10.0_1.0_0.1]_rho[10.0_1.0_0.1].csv',
+       },
+       save_root_path='./result_files/',
+       GEM_path='./scooti/metabolicModel/GEMs/Shen2019.mat',
+       uncon_model_path='./examples/unconstrained_demo/out/unconstrained_models/',
+       col_map={},
+       label_func=None,
+       samplingFlux_path='',
+       sel_para='',
+       prefix='Demo',
+       medium='DMEMF12',
+   )
+   # Get coefficients of metabolic objectives
    moa.get_coef(metType_cluster=False)
-   # analyze the coefficients with distance to biomass and statistical comparisons between groups
+   # Analyze coefficients with distance to biomass and statistical comparisons
    moa.coefAnalysis(
-               norm=False,
-               unknown_clustering=False,
-               clustering=False,
-               entropy=False,
-               distance=True,
-               compare=True,
-               umap_para=[5, 50],
-               recluster_min_size=10,
-               method='average',
-               ref_col='Proliferative',
-               cutoff=0.01
-               )
+       norm=False,
+       unknown_clustering=False,
+       clustering=False,
+       entropy=False,
+       distance=True,
+       compare=True,
+       umap_para=[5, 50],
+       recluster_min_size=10,
+       method='average',
+       ref_col=None,
+       cutoff=0.01,
+   )
 
 
+Flux data format
+****************
+
+If you already have flux data and want to skip MATLAB modeling, provide a directory under ``flux_paths`` containing files as SCOOTI expects:
+
+- For each sample: a pair of files
+  - ``[prefix]..._metadata.json`` containing at least: ``input_path``, ``CFR_kappa``, ``CFR_rho``, ``medium``
+  - The matching flux file named ``[prefix]..._fluxes.csv`` or ``[prefix]..._fluxes.csv.gz`` with two columns per line: ``rxn_id,value`` (header is optional)
+
+Example demo fluxes are generated by the commands above and written under:
+
+- Constrained fluxes: ``./examples/constrained_demo/out/constrained_models/``
+- Unconstrained fluxes: ``./examples/unconstrained_demo/out/unconstrained_models/``
+
+Outputs
+*******
+
+After completing the steps, SCOOTI writes these representative files:
+
+- ``examples/unconstrained_demo/out/unconstrained_models/``: per-metabolite unconstrained fluxes and metadata JSONs
+- ``examples/constrained_demo/out/constrained_models/``: per-sample constrained fluxes and metadata JSONs (includes ``CFR_kappa`` and ``CFR_rho``)
+- ``examples/inference_demo/out/regression_models/``: coefficients CSVs (e.g., ``flux_sl_<exp>_...csv``) used by analysis
+- ``examples/tradeoff_demo/out/`` or ``examples/analyze_demo/out/``: analysis figures (UMAP, entropy, correlations, Pareto plots), summaries, and helper tables
+
+Notes
+*****
+
+- Use ``bash ./scooti/run_flux.sh ...`` for direct MATLAB runs; the ``./`` prefix is optional when using ``bash``.
+- Ensure ``medium`` in configs (e.g., constrained_demo_config.json) is set to ``DMEMF12`` to match the demo medium maps.
+- ``metObjAnalyzer.get_flux(kappa=..., rho=...)`` fetches reconstructed flux using the specified parameters; arguments must be numeric.
+- When calling ``metObjAnalyzer`` for quick analysis, always provide a valid ``flux_paths`` mapping (even if you primarily analyze coefficients via ``coef_paths``).

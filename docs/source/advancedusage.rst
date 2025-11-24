@@ -178,7 +178,7 @@ Again,
    #!/bin/bash
    # input settings
    # path to access your matlab-version cobratoolbox
-   COBRA_path='./cobratoolbox/'
+   COBRA_path='~/cobratoolbox/'
    # path to access the metabolic model
    GEM_path='./GEMs/Shen2019.mat'
    # name of the model
@@ -212,7 +212,7 @@ Again, we need to firstly generate the unconstrained models as the variables for
    #!/bin/bash
    # input settings
    # path to access your matlab-version cobratoolbox
-   COBRA_path='./cobratoolbox/'
+   COBRA_path='~/cobratoolbox/'
    # path to access the metabolic model
    GEM_path='./GEMs/Shen2019.mat'
    # name of the model
@@ -240,7 +240,7 @@ Again, we need to firstly generate the unconstrained models as the variables for
    #!/bin/bash
    # input settings
    # path to access your matlab-version cobratoolbox
-   COBRA_path='./cobratoolbox/'
+   COBRA_path='~/cobratoolbox/'
    # path to access the metabolic model
    GEM_path='./GEMs/Shen2019.mat'
    # name of the model
@@ -279,4 +279,3 @@ Again, we need to firstly generate the unconstrained models as the variables for
    
    run=1
    matlab -nosplash -noFigureWindows -r "multiObj_CBM($run, $DFA_kappa, $CFR_kappa, $CFR_rho, $COBRA_path,$GEM_path, $model_name, $obj_candidate_list_file, $input_obj_tb, $paraLen, $random_para, $init_objective, $genekoflag, $rxnkoflag, $FVAflag, $pfba, $medium_perturbation, $data_dir, $prefix_name, $medium, $late_stage, $early_stage, $simulation, $constraint, $save_root_path)"
-

@@ -7,8 +7,8 @@ LONG_DESCRIPTION = 'SCOOTI: Single Cell Optimization OBjective and Tradeoff Infe
 
 
 setup(
-    name="SCOOTI",
-    use_scm_version={"write_to": "SCOOTI/_version.py"},# Enables setuptools_scm to derive the version from SCM metadata
+    name="scooti",
+    use_scm_version={"write_to": "scooti/_version.py"},# Enables setuptools_scm to derive the version from SCM metadata
     setup_requires=["setuptools_scm"],  # Ensures setuptools_scm is installed during setup
     author="Chandrasekaran Lab, University of Michigan",
     author_email="csriram@umich.edu",
@@ -25,7 +25,9 @@ setup(
         "seaborn==0.12.2",
         "phate==1.0.11",
         "adjustText==0.8",
-        "torch==2.0.1"
+        "torch==2.0.1",
+        "hdbscan",
+        "openpyxl"
     ],
     python_requires=">=3.8, <3.12",
     classifiers=[

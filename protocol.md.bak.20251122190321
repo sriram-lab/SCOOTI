@@ -1,0 +1,117 @@
+# Inference of Metabolic Objectives and Trade‑offs using SCOOTI
+
+## Summary
+A step‑by‑step protocol to infer metabolic objectives and analyze trade‑offs from omics data using SCOOTI. The workflow covers DEG identification (bulk and single‑cell), flux modeling (unconstrained and constrained), objective inference, and downstream analysis including dimensionality reduction and trade‑off exploration.
+
+## Before You Begin
+- Innovation: SCOOTI couples omics‑constrained flux prediction with meta‑regression over idealized single‑objective fluxes to infer condition‑specific metabolic priorities, enabling interpretable trade‑off analyses (correlation/Pareto) across samples.
+- Approvals: Not applicable for computational workflows. If using human/animal datasets, ensure institutional permissions for data use.
+
+## Key Resources
+- Software: MATLAB (Gurobi), Python 3.10, `scanpy`, `torch`, `cobra` (see `environment.yml`).
+- GEM: `Shen2019.mat` (includes metabolite “accoa” in the objective list) under `./scooti/metabolicModel/GEMs/`.
+- Demo data and configs under `examples/*_demo/`.
+
+## Environment Setup
+- Python (conda recommended):
+```
+conda env create -f environment.yml
+conda activate scooti
+```
+- MATLAB: Install and license Gurobi; set COBRA toolbox path in JSON configs.
+
+Timing: 30–90 minutes (once) depending on download/solver installs.
+
+## 1. Identify Significant Genes/Proteins (DEGs)
+Use the unified demo for bulk CSVs and single‑cell embryogenesis transitions.
+
+- Run:
+```
+bash examples/identifySigGenes_demo/run_identify_siggenes.sh
+```
+- Config: `examples/identifySigGenes_demo/identify_siggenes_config.json`
+  - Bulk: Sharma’21 (`sharma_csv`), Min’18 (`min_csv`), Johnson’18 (`qp_csv`)
+  - Single‑cell: `sc_path` (10x folder), `sc_transitions` (e.g., Zygote→2cell, 2cell→32cell), `sc_method: AVGSTD`
+- Outputs: up/down gene CSVs under `examples/identifySigGenes_demo/out/` (and reverse “_P_” files). Point constrained flux configs to this folder (`data_dir`) with `uplabel/dwlabel`.
+
+Timing: 10–60 minutes (bulk per dataset); 10–60 minutes (single‑cell transitions).
+
+## 2. Generate Unconstrained Flux Models (ideal objectives)
+- Command:
+```
+bash examples/unconstrained_demo/run_unconstrained.sh
+# or
+bash scooti/run_flux.sh examples/unconstrained_demo/unconstrained_demo_config.json
+```
+- Notes: Uses `Shen2019.mat`, objective list `obj52_metabolites_shen2019.csv`, `medium: DMEMF12`.
+
+Timing: 2–12 hours depending on solver and number of objectives.
+
+## 3. Generate Constrained Flux Models (omics‑informed)
+- Command:
+```
+bash examples/constrained_demo/run_constrained.sh
+# or
+bash scooti/run_flux.sh examples/constrained_demo/constrained_demo_config.json
+```
+- Required fields: `data_dir` points to DEG CSVs, `uplabel/dwlabel`, `CFR_kappa: 0.1`, `CFR_rho: 10`, `medium: DMEMF12`.
+
+Timing: 2–8 hours depending on samples and solver.
+
+## 4. Infer Metabolic Objectives (meta‑regression)
+- Command:
+```
+bash examples/inference_demo/run_inference.sh
+# or
+bash scooti/run_trainer.sh examples/inference_demo/demo_inference_config.json
+```
+- Notes: Ensure `medium` and `fileSuffix` match your flux outputs. Outputs written to `examples/inference_demo/out/regression_models/`.
+
+Timing: 10–45 minutes (demo scale); up to a few hours for large cohorts.
+
+## 5. Analyze Objectives (minimal/legacy)
+- Minimal (recommended):
+```
+conda activate scooti
+bash examples/analyze_demo/run_analyze_minimal.sh
+```
+- Legacy (Pareto overlays, trait analysis):
+```
+bash examples/analyze_demo/run_analyze.sh
+```
+- Notes: Both engines support label configuration and safe UMAP (auto clamps neighbors/components).
+
+Timing: 5–60 minutes depending on engine and data size.
+
+## 6. Trade‑off Analysis
+- Minimal (correlations + pairwise scatters):
+```
+bash examples/tradeoff_demo/run_tradeoff_minimal.sh
+```
+- Legacy (Pareto overlays/3D):
+```
+bash examples/tradeoff_demo/run_tradeoff_legacy.sh
+```
+- Notes: Configure `pareto_mets`, correlation thresholds, and UMAP parameters as needed.
+
+Timing: 10–90 minutes depending on feature set.
+
+## Troubleshooting
+- Torch import error on some HPC nodes: install the PyTorch cu118 wheel (see README).
+- No files found by trainer/analyzer: ensure `medium` and `fileSuffix` match the flux outputs.
+- UMAP ARPACK errors (`k >= N`): use minimal analyzer or lower `umap_para`; built‑in auto‑clamping is enabled.
+
+## Resource Availability
+- Lead contact: Sriram Chandrasekaran (csriram@umich.edu)
+- Technical contact: Da‑Wei Lin (daweilin@umich.edu)
+- Materials availability: Not applicable.
+- Data/code availability: SCOOTI code and demo configs are included in this repository; example data paths are specified in configs.
+
+## Figures and Files
+- Provide figures (300 dpi) as separate files upon submission; the analyzer and trade‑off demos produce publication‑quality plots.
+
+## Highlights (examples)
+- End‑to‑end pipeline from omics to objectives and trade‑offs.
+- Single‑cell embryogenesis transitions supported via `findSigGenes`.
+- Minimal analyzer provides safe defaults for robust visualization.
+

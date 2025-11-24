@@ -10,9 +10,16 @@ Welcome to SCOOTI's documentation!
    :maxdepth: 2
    :caption: Contents
 
+   structure
    regressionAnalyzer
    metObjAnalyzer
    quickstart
+   unconstrained_models_demo
+   inference_demo
+   analyze_demo
+   tradeoff_demo
+   constrained_models_demo
+   identifying_sig_genes
    scootisettings
    advancedusage
 

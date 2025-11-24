@@ -1,6 +1,7 @@
+## Core Python deps (torch installed separately; see README for GPU/CPU options)
 numpy==1.23.5
 pandas==1.5.3
-scikit-learn==1.1.3
+scikit-learn==1.4.2
 numba==0.56.4
 tqdm
 cobra==0.26.3
@@ -8,5 +9,6 @@ scanpy==1.9.5
 seaborn==0.12.2
 phate==1.0.11
 adjustText==0.8
-torch==2.0.1
-
+hdbscan
+openpyxl
+oapackage
