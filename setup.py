@@ -29,11 +29,17 @@ setup(
         "seaborn==0.12.2",
         "phate==1.0.11",
         "adjustText==0.8",
-        "torch==2.0.1",
         "hdbscan",
         "openpyxl"
     ],
-    python_requires=">=3.8, <3.12",
+
+    extras_require={
+        # Optional PyTorch installs. By default, SCOOTI does NOT install torch.
+        # GPU (CUDA 11.8): pip install -e ".[gpu]" --extra-index-url https://download.pytorch.org/whl/cu118
+        # CPU only:        pip install -e ".[cpu]"
+        "gpu": ["torch==2.0.1+cu118"],
+        "cpu": ["torch==2.0.1"],
+    },    python_requires=">=3.8, <3.12",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",  # change if you use other

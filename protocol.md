@@ -192,8 +192,8 @@ bash examples/quickstart/inference_reproduce/run_reproduce_inference.sh
 - Inference config (examples/quickstart/inference_reproduce/reproduce_inference_config.json):
 ```json
 {
-  "unconModel": "./examples/quickstart/unconstrained_models/",
-  "conModel": "./examples/quickstart/constrained_models/",
+  "unconModel": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/",
+  "conModel": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/",
   "savePath": "./examples/quickstart/inference_reproduce/out/regression_models/",
   "kappaArr": "0.1",
   "rhoArr": "10",
@@ -226,7 +226,7 @@ bash examples/quickstart/analyze_reproduce/run_analyze_reproduce.sh
 ```json
 {
   "flux_paths": {
-    "exp": "./examples/quickstart/constrained_models/"
+    "exp": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/"
   },
   "coef_paths": {
     "exp": "./examples/quickstart/inference_reproduce/out/regression_models/"
@@ -235,7 +235,7 @@ bash examples/quickstart/analyze_reproduce/run_analyze_reproduce.sh
   "engine": "minimal",
   "reduction": "umap",
   "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
-  "uncon_model_path": "./examples/quickstart/unconstrained_models/",
+  "uncon_model_path": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/",
   "col_map": {},
   "samplingFlux_path": "",
   "sel_para": "k0.1_r10",
@@ -562,9 +562,9 @@ Edit these fields to match your data and thresholds:
   "out_dir": "./examples/identifySigGenes_demo/out/",
   "fdr_alpha": 0.05,
   "fc_threshold": 1.0,
-  "sharma_csv": "./examples/example_omics/sharma_21_prolif_pmid_34274479.csv",
-  "min_csv": "./examples/example_omics/min_18_GSE122927_ReadCount.csv",
-  "qp_csv": "./examples/example_omics/johnson_18_GSE117444_prolif_qui_count.csv",
+  "sharma_csv": "/home/daweilin/sriram-lab/SCOOTI/examples/example_omics/cell_quiescence/sharma_21_prolif_pmid_34274479.csv",
+  "min_csv": "/home/daweilin/sriram-lab/SCOOTI/examples/example_omics/cell_quiescence/min_18_GSE122927_ReadCount.csv",
+  "qp_csv": "/home/daweilin/sriram-lab/SCOOTI/examples/example_omics/cell_quiescence/johnson_18_GSE117444_prolif_qui_count.csv",
   "sharma_groups": {
     "EGF":  {"exp": [2,6,10],  "ctrl": [1,5,9,15]},
     "TPA":  {"exp": [8,12],    "ctrl": [1,5,9,15]},
@@ -720,8 +720,8 @@ Use this when you already have quickstart flux folders:
 - Other fields mirror the end‑to‑end inference config; keep consistent `medium/model/method/fileSuffix`.
 ```json
 {
-  "unconModel": "./examples/quickstart/unconstrained_models/",
-  "conModel": "./examples/quickstart/constrained_models/",
+  "unconModel": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/",
+  "conModel": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/",
   "savePath": "./examples/quickstart/inference_reproduce/out/regression_models/",
   "kappaArr": "0.1",
   "rhoArr": "10",
@@ -758,7 +758,7 @@ Customize analysis inputs and labels:
 ```json
 {
   "flux_paths": {
-    "exp": "./examples/quickstart/constrained_models/"
+    "exp": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/"
   },
   "coef_paths": {
     "exp": "./examples/quickstart/inference_reproduce/out/regression_models/"
@@ -767,7 +767,7 @@ Customize analysis inputs and labels:
   "engine": "legacy",
   "reduction": "auto",
   "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
-  "uncon_model_path": "./examples/quickstart/unconstrained_models/",
+  "uncon_model_path": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/",
   "col_map": {},
   "samplingFlux_path": "",
   "sel_para": "k0.1_r10",

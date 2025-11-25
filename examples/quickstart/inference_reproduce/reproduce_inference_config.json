@@ -1,6 +1,6 @@
 {
-  "unconModel": "./examples/quickstart/unconstrained_models/",
-  "conModel": "./examples/quickstart/constrained_models/",
+  "unconModel": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/",
+  "conModel": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/",
   "savePath": "./examples/quickstart/inference_reproduce/out/regression_models/",
   "kappaArr": "0.1",
   "rhoArr": "0.01",
