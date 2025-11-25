@@ -58,6 +58,229 @@ conda activate scooti
 
 Timing: 30–90 minutes (once) depending on download/solver installs.
 
+## Quickstart: Infer and Analyze Metabolic Objectives
+- Prereqs: Python env active (`conda activate scooti`). MATLAB + COBRA only needed for the end-to-end run.
+
+End-to-End (examples/endToend_demo)
+- Purpose: generate unconstrained and constrained fluxes, then infer objectives end-to-end.
+- One command:
+```
+bash examples/endToend_demo/run_all.sh
+```
+- Or run step-by-step:
+```
+# 1) Unconstrained fluxes (ideal objectives)
+bash scooti/run_flux.sh examples/endToend_demo/configs/unconstrained.json
+
+# 2) Constrained fluxes (omics-informed)
+bash scooti/run_flux.sh examples/endToend_demo/configs/constrained.json
+
+# 3) Objective inference (meta-regression)
+bash scooti/run_trainer.sh examples/endToend_demo/configs/inference.json
+```
+- JSON configs used (edit as needed):
+
+Config (examples/endToend_demo/configs/unconstrained.json)
+```json
+{
+  "jj": 1,
+  "COBRA_path": "~/cobratoolbox",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "model_name": "Recon1",
+  "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
+  "input_obj_tb": "",
+  "paraLen": 1,
+  "random_para": 0,
+  "init_objective": 1,
+  "genekoflag": 0,
+  "rxnkoflag": 0,
+  "FSflag": 0,
+  "pfba": 1,
+  "medium_perturbation": 0,
+  "data_dir": "",
+  "prefix_name": "model",
+  "medium": "DMEMF12",
+  "uplabel": "upgenes",
+  "dwlabel": "dwgenes",
+  "simulation": "CFR",
+  "constraint": 0,
+  "save_root_path": "./examples/endToend_demo/out/unconstrained_models/",
+  "CFR_model_path": "",
+  "pairwise_CFR_model": 0,
+  "extraWeight": 0,
+  "algorithm": "cfr",
+  "data_series": "",
+  "prefix_series": "",
+  "medium_series": ""
+}
+```
+
+Config (examples/endToend_demo/configs/constrained.json)
+```json
+{
+  "jj": 1,
+  "COBRA_path": "~/cobratoolbox",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "model_name": "Recon1",
+  "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
+  "input_obj_tb": "",
+  "paraLen": 1,
+  "random_para": 0,
+  "init_objective": 1,
+  "genekoflag": 0,
+  "rxnkoflag": 0,
+  "FSflag": 0,
+  "pfba": 1,
+  "medium_perturbation": 0,
+  "data_dir": "./examples/run_flux/example_sigGenes/",
+  "prefix_name": "ProQui",
+  "medium": "DMEMF12",
+  "uplabel": "upgenes",
+  "dwlabel": "dwgenes",
+  "simulation": "CFR",
+  "constraint": 1,
+  "save_root_path": "./examples/endToend_demo/out/constrained_models/",
+  "CFR_model_path": "",
+  "pairwise_CFR_model": 0,
+  "extraWeight": 0,
+  "algorithm": "cfr",
+  "data_series": "",
+  "prefix_series": "",
+  "medium_series": "",
+  "kappa": 0.1,
+  "rho": 10,
+  "DFA_kappa": -1
+}
+```
+
+Config (examples/endToend_demo/configs/inference.json)
+```json
+{
+  "unconModel": "./examples/endToend_demo/out/unconstrained_models/",
+  "conModel": "./examples/endToend_demo/out/constrained_models/",
+  "savePath": "./examples/endToend_demo/out/regression_models/",
+  "kappaArr": "10,1,0.1",
+  "rhoArr": "10,1,0.1",
+  "dkappaArr": "10,1,0.1",
+  "expName": "quickstart",
+  "unconNorm": "T",
+  "conNorm": "F",
+  "medium": "DMEMF12",
+  "method": "cfr",
+  "model": "recon1",
+  "inputType": "flux",
+  "clusterPath": "",
+  "objListPath": "",
+  "rank": "F",
+  "stackModel": "F",
+  "sampling": "F",
+  "learner": "L",
+  "geneKO": "F",
+  "geneListPath": "",
+  "learningRate": 0.001,
+  "epo": 5000,
+  "fileSuffix": "_fluxes.csv.gz"
+}
+```
+
+Quickstart (examples/quickstart)
+- Purpose: use precomputed unconstrained/constrained fluxes to run inference and analysis quickly.
+- Inference:
+```
+bash examples/quickstart/inference_reproduce/run_reproduce_inference.sh
+```
+- Inference config (examples/quickstart/inference_reproduce/reproduce_inference_config.json):
+```json
+{
+  "unconModel": "./examples/quickstart/unconstrained_models/",
+  "conModel": "./examples/quickstart/constrained_models/",
+  "savePath": "./examples/quickstart/inference_reproduce/out/regression_models/",
+  "kappaArr": "0.1",
+  "rhoArr": "10",
+  "dkappaArr": "10,1,0.1",
+  "expName": "inference_reproduce",
+  "unconNorm": "T",
+  "conNorm": "F",
+  "medium": "DMEMF12",
+  "method": "cfr",
+  "model": "recon1",
+  "inputType": "flux",
+  "clusterPath": "",
+  "objListPath": "",
+  "rank": "F",
+  "stackModel": "F",
+  "sampling": "F",
+  "learner": "L",
+  "geneKO": "F",
+  "geneListPath": "",
+  "learningRate": 0.001,
+  "epo": 5000,
+  "fileSuffix": "_fluxes.csv.gz"
+}
+```
+- Analysis:
+```
+bash examples/quickstart/analyze_reproduce/run_analyze_reproduce.sh
+```
+- Analysis config (examples/quickstart/analyze_reproduce/analyze_reproduce_config.minimal.json):
+```json
+{
+  "flux_paths": {
+    "exp": "./examples/quickstart/constrained_models/"
+  },
+  "coef_paths": {
+    "exp": "./examples/quickstart/inference_reproduce/out/regression_models/"
+  },
+  "save_root_path": "./examples/quickstart/analyze_reproduce/out/",
+  "engine": "minimal",
+  "reduction": "umap",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "uncon_model_path": "./examples/quickstart/unconstrained_models/",
+  "col_map": {},
+  "samplingFlux_path": "",
+  "sel_para": "k0.1_r10",
+  "prefix": "analyze_reproduce",
+  "medium": "DMEMF12",
+  "clustering": true,
+  "clustergram_allocation": true,
+  "entropy": true,
+  "distance": true,
+  "cluster_umap": true,
+  "umap_para": [
+    5,
+    50
+  ],
+  "plots": {
+    "coef_strip": true,
+    "coef_strip_norm": true,
+    "proportional": true,
+    "distance_plot": true,
+    "allocation_heatmap": true,
+    "proportion_lollipop": true,
+    "allocation_bar_distribution": true,
+    "top_k": 12
+  },
+  "labels": {
+    "mode": "contains",
+    "contains_pattern": "_P_",
+    "true_label": "Proliferation",
+    "false_label": "Quiescence"
+  },
+  "coef_analysis": {
+    "ref_col": null,
+    "tgt_col": null
+  },
+  "metType_cluster": false,
+  "metType_map": null,
+  "tradeoff": false,
+  "tradeoff_top_k": 100,
+  "tradeoff_corr_threshold": -0.5
+}
+```
+- Outputs:
+  - Inference coefficients: `examples/quickstart/inference_reproduce/out/regression_models/`
+  - Analysis figures: `examples/quickstart/analyze_reproduce/out/`
+
 ## 1. Identify Significant Genes/Proteins (DEGs)
 Use the unified demo for bulk CSVs and single‑cell embryogenesis transitions.
 
@@ -320,3 +543,254 @@ Config (tradeoff_demo/tradeoff_config.legacy.json)
 - Legacy analyzer provides Pareto overlays and trait analysis.
 - End‑to‑end pipeline from omics to objectives and trade‑offs.
 - Single‑cell embryogenesis transitions supported via `findSigGenes`.
+
+## Full Configuration Listings
+
+Full JSON contents for the referenced demos are included here for convenience.
+
+### identifySigGenes_demo/identify_siggenes_config.json
+Edit these fields to match your data and thresholds:
+- out_dir: folder for DEG CSV outputs.
+- fdr_alpha: FDR cutoff for significance (e.g., 0.05).
+- fc_threshold: fold‑change threshold; >1 for up, <1/fc for down.
+- sharma_csv, min_csv, qp_csv: absolute or relative paths to bulk count/TPM tables.
+- sharma_groups: list experimental vs control sample indices for each label.
+- min_pairs: regex rules that select two cohorts from a single table; adjust patterns to your columns.
+- qp_split: number of control vs experimental replicates to split from the left of the table.
+```json
+{
+  "out_dir": "./examples/identifySigGenes_demo/out/",
+  "fdr_alpha": 0.05,
+  "fc_threshold": 1.0,
+  "sharma_csv": "./examples/example_omics/sharma_21_prolif_pmid_34274479.csv",
+  "min_csv": "./examples/example_omics/min_18_GSE122927_ReadCount.csv",
+  "qp_csv": "./examples/example_omics/johnson_18_GSE117444_prolif_qui_count.csv",
+  "sharma_groups": {
+    "EGF":  {"exp": [2,6,10],  "ctrl": [1,5,9,15]},
+    "TPA":  {"exp": [8,12],    "ctrl": [1,5,9,15]},
+    "H89-EGF": {"exp": [13,16],  "ctrl": [7,11,17]},
+    "H89-TPA": {"exp": [14,18],  "ctrl": [7,11,17]}
+  },
+  "min_pairs": [
+    {"label": "p21_2E2",            "regex": "(?=.*p21_high)(?=.*2E2)|(?=.*p21_low)(?=.*2E2)"},
+    {"label": "p21_3B6",            "regex": "(?=.*p21)(?=.*3B6)"},
+    {"label": "SerumStarvation_2E2","regex": "(?=.*SerumStarvation)(?=.*2E2)|(?=.*2E2)(?=.*Control)"},
+    {"label": "SerumStarvation_3B6","regex": "(?=.*SerumStarvation)(?=.*3B6)|(?=.*3B6)(?=.*Control)"},
+    {"label": "Meki_2E2",           "regex": "(?=.*Meki)(?=.*2E2)|(?=.*2E2)(?=.*Control)"},
+    {"label": "Meki_3B6",           "regex": "(?=.*Meki)(?=.*3B6)|(?=.*3B6)(?=.*Control)"},
+    {"label": "CDK46i_2E2",         "regex": "(?=.*CDK46i)(?=.*2E2)|(?=.*2E2)(?=.*Control)"},
+    {"label": "CDK46i_3B6",         "regex": "(?=.*CDK46i)(?=.*3B6)|(?=.*3B6)(?=.*Control)"},
+    {"label": "ContactIn_2E2",      "regex": "(?=.*ContactIn)(?=.*2E2)|(?=.*2E2)(?=.*Control)"},
+    {"label": "ContactIn_3B6",      "regex": "(?=.*ContactIn)(?=.*3B6)|(?=.*3B6)(?=.*Control)"}
+  ],
+  "qp_split": {"ctrl_n": 3, "exp_n": 3}
+}
+```
+
+### endToend_demo/configs/unconstrained.json
+Edit the core modeling knobs and locations:
+- COBRA_path: your COBRA Toolbox path in MATLAB (e.g., ~/cobratoolbox).
+- GEM_path: path to the GEM MAT file (supports sparse `Shen2019.mat`).
+- obj_candidate_list_file: CSV of objective candidates to optimize individually.
+- pfba: 1 to use pFBA for flux minimization under the objective.
+- medium: exchange medium (e.g., DMEMF12); must match other steps.
+- save_root_path: output folder for the per‑objective models.
+- init_objective, random_para, paraLen: keep defaults for the demo.
+```json
+{
+  "jj": 1,
+  "COBRA_path": "~/cobratoolbox",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "model_name": "Recon1",
+  "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
+  "input_obj_tb": "",
+  "paraLen": 1,
+  "random_para": 0,
+  "init_objective": 1,
+  "genekoflag": 0,
+  "rxnkoflag": 0,
+  "FSflag": 0,
+  "pfba": 1,
+  "medium_perturbation": 0,
+  "data_dir": "",
+  "prefix_name": "model",
+  "medium": "DMEMF12",
+  "uplabel": "upgenes",
+  "dwlabel": "dwgenes",
+  "simulation": "CFR",
+  "constraint": 0,
+  "save_root_path": "./examples/endToend_demo/out/unconstrained_models/",
+  "CFR_model_path": "",
+  "pairwise_CFR_model": 0,
+  "extraWeight": 0,
+  "algorithm": "cfr",
+  "data_series": "",
+  "prefix_series": "",
+  "medium_series": ""
+}
+```
+
+### endToend_demo/configs/constrained.json
+Key items to customize for your DEG‑constrained runs:
+- data_dir: directory containing `*_upgenes.csv` and `*_dwgenes.csv` files.
+- uplabel, dwlabel: filename suffixes used to match gene lists.
+- kappa, rho: CFR penalty parameters (e.g., 0.1 and 10); tune for your dataset.
+- medium: must match unconstrained and inference configs.
+- save_root_path: output folder for constrained models.
+- GEM_path, COBRA_path: see unconstrained notes; keep consistent.
+```json
+{
+  "jj": 1,
+  "COBRA_path": "~/cobratoolbox",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "model_name": "Recon1",
+  "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
+  "input_obj_tb": "",
+  "paraLen": 1,
+  "random_para": 0,
+  "init_objective": 1,
+  "genekoflag": 0,
+  "rxnkoflag": 0,
+  "FSflag": 0,
+  "pfba": 1,
+  "medium_perturbation": 0,
+  "data_dir": "./examples/run_flux/example_sigGenes/",
+  "prefix_name": "ProQui",
+  "medium": "DMEMF12",
+  "uplabel": "upgenes",
+  "dwlabel": "dwgenes",
+  "simulation": "CFR",
+  "constraint": 1,
+  "save_root_path": "./examples/endToend_demo/out/constrained_models/",
+  "CFR_model_path": "",
+  "pairwise_CFR_model": 0,
+  "extraWeight": 0,
+  "algorithm": "cfr",
+  "data_series": "",
+  "prefix_series": "",
+  "medium_series": "",
+  "kappa": 0.1,
+  "rho": 10,
+  "DFA_kappa": -1
+}
+```
+
+### endToend_demo/configs/inference.json
+Adjust paths and inference hyperparameters:
+- unconModel, conModel: folders containing the flux tables from earlier steps.
+- savePath: folder for inferred coefficients.
+- kappaArr, rhoArr, dkappaArr: parameter grids to aggregate/analyze; comma‑separated strings.
+- medium, method, model, inputType: must match how fluxes were generated (e.g., DMEMF12/cfr/recon1/flux).
+- learner: `L` for linear meta‑learner (default); torch learners optional.
+- fileSuffix: filename suffix for flux tables (e.g., `_fluxes.csv.gz`).
+```json
+{
+  "unconModel": "./examples/endToend_demo/out/unconstrained_models/",
+  "conModel": "./examples/endToend_demo/out/constrained_models/",
+  "savePath": "./examples/endToend_demo/out/regression_models/",
+  "kappaArr": "10,1,0.1",
+  "rhoArr": "10,1,0.1",
+  "dkappaArr": "10,1,0.1",
+  "expName": "quickstart",
+  "unconNorm": "T",
+  "conNorm": "F",
+  "medium": "DMEMF12",
+  "method": "cfr",
+  "model": "recon1",
+  "inputType": "flux",
+  "clusterPath": "",
+  "objListPath": "",
+  "rank": "F",
+  "stackModel": "F",
+  "sampling": "F",
+  "learner": "L",
+  "geneKO": "F",
+  "geneListPath": "",
+  "learningRate": 0.001,
+  "epo": 5000,
+  "fileSuffix": "_fluxes.csv.gz"
+}
+```
+
+### quickstart/inference_reproduce/reproduce_inference_config.json
+Use this when you already have quickstart flux folders:
+- unconModel, conModel: point to existing `unconstrained_models/` and `constrained_models/`.
+- savePath: where to write the coefficients.
+- kappaArr, rhoArr: single values or short lists for the reproduced setting.
+- Other fields mirror the end‑to‑end inference config; keep consistent `medium/model/method/fileSuffix`.
+```json
+{
+  "unconModel": "./examples/quickstart/unconstrained_models/",
+  "conModel": "./examples/quickstart/constrained_models/",
+  "savePath": "./examples/quickstart/inference_reproduce/out/regression_models/",
+  "kappaArr": "0.1",
+  "rhoArr": "10",
+  "dkappaArr": "10,1,0.1",
+  "expName": "inference_reproduce",
+  "unconNorm": "T",
+  "conNorm": "F",
+  "medium": "DMEMF12",
+  "method": "cfr",
+  "model": "recon1",
+  "inputType": "flux",
+  "clusterPath": "",
+  "objListPath": "",
+  "rank": "F",
+  "stackModel": "F",
+  "sampling": "F",
+  "learner": "L",
+  "geneKO": "F",
+  "geneListPath": "",
+  "learningRate": 0.001,
+  "epo": 5000,
+  "fileSuffix": "_fluxes.csv.gz"
+}
+```
+
+### quickstart/analyze_reproduce/analyze_reproduce_config.json
+Customize analysis inputs and labels:
+- flux_paths.exp: constrained model folder to analyze (can be relative).
+- coef_paths.exp: coefficients folder from the reproduce inference step.
+- save_root_path: output folder for analysis plots/tables.
+- labels: choose labeling mode; `contains` with `_P_` maps to Proliferation/Quiescence.
+- sel_para: optional selector string (e.g., `k0.1_r10`) if your analyzer uses parameter keys.
+- engine/reduction/umap_para: analysis engine and dimensionality reduction settings.
+```json
+{
+  "flux_paths": {
+    "exp": "./examples/quickstart/constrained_models/"
+  },
+  "coef_paths": {
+    "exp": "./examples/quickstart/inference_reproduce/out/regression_models/"
+  },
+  "save_root_path": "./examples/quickstart/analyze_reproduce/out/",
+  "engine": "legacy",
+  "reduction": "auto",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "uncon_model_path": "./examples/quickstart/unconstrained_models/",
+  "col_map": {},
+  "samplingFlux_path": "",
+  "sel_para": "k0.1_r10",
+  "prefix": "analyze_reproduce",
+  "medium": "DMEMF12",
+  "labels": {
+    "mode": "contains",
+    "contains_pattern": "_P_",
+    "true_label": "Proliferation",
+    "false_label": "Quiescence"
+  },
+  "get_coef": {
+    "metType_cluster": false
+  },
+  "coef_analysis": {
+    "unknown_clustering": false,
+    "clustering": true,
+    "entropy": true,
+    "distance": true,
+    "compare": true,
+    "umap_para": [5, 50],
+    "method": "average",
+    "ref_col": null
+  }
+}
+```

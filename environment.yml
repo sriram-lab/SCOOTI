@@ -12,6 +12,7 @@ dependencies:
   - cobra=0.26.3
   - scanpy=1.9.5
   - seaborn=0.12.2
+  - swig  # needed to build OApackage from source
   - ittapi
   - intel-openmp
   - pip
@@ -20,5 +21,4 @@ dependencies:
       - adjustText==0.8
       - hdbscan
       - openpyxl
-      - oapackage
-      - -e .
+      - OApackage

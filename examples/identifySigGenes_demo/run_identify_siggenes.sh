@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Usage: bash examples/identifySigGenes_demo/run_identify_siggenes.sh [config.json]
+# Default config now targets single-cell embryogenesis transitions.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -14,4 +14,5 @@ fi
 # Activate environment if needed (optional)
 # source "$REPO_ROOT/.venv/bin/activate" || true
 
+echo "[identifySigGenes] Using config: $CFG"
 python3 "$SCRIPT_DIR/demo_identify_siggenes.py" "$CFG"

@@ -15,7 +15,7 @@
   "medium_perturbation": 0,
   "data_dir": "",
   "prefix_name": "model",
-  "medium": "DMEMF12",
+  "medium": "KSOM",
   "uplabel": "upgenes",
   "dwlabel": "dwgenes",
   "simulation": "CFR",

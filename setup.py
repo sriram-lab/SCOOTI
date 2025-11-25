@@ -8,7 +8,10 @@ LONG_DESCRIPTION = 'SCOOTI: Single Cell Optimization OBjective and Tradeoff Infe
 
 setup(
     name="scooti",
-    use_scm_version={"write_to": "scooti/_version.py"},# Enables setuptools_scm to derive the version from SCM metadata
+    use_scm_version={
+        "write_to": "scooti/_version.py",
+        "fallback_version": "0.0.0",
+    },# Enables setuptools_scm to derive the version from SCM metadata (with fallback)
     setup_requires=["setuptools_scm"],  # Ensures setuptools_scm is installed during setup
     author="Chandrasekaran Lab, University of Michigan",
     author_email="csriram@umich.edu",
@@ -17,7 +20,8 @@ setup(
     install_requires=[
         "numpy==1.23.5",
         "pandas==1.5.3",
-        "scikit-learn==1.1.3",
+        # Allow newer scikit-learn from environment.yml (e.g., 1.4.x)
+        "scikit-learn>=1.1,<1.5",
         "numba==0.56.4",
         "tqdm",
         "cobra==0.26.3",

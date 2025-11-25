@@ -378,8 +378,8 @@ class findSigGenes:
         adata.var_names_make_unique()  # this is unnecessary if using `var_names='gene_ids'` in `sc.read_10x_mtx`
         
         # 1st filtering
-        sc.pp.filter_cells(adata, min_genes=200)
-        sc.pp.filter_genes(adata, min_cells=3)
+        sc.pp.filter_cells(adata, min_genes=100)
+        sc.pp.filter_genes(adata, min_cells=1)
         
         adata.var['mt'] = adata.var_names.str.startswith('MT-')  # annotate the group of mitochondrial genes as 'mt'
         sc.pp.calculate_qc_metrics(
@@ -387,7 +387,6 @@ class findSigGenes:
                 )
         
         # 2nd filtering
-        #adata = adata[adata.obs.n_genes_by_counts < 5000, :]
         adata = adata[adata.obs.pct_counts_mt < 5, :]
         
         # normalize data
@@ -743,82 +742,78 @@ class findSigGenes:
 
     # methods to get sig genes during transitions
     def get_transition_genes(self, ref_cells, exp_cells, alpha=0.95, split_str='_', prefix_define='', method='CI', std_num=2, correction=False, save_files=False):
-        
         """
-        Parameter
-        ---------
-        ref_cells (numpy.array): a boolean array that indicates where is the reference rows
-        exp_cells (numpy.array): a boolean array that indicates where is the compared rows
-        alpha (float): threshold for statistical tests
-        split_str (str): split the name of cells
-        
-        Return
-        ------
-        genedf (pandas.DataFrame): gene expression table
-
+        Identify up- and down-regulated genes for exp_cells by comparing to ref_cells thresholds.
+        method 'CI': t-interval over ref cells; 'AVGSTD': mean(ref) ± std_num*std(ref).
+        Strict thresholds (> ub, < lb). Optional BH-FDR per exp cell.
         """
-
+        import numpy as np
+        import pandas as pd
         import scipy.stats as st
-        # get expression table
-        genedf = self.genedf
+        try:
+            import statsmodels.stats.multitest as mt
+        except Exception:
+            mt = None
+
+        genedf = self.genedf  # rows: cells, cols: genes
         print('shape of gene expression data:', genedf.shape)
-        if method=='CI':
-            # create 95% confidence interval for population mean weight
-            lb, ub = st.t.interval(
-                        alpha=alpha,
-                        df=len(genedf)-1,
-                        loc=np.mean(genedf),
-                        scale=st.sem(genedf)
-                    )
+        ref_cells = np.asarray(ref_cells).astype(bool)
+        exp_cells = np.asarray(exp_cells).astype(bool)
+        ref_df = genedf.loc[ref_cells]
+        if ref_df.shape[0] < 2:
+            raise ValueError('Not enough reference cells to compute thresholds')
+
+        if method == 'CI':
+            n = ref_df.shape[0]
+            ref_mean = ref_df.mean(axis=0)
+            ref_std = ref_df.std(axis=0, ddof=1)
+            se = ref_std / np.sqrt(n)
+            tcrit = st.t.ppf((1+alpha)/2.0, df=n-1)
+            ub = ref_mean + tcrit * se
+            lb = ref_mean - tcrit * se
             print('shape of limits:', ub.shape)
-        else: # AVGSTD
-            # create mean+2std for population mean weight
-            ub = genedf.mean(axis=0)+std_num*genedf.std(axis=0)
-            lb = genedf.mean(axis=0)-std_num*genedf.std(axis=0)
+        else:
+            ref_mean = ref_df.mean(axis=0)
+            ref_std = ref_df.std(axis=0, ddof=1)
+            ub = ref_mean + std_num * ref_std
+            lb = ref_mean - std_num * ref_std
             print('shape of limits:', ub.shape)
-        # get up- or down-regulated genes for each cells
-        dwgenedf = genedf[exp_cells].apply(lambda x: x<lb, axis=1)
-        upgenedf = genedf[exp_cells].apply(lambda x: x>ub, axis=1)
 
-        if correction=='True':
-            zscores = genedf.sub(genedf.mean(axis=0), axis=1).div(genedf.std(axis=0), axis=1)
-            pvalues = zscores.apply(lambda x: st.norm.sf(abs(x))*2)
-            corrected_p = {}
-            for i in range(len(pvalues)):
-                corrected_p[pvalues.index[i]] = mt.fdrcorrection(pvalues.iloc[i,:])[1]
-            corrected_p = pd.DataFrame(corrected_p).T
-            print('FDR')
-            print(corrected_p)
-            dwgenedf[corrected_p>=0.05] = 0
-            upgenedf[corrected_p>=0.05] = 0
+        exp_df = genedf.loc[exp_cells]
+        upgenedf = exp_df.gt(ub, axis=1)
+        dwgenedf = exp_df.lt(lb, axis=1)
 
-        print(upgenedf)
+        use_corr = (isinstance(correction, str) and correction == 'True') or (isinstance(correction, bool) and correction)
+        if use_corr and mt is not None:
+            ref_std_safe = ref_std.replace(0, np.nan)
+            for idx in upgenedf.index:
+                x = exp_df.loc[idx]
+                z = (x - ref_mean) / ref_std_safe
+                pv = 2.0 * st.norm.sf(np.abs(z.values))
+                pvals = np.asarray(pv, dtype=float)
+                nan_mask = np.isnan(pvals)
+                if nan_mask.any():
+                    pvals[nan_mask] = 1.0
+                reject, p_adj = mt.fdrcorrection(pvals)
+                mask = pd.Series(reject, index=exp_df.columns)
+                upgenedf.loc[idx, ~mask] = False
+                dwgenedf.loc[idx, ~mask] = False
 
-
-        self.regulator_clustering(upgenedf, dwgenedf, method, correction, alpha)
-        
-        if save_files==True:
-            # save files
+        if save_files == True:
+            import os
             for i in range(len(upgenedf)):
-                # get cell names
-                prefix = upgenedf.index[i] if prefix_define=='' else prefix_define
-                cell_dir = self.folder_path+'sigGenes/'+prefix.split(split_str)[0]+'/'
-                isExist = os.path.exists(cell_dir)
-                if not isExist:
-                    # create a new dir if not existing
+                prefix = upgenedf.index[i] if prefix_define == '' else prefix_define
+                cell_dir = self.folder_path + 'sigGenes/' + prefix.split(split_str)[0] + '/'
+                if not os.path.exists(cell_dir):
                     os.makedirs(cell_dir)
                     print(f'Create a folder for {prefix.split("_")[0]}')
-                # save up-/down-regulated genes for each cells
-                pd.DataFrame({
-                    'upgenes':upgenedf.iloc[i,:][upgenedf.iloc[i, :]==True].index.to_numpy()
-                    }).to_csv(cell_dir+upgenedf.index[i]+'_upgenes.csv')
-
-                pd.DataFrame({
-                    'dwgenes':dwgenedf.iloc[i,:][dwgenedf.iloc[i, :]==True].index.to_numpy()
-                    }).to_csv(cell_dir+upgenedf.index[i]+'_dwgenes.csv')
-
+                up_list = upgenedf.iloc[i, :][upgenedf.iloc[i, :] == True].index.to_numpy()
+                dw_list = dwgenedf.iloc[i, :][dwgenedf.iloc[i, :] == True].index.to_numpy()
+                pd.DataFrame({'upgenes': up_list}).to_csv(cell_dir + prefix + '_upgenes.csv')
+                pd.DataFrame({'dwgenes': dw_list}).to_csv(cell_dir + prefix + '_dwgenes.csv')
 
         return upgenedf, dwgenedf
+
 
     # ------------------------------
     # T-test + (optional) FDR + FC for transitions (Johnson-style)

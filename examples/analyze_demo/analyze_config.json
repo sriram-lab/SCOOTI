@@ -12,9 +12,9 @@
   "uncon_model_path": "./examples/unconstrained_demo/out/unconstrained_models/",
   "col_map": {},
   "samplingFlux_path": "",
-  "sel_para": "",
+  "sel_para": "k0.1_r0.01",
   "prefix": "analyze_demo",
-  "medium": "DMEMF12",
+  "medium": "KSOM",
 
   "labels": {
     "mode": "contains",

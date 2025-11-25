@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from statsmodels.stats.multitest import fdrcorrection
-from scooti.GeneralMethods.findSigGenes import findSigGenes
+from scooti.utils.findSigGenes import findSigGenes
+from pathlib import Path
 
 # Utilities
 
@@ -126,12 +127,16 @@ def run_single_cell(cfg):
     """
     out_dir = cfg["out_dir"]
     sc_path = cfg.get("sc_path", "")
+    if sc_path and not os.path.isabs(sc_path):
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        sc_path = os.path.abspath(os.path.join(repo_root, sc_path))
     if not sc_path:
       return
     label_split = cfg.get("sc_label_split", "_")
     label_index = int(cfg.get("sc_label_index", 0))
     sc_method = cfg.get("sc_method", "AVGSTD")
     sc_std = float(cfg.get("sc_std_num", 2))
+    sc_correction = cfg.get("sc_correction", True)
 
     fr = findSigGenes(sc_path)
     fr.read_scRNAseq()
@@ -145,17 +150,99 @@ def run_single_cell(cfg):
         exp_pat = re.compile(tr.get("exp_regex", ".*"))
         ref_cells = labels.apply(lambda s: bool(ref_pat.search(s))).to_numpy()
         exp_cells = labels.apply(lambda s: bool(exp_pat.search(s))).to_numpy()
-        updf, dwdf = fr.get_transition_genes(ref_cells, exp_cells, split_str=label_split, method=sc_method, std_num=sc_std, save_files=False)
-        # Aggregate across exp cells by union
-        up_union = updf.any(axis=0).to_numpy()
-        dw_union = dwdf.any(axis=0).to_numpy()
-        save_up_dw(updf.columns.to_numpy(), up_union, dw_union, out_dir, tlabel)
+        print(f"[debug] transition {tlabel}: ref={ref_cells.sum()} exp={exp_cells.sum()} of {len(labels)}")
+        print(f"[debug] transition {tlabel}: ref={ref_cells.sum()} exp={exp_cells.sum()} of {len(labels)}")
+        updf, dwdf = fr.get_transition_genes(ref_cells, exp_cells, split_str=label_split, method=sc_method, std_num=sc_std, correction=sc_correction, save_files=False)
+        # Write per-exp-cell files matching example_sigGenes naming
+        for cell in updf.index:
+            if 'sc1C2C' in tlabel:
+                base = f'1C_to_{cell}'
+            elif 'sc2CBC' in tlabel:
+                base = f'2C_to_{cell}'
+            else:
+                base = cell
+            up_genes = updf.loc[cell]
+            dw_genes = dwdf.loc[cell]
+            up_list = up_genes[up_genes == True].index.to_numpy()
+            dw_list = dw_genes[dw_genes == True].index.to_numpy()
+            pd.DataFrame({"upgenes": up_list}).to_csv(os.path.join(out_dir, f"{base}_upgenes.csv"), index=False)
+            pd.DataFrame({"dwgenes": dw_list}).to_csv(os.path.join(out_dir, f"{base}_dwgenes.csv"), index=False)
+
+
+
+def extract_first_col(df: pd.DataFrame):
+    for c in df.columns:
+        if str(c).strip().lower() == 'gene':
+            series = df[c]
+            return [str(x).strip() for x in series.dropna().astype(str) if str(x).strip()]
+    try:
+        series = df.iloc[:, -1]
+    except Exception:
+        series = df.iloc[:, 0]
+    return [str(x).strip() for x in series.dropna().astype(str) if str(x).strip()]
+
+
+def run_scembryo_excels(cfg):
+    """Produce per-file upgenes/dwgenes CSVs from scEmbryo Excel files.
+    Follows RegulatorsFromDatasets mapping: for names like '1C_to_2cell_...'
+      - use the '2C' sheet as upgenes and '1C' as dwgenes (last column or 'gene' column)
+      - for '2C_to_32cell_...' use '32C' as upgenes and '2C' as dwgenes.
+    """
+    indir = Path(cfg.get('sc_xlsx_dir', ''))
+    outdir = Path(cfg.get('out_dir', indir))
+    if not indir or not indir.exists():
+        return
+    outdir.mkdir(parents=True, exist_ok=True)
+    xfiles = sorted(indir.glob('*.xlsx')); print('[scembryo-excel] files found:', len(xfiles))
+    for xf in xfiles:
+        try:
+            xls = pd.ExcelFile(xf)
+        except Exception as e:
+            print(f'[scembryo-excel][SKIP] {xf.name}: {e}', file=sys.stderr)
+            continue
+        sheets = {s.lower(): s for s in xls.sheet_names}
+        base = xf.stem
+        name = base.lower()
+        up_sheet = None
+        dw_sheet = None
+        if '1c_to_2cell' in name:
+            up_sheet = sheets.get('2c')
+            dw_sheet = sheets.get('1c')
+        elif '2c_to_32cell' in name:
+            # allow '32c' or '32cell' in sheet
+            up_sheet = sheets.get('32c') or sheets.get('32cell')
+            dw_sheet = sheets.get('2c')
+        else:
+            # Fallback: try any two sheets, map second as up, first as down
+            if xls.sheet_names:
+                dw_sheet = xls.sheet_names[0]
+            if len(xls.sheet_names) > 1:
+                up_sheet = xls.sheet_names[1]
+        up_list, dw_list = [], []
+        if up_sheet:
+            try:
+                dfu = xls.parse(up_sheet)
+                up_list = extract_first_col(dfu)
+            except Exception as e:
+                print(f'[scembryo-excel][WARN] {xf.name}: up {up_sheet} parse error: {e}', file=sys.stderr)
+        if dw_sheet:
+            try:
+                dfd = xls.parse(dw_sheet)
+                dw_list = extract_first_col(dfd)
+            except Exception as e:
+                print(f'[scembryo-excel][WARN] {xf.name}: dw {dw_sheet} parse error: {e}', file=sys.stderr)
+        # Write per-file outputs into out_dir
+        pd.DataFrame({'upgenes': up_list}).to_csv(outdir / f'{base}_upgenes.csv', index=False)
+        pd.DataFrame({'dwgenes': dw_list}).to_csv(outdir / f'{base}_dwgenes.csv', index=False)
+        print(f'[scembryo-excel] {xf.name} -> {base}_upgenes.csv ({len(up_list)}), {base}_dwgenes.csv ({len(dw_list)})')
+
 
 
 def main():
+    print("[debug] demo_identify_siggenes starting")
     cfg_path = sys.argv[1] if len(sys.argv) > 1 else "identify_siggenes_config.json"
     with open(cfg_path, "r") as f:
-        cfg = json.load(f)
+        cfg = json.load(f); print("[debug] cfg keys:", list(cfg.keys()))
     # Resolve out_dir relative to repo root if needed
     out_dir = cfg.get("out_dir", "./examples/identifySigGenes_demo/out/")
     if not os.path.isabs(out_dir):
@@ -173,8 +260,13 @@ def main():
     if "qp_csv" in cfg:
         run_qp(cfg)
     # Single-cell (optional)
+    if "sc_xlsx_dir" in cfg:
+        print("[debug] running excel on", cfg.get("sc_xlsx_dir")); run_scembryo_excels(cfg)
     if "sc_path" in cfg:
-        run_single_cell(cfg)
+        try:
+            run_single_cell(cfg)
+        except Exception as e:
+            print(f"[warn] single-cell processing skipped: {e}")
 
     print(f"[identifySigGenes_demo] Done. Outputs in: {out_dir}")
 

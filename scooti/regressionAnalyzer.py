@@ -1335,7 +1335,11 @@ def getRxnCoefficients(
         except Exception:
             pass
         # known repo location
-        candidates.append('/home/daweilin/sriram-lab/SCOOTI/scooti/metabolicModel/GEMs/recon1_biomass_coef.csv')
+        try:
+            here = os.path.dirname(os.path.abspath(__file__))
+            candidates.append(os.path.join(here, 'metabolicModel', 'GEMs', 'recon1_biomass_coef.csv'))
+        except Exception:
+            pass
 
         csv_used = None
         tmp = None
