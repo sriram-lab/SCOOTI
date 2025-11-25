@@ -15,7 +15,7 @@
   "medium_perturbation": 0,
   "data_dir": "/home/daweilin/sriram-lab/SCOOTI/examples/example_sigGenes/scEmbryo/",
   "prefix_name": "ProQui",
-  "medium": "KSOM",
+  "medium": "DMEMF12",
   "uplabel": "upgenes",
   "dwlabel": "dwgenes",
   "simulation": "CFR",
@@ -29,6 +29,6 @@
   "prefix_series": "",
   "medium_series": "",
   "kappa": 0.1,
-  "rho": 0.01,
+  "rho": 10,
   "DFA_kappa": -1
 }

@@ -5,7 +5,7 @@
   "save_root_path": "./examples/tradeoff_demo/out/",
   "engine": "legacy",
   "prefix": "tradeoff_demo",
-  "medium": "DMEMF12",
+  "medium": "KSOM",
   "coef_analysis": {
     "clustering": false,
     "entropy": true,

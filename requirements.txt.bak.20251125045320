@@ -11,4 +11,4 @@ phate==1.0.11
 adjustText==0.8
 hdbscan
 openpyxl
-OApackage<2.7
+OApackage

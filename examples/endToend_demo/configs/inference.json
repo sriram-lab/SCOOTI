@@ -8,7 +8,7 @@
   "expName": "quickstart",
   "unconNorm": "T",
   "conNorm": "F",
-  "medium": "KSOM",
+  "medium": "DMEMF12",
   "method": "cfr",
   "model": "recon1",
   "inputType": "flux",

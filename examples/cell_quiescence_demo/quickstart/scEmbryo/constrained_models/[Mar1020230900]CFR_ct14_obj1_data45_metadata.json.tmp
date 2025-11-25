@@ -110,9 +110,9 @@
     0,
     0
   ],
-  "output_path": "/nfs/turbo/umms-csriram/daweilin/fluxPrediction/prolif_qui/",
-  "input_path": "/nfs/turbo/umms-csriram/daweilin/data/dawei_prolif_qui_datasets/sigGenes/prolif_qui/min_18_GSE122927_ContactIn_2E2.csv",
-  "file_name": "CFR_ct11_obj1_data13",
+  "output_path": "/nfs/turbo/umms-csriram/daweilin/fluxPrediction/sc1C2C/paraScan/",
+  "input_path": "/nfs/turbo/umms-csriram/daweilin/data/scEmbryo/GSE136714/old_sigGenes/1C2C/1C_to_2cell_embryo9_1_split1.xlsx",
+  "file_name": "CFR_ct14_obj1_data45",
   "with_constraint": 1,
   "CFR_kappa": 0.1,
   "CFR_rho": 10,
@@ -122,7 +122,7 @@
   "media_perturbation": 0,
   "objWeights": 0,
   "objRxns": "",
-  "model_path": "~/StemCell/cancer_model.mat",
-  "upStage": "upgenes",
-  "dwStage": "dwgenes"
+  "model_path": "cancer_model.mat",
+  "upStage": "2C",
+  "dwStage": "1C"
 }

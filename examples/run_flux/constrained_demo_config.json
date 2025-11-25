@@ -15,7 +15,7 @@
   "medium_perturbation": 0,
   "data_dir": "/home/daweilin/sriram-lab/SCOOTI/examples/example_sigGenes/scEmbryo/",
   "prefix_name": "ProQui",
-  "medium": "KSOM",
+  "medium": "DMEMF12",
   "uplabel": "upgenes",
   "dwlabel": "dwgenes",
   "simulation": "CFR",

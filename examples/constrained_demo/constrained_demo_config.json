@@ -29,6 +29,6 @@
   "prefix_series": "",
   "medium_series": "",
   "CFR_kappa": 0.1,
-  "CFR_rho": 10,
+  "CFR_rho": 0.01,
   "DFA_kappa": -1
 }

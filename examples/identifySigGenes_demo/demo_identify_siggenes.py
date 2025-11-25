@@ -108,8 +108,8 @@ def run_qp(cfg):
     exp_n = int(cfg.get("qp_split", {}).get("exp_n", 3))
     cols = df.columns[1:1+ctrl_n+exp_n]
     genedf = df[cols]
-    ctrl = genedf.iloc[:, :ctrl_n].values.T
-    exp = genedf.iloc[:, ctrl_n:ctrl_n+exp_n].values.T
+    ctrl = genedf.iloc[:, :ctrl_n].values
+    exp = genedf.iloc[:, ctrl_n:ctrl_n+exp_n].values
     reject, pvals_fdr, fcs = ttest_and_fdr(exp, ctrl)
     up = (pvals_fdr < alpha) & (fcs > cfg.get("fc_threshold", 1.0))
     dw = (pvals_fdr < alpha) & (fcs < 1.0/cfg.get("fc_threshold", 1.0))

@@ -15,14 +15,12 @@
   "sel_para": "k0.1_r0.01",
   "prefix": "analyze_demo",
   "medium": "KSOM",
-
   "labels": {
     "mode": "contains",
     "contains_pattern": "_P_",
     "true_label": "Proliferation",
     "false_label": "Quiescence"
   },
-
   "get_coef": {
     "metType_cluster": false
   },
@@ -32,7 +30,10 @@
     "entropy": true,
     "distance": true,
     "compare": true,
-    "umap_para": [5, 50],
+    "umap_para": [
+      5,
+      50
+    ],
     "method": "average",
     "ref_col": null
   }
