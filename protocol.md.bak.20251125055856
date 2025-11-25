@@ -799,7 +799,3 @@ Customize analysis inputs and labels:
 - Torch optional: Default install skips torch. For GPU: `pip install -e ".[gpu]" --extra-index-url https://download.pytorch.org/whl/cu118`. CPU: `pip install -e ".[cpu]"`.
 - OApackage pin: OApackage 2.7 requires NumPy ≥ 2. This repo pins `OApackage<2.7` to keep NumPy 1.23.5 and Pandas 1.5.3 compatible.
 - If you encounter a NumPy/Pandas ABI error ("numpy.dtype size changed"), re-clamp with conda-forge and strict priority, or recreate the env from `environment.yml`.
-
-
-## Trade-off Demo Dependency
-- Install OApackage prior to running: `pip install "OApackage<2.7"` (NumPy 1.23.5).

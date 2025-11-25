@@ -8,7 +8,17 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
   %  ss = strsplit(s{2}, ']');
   %  compartments{i, 1} = ss{1};
   %end
-  model.genes = upper(model.genes)
+  % Ensure genes remain a cell array of uppercase strings (COBRA expects cellstr)
+  try
+    model.genes = cellstr(upper(string(model.genes)));
+  catch
+    % Fallback: if string conversion is unavailable, apply cellfun
+    if iscell(model.genes)
+      model.genes = cellfun(@upper, model.genes, 'UniformOutput', false);
+    else
+      model.genes = upper(model.genes);
+    end
+  end
   initial_model = model;
 
 
@@ -50,7 +60,7 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
                       demand_rxn = obj;
                       rname = sprintf('%s_demand', obj);
                       rsym = sprintf('%s -> ', obj);
-                      model = addReaction(model, rname, 'reactionFormula', rsym);
+                      model = addReaction(model, rname, 'reactionFormula', rsym, 'geneRule', '');
                       % Change objective reaction if needed
                       obj_ind = find(contains(model.rxns, rname));
                       model.c(obj_ind) = coef;
@@ -72,7 +82,7 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
                       for ii=1:sum(inmodel),
                           rsym = sprintf('%s -> ', obj_mets{ii});
                           rname = sprintf('%s_demand', obj_mets{ii});
-                          model = addReaction(model, rname, 'reactionFormula', rsym);
+                          model = addReaction(model, rname, 'reactionFormula', rsym, 'geneRule', '');
                           % Change objective reaction if needed
                           obj_ind = findRxnIDs(model, rname);
                           model.c(obj_ind) = coef;
