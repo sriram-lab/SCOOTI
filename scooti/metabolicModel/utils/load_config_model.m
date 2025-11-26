@@ -4,33 +4,7 @@ function model = load_config_model(model_path, model_name, medium)
   fn = fieldnames(raw);
   model = raw.(fn{1});
 
-  % Normalize model fields to COBRA-expected types (cell arrays of char)
-  normFields = {'rxns','rxnNames','mets','metNames','genes','grRules','subSystems'};
-  for k = 1:numel(normFields)
-    f = normFields{k};
-    if isfield(model, f)
-      v = model.(f);
-      try
-        if isstring(v)
-          model.(f) = cellstr(v);
-        elseif iscell(v)
-          % Convert any string scalars to char within the cell
-          model.(f) = cellfun(@(x) char(x), v, 'UniformOutput', false);
-        elseif ischar(v)
-          model.(f) = {v};
-        end
-      catch
-        % Best-effort fallback via string() then cellstr
-        try
-          model.(f) = cellstr(string(v));
-        catch
-          % leave as-is
-        end
-      end
-    end
-  end
-
-
+  
   % Special handling for Recon1
   if strcmp(model_name, 'Recon1')
     bio_obj_idx = find(contains(model.rxns, 'biomass_objective'));

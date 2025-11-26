@@ -63,6 +63,7 @@ changeCobraSolver('gurobi');
 model_struct = load(config.GEM_path);
 fn = fieldnames(model_struct);
 config.model = model_struct.(fn{1});
+
 if strcmp(config.model_name, 'Recon1')
     bio_obj_idx = find(contains(config.model.rxns, 'biomass_objective'));
     config.model.c(bio_obj_idx) = 1;
@@ -133,7 +134,6 @@ for data_idx = 1:length(config.data_series)
     end
 end
 end % end for the function
-
 
 
 
