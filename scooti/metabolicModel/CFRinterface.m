@@ -46,7 +46,21 @@ function CFRinterface(config)
   %% Manage model parameters
   if ~isempty(ups) && ~isempty(dws)
     [ups, dws] = process_expression_data(ups, dws, config.model_name);
-    disp(ups)
+    % Print a compact preview to avoid flooding the console
+    try
+      fprintf('[CFRinterface] Preview of upregulated genes (first 10 rows):\n');
+      disp(head_safe(ups, 10));
+      fprintf('[CFRinterface] Preview of downregulated genes (first 10 rows):\n');
+      disp(head_safe(dws, 10));
+    catch
+      % Fallback: print sizes only
+      try
+        fprintf('[CFRinterface] ups size: %dx%d\n', size(ups,1), size(ups,2));
+        fprintf('[CFRinterface] dws size: %dx%d\n', size(dws,1), size(dws,2));
+      catch
+        % ignore if size fails
+      end
+    end
   end
 
   %% Main simulation run
@@ -59,3 +73,26 @@ end
 
 
 
+
+function out = head_safe(x, n)
+% head_safe - return first n rows of a table/cell/array without errors
+  if nargin < 2, n = 10; end
+  out = x;
+  try
+    if istable(x)
+      n = min(n, height(x));
+      out = x(1:n, :);
+    elseif iscell(x)
+      n = min(n, size(x,1));
+      out = x(1:n, :);
+    elseif isnumeric(x) || islogical(x)
+      n = min(n, size(x,1));
+      out = x(1:n, :);
+    else
+      % Unknown type; return as-is
+      out = x;
+    end
+  catch
+    out = x;
+  end
+end

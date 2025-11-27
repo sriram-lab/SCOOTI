@@ -40,6 +40,11 @@ setup(
         "gpu": ["torch==2.0.1+cu118"],
         "cpu": ["torch==2.0.1"],
     },    python_requires=">=3.8, <3.12",
+    entry_points={
+        "console_scripts": [
+            "scooti=scooti.cli:main",
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",  # change if you use other

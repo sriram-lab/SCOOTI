@@ -88,7 +88,7 @@ end
 %% Step 5: Constraint and data preprocessing
 if config.constraint == 1
     if isempty(config.data_series) || all(cellfun(@isempty, config.data_series))
-      disp('inininin')
+      % Auto-detect and prepare constraint inputs if not provided
         [config.data_series, config.prefix_series, config.medium_series] = ...
             batch_input_preprocess(config.data_dir, config.prefix_name, config.medium);
     end
@@ -122,7 +122,10 @@ for data_idx = 1:length(config.data_series)
       % loop bounded at N unintentionally skipped the last metabolite.
       num_candidates = height(config.obj_candidates);
       for ii = 2:(num_candidates + 1)
-        disp(ii)
+        if ii == 2
+          fprintf('[multiObj_CBM] Scanning %d objective candidates...\n', num_candidates);
+        end
+        fprintf('[multiObj_CBM] Objective index: %d of %d\n', ii-1, num_candidates);
         config.ii = ii;
         params = prepare_simulation_parameters(config);
         dispatch_simulation(config.simulation, params);
@@ -134,7 +137,6 @@ for data_idx = 1:length(config.data_series)
     end
 end
 end % end for the function
-
 
 
 

@@ -8,7 +8,8 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
   %  ss = strsplit(s{2}, ']');
   %  compartments{i, 1} = ss{1};
   %end
-  model.genes = upper(model.genes)
+  % Normalize gene IDs to uppercase without flooding console
+  model.genes = upper(model.genes);
   initial_model = model;
 
 
@@ -130,10 +131,25 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
           end
       end
   end
-  disp('Checking objective')
+  % Summarize objectives succinctly
   obj_check = find(model.c~=0);
-  model.c(obj_check)
-  model.rxns{obj_check}
+  fprintf('[objective_setting] Objectives set: %d\n', numel(obj_check));
+  if ~isempty(obj_check)
+    k = min(10, numel(obj_check));
+    idx = obj_check(1:k);
+    try
+      T = table(model.rxns(idx), model.c(idx), 'VariableNames', {'rxn','weight'});
+      disp(T)
+      if numel(obj_check) > k
+        fprintf('[objective_setting] ... and %d more objectives omitted\n', numel(obj_check)-k);
+      end
+    catch
+      % Fallback printing if table fails
+      for ii=1:k
+        fprintf('  %s : %g\n', model.rxns{idx(ii)}, model.c(idx(ii)));
+      end
+    end
+  end
 
   %% recover and fix the model and then remove objectives
   %if strcmp(algorithm, 'INIT') | strcmp(algorithm, 'MOOMIN'),

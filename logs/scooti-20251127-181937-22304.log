@@ -1,0 +1,326 @@
+[reproduce-all] 1/2 Inference ...
+[inference-reproduce] Running meta-regression with: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/reproduce_inference_config.json
+[inference-reproduce] unconstrained dir: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/
+[inference-reproduce] constrained   dir: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/
+[inference-reproduce] medium='DMEMF12' fileSuffix='_fluxes.csv.gz'
+[inference-reproduce] Scanning unconstrained metadata in: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/
+[inference-reproduce] Found medium tags in unconstrained:      53 DMEMF12
+testing bug...
+[device] torch 2.0.1+cu117 cuda 11.7 avail False devices 0
+[device] using CPU
+Start processing the unconstrained models...
+Start processing the unconstrained models...
+Returning reaction fluxes...
+Finishing up the data loading of unconstrained models...
+Start processing the constrained models...
+False
+Ordinary constrained models
+Start processing the data of constrained models...
+Start collecting filenames...
+  0%|          | 0/60 [00:00<?, ?it/s]100%|██████████| 60/60 [00:00<00:00, 35625.46it/s]
+Start merging tables
+  0%|          | 0/30 [00:00<?, ?it/s]100%|██████████| 30/30 [00:00<00:00, 303.91it/s]
+debug 24.275708627538688
+              min_18_GSE122927_P_CDK46i_2E2_k0.1_r10  ...  johnson_18_GSE117444_P_k0.1_r10
+rxns                                                  ...                                 
+10FTHF5GLUtl                                     0.0  ...                            0.000
+10FTHF5GLUtm                                     0.0  ...                            0.000
+10FTHF6GLUtl                                     0.0  ...                            0.000
+10FTHF6GLUtm                                     0.0  ...                            0.000
+10FTHF7GLUtl                                     0.0  ...                            0.000
+...                                              ...  ...                              ...
+EX_KAC                                           0.0  ...                            0.000
+EX_KACcoa                                        0.0  ...                            0.000
+acl_n                                            0.0  ...                            0.001
+oaa_nt                                           0.0  ...                            0.001
+cit_nt                                          -0.0  ...                           -0.001
+
+[3757 rows x 30 columns]
+Finishing up loading the constrained models...
+Start loading models...
+(3757, 52) (3757, 30)
+Check the size of the models: (1515, 52) (1515, 30)
+(1515, 52) (1515, 30)
+./examples/quickstart/inference_reproduce/out/regression_models//flux_rfelm_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+Start training regression models...
+Mapping...
+  0%|          | 0/30 [00:00<?, ?it/s]100%|██████████| 30/30 [00:00<00:00, 304670.99it/s]
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+[inference-reproduce] Done. Outputs in: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/
+[inference-reproduce] Showing result files:
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/flux_CVscores_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/flux_EN_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/flux_foldCorr_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/flux_lasso_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/flux_LL_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/flux_rfelm_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/out/regression_models/flux_sl_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+[reproduce-all] 2/2 Analysis (legacy) ...
+[analyze-reproduce] Running analysis with: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/analyze_reproduce/analyze_reproduce_config.json
+[analyze-reproduce] Found coef CSV: ./examples/quickstart/inference_reproduce/out/regression_models//flux_CVscores_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+[analysis] coef_paths[exp] -> examples/quickstart/inference_reproduce/out/regression_models/flux_sl_inference_reproduce_cfr_True_False_recon1_DMEMF12_k[0.1]_rho[10.0].csv
+[analysis] init: save_root_path=./examples/quickstart/analyze_reproduce/out/ medium=DMEMF12 prefix=analyze_reproduce
+[analysis] get_coef
+Columns with zero coefficients: Index(['min_18_GSE122927_Meki_2E2_k0.1_r10'], dtype='object')
+min_18_GSE122927_P_CDK46i_2E2_k0.1_r10             Proliferation
+Sharma_21_P_H89-TPA_k0.1_r10                       Proliferation
+min_18_GSE122927_P_SerumStarvation_3B6_k0.1_r10    Proliferation
+Sharma_21_P_H89-EGF_k0.1_r10                       Proliferation
+min_18_GSE122927_CDK46i_2E2_k0.1_r10                  Quiescence
+johnson_18_GSE117444_k0.1_r10                         Quiescence
+min_18_GSE122927_P_Meki_3B6_k0.1_r10               Proliferation
+min_18_GSE122927_SerumStarvation_2E2_k0.1_r10         Quiescence
+min_18_GSE122927_P_p21_3B6_k0.1_r10                Proliferation
+min_18_GSE122927_p21_2E2_k0.1_r10                     Quiescence
+Sharma_21_EGF_k0.1_r10                                Quiescence
+min_18_GSE122927_P_p21_2E2_k0.1_r10                Proliferation
+Sharma_21_TPA_k0.1_r10                                Quiescence
+min_18_GSE122927_CDK46i_3B6_k0.1_r10                  Quiescence
+min_18_GSE122927_ContactIn_2E2_k0.1_r10               Quiescence
+Sharma_21_P_EGF_k0.1_r10                           Proliferation
+min_18_GSE122927_p21_3B6_k0.1_r10                     Quiescence
+min_18_GSE122927_ContactIn_3B6_k0.1_r10               Quiescence
+Sharma_21_H89-EGF_k0.1_r10                            Quiescence
+min_18_GSE122927_P_Meki_2E2_k0.1_r10               Proliferation
+min_18_GSE122927_P_SerumStarvation_2E2_k0.1_r10    Proliferation
+min_18_GSE122927_P_ContactIn_3B6_k0.1_r10          Proliferation
+min_18_GSE122927_SerumStarvation_3B6_k0.1_r10         Quiescence
+min_18_GSE122927_P_ContactIn_2E2_k0.1_r10          Proliferation
+Sharma_21_H89-TPA_k0.1_r10                            Quiescence
+Sharma_21_P_TPA_k0.1_r10                           Proliferation
+min_18_GSE122927_Meki_3B6_k0.1_r10                    Quiescence
+min_18_GSE122927_P_CDK46i_3B6_k0.1_r10             Proliferation
+johnson_18_GSE117444_P_k0.1_r10                    Proliferation
+dtype: object
+[analysis] labels (unique): ['Proliferation', 'Quiescence']
+[analysis] coefAnalysis
+[analysis] Adjusting umap_para from [5, 50] to [5, 28] for n=29
+Correlation size
+(29, 29)
+[UMAP] Adjusted n_components from 28 to 28 (N=29); init='random'.
+                                                 Entropy of Objective       cellType
+min_18_GSE122927_P_CDK46i_2E2_k0.1_r10                       0.004144  Proliferation
+Sharma_21_P_H89-TPA_k0.1_r10                                 0.000314  Proliferation
+min_18_GSE122927_P_SerumStarvation_3B6_k0.1_r10              0.006800  Proliferation
+Sharma_21_P_H89-EGF_k0.1_r10                                 0.001198  Proliferation
+min_18_GSE122927_CDK46i_2E2_k0.1_r10                         0.000193     Quiescence
+johnson_18_GSE117444_k0.1_r10                                0.017300     Quiescence
+min_18_GSE122927_P_Meki_3B6_k0.1_r10                         0.010789  Proliferation
+min_18_GSE122927_SerumStarvation_2E2_k0.1_r10                0.014272     Quiescence
+min_18_GSE122927_P_p21_3B6_k0.1_r10                          0.001506  Proliferation
+min_18_GSE122927_p21_2E2_k0.1_r10                            0.004726     Quiescence
+Sharma_21_EGF_k0.1_r10                                       0.000122     Quiescence
+min_18_GSE122927_P_p21_2E2_k0.1_r10                          0.002917  Proliferation
+Sharma_21_TPA_k0.1_r10                                       0.002148     Quiescence
+min_18_GSE122927_CDK46i_3B6_k0.1_r10                         0.021711     Quiescence
+min_18_GSE122927_ContactIn_2E2_k0.1_r10                      0.000149     Quiescence
+Sharma_21_P_EGF_k0.1_r10                                     0.000882  Proliferation
+min_18_GSE122927_p21_3B6_k0.1_r10                            0.000647     Quiescence
+min_18_GSE122927_ContactIn_3B6_k0.1_r10                      0.000530     Quiescence
+Sharma_21_H89-EGF_k0.1_r10                                   0.000124     Quiescence
+min_18_GSE122927_P_Meki_2E2_k0.1_r10                         0.007615  Proliferation
+min_18_GSE122927_P_SerumStarvation_2E2_k0.1_r10              0.007594  Proliferation
+min_18_GSE122927_P_ContactIn_3B6_k0.1_r10                    0.002419  Proliferation
+min_18_GSE122927_SerumStarvation_3B6_k0.1_r10                0.010769     Quiescence
+min_18_GSE122927_P_ContactIn_2E2_k0.1_r10                    0.003452  Proliferation
+Sharma_21_H89-TPA_k0.1_r10                                   0.000426     Quiescence
+Sharma_21_P_TPA_k0.1_r10                                     0.001689  Proliferation
+min_18_GSE122927_Meki_3B6_k0.1_r10                           0.016414     Quiescence
+min_18_GSE122927_P_CDK46i_3B6_k0.1_r10                       0.001649  Proliferation
+johnson_18_GSE117444_P_k0.1_r10                              0.008384  Proliferation
+[UMAP] Adjusted n_components from 28 to 28 (N=29); init='random'.
+Traceback (most recent call last):
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/analysis_runner.py", line 319, in <module>
+    main()
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/analysis_runner.py", line 236, in main
+    moa.coefAnalysis(
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/metObjAnalyzer.py", line 862, in coefAnalysis
+    overlap_allocation_plot(
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/regressionAnalyzer.py", line 2525, in overlap_allocation_plot
+    plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_groupbar_allocations.png')
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/pyplot.py", line 1250, in savefig
+    res = fig.savefig(*args, **kwargs)  # type: ignore[func-returns-value]
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/figure.py", line 3490, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backend_bases.py", line 2186, in print_figure
+    result = print_method(
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backend_bases.py", line 2042, in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backends/backend_agg.py", line 481, in print_png
+    self._print_pil(filename_or_obj, "png", pil_kwargs, metadata)
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backends/backend_agg.py", line 430, in _print_pil
+    mpl.image.imsave(
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/image.py", line 1657, in imsave
+    image.save(fname, **pil_kwargs)
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/PIL/Image.py", line 2566, in save
+    fp = builtins.open(filename, "w+b")
+FileNotFoundError: [Errno 2] No such file or directory: '/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/analyze_reproduce_Proliferation_Quiescence_groupbar_allocations.png'
+Loading the model...
+Successfully record the coefficients of biomass objectives...
+Index(['coefficient', 'min_18_GSE122927_P_CDK46i_2E2_k0.1_r10',
+       'Sharma_21_P_H89-TPA_k0.1_r10',
+       'min_18_GSE122927_P_SerumStarvation_3B6_k0.1_r10',
+       'Sharma_21_P_H89-EGF_k0.1_r10', 'min_18_GSE122927_CDK46i_2E2_k0.1_r10',
+       'johnson_18_GSE117444_k0.1_r10', 'min_18_GSE122927_P_Meki_3B6_k0.1_r10',
+       'min_18_GSE122927_SerumStarvation_2E2_k0.1_r10',
+       'min_18_GSE122927_P_p21_3B6_k0.1_r10',
+       'min_18_GSE122927_p21_2E2_k0.1_r10', 'Sharma_21_EGF_k0.1_r10',
+       'min_18_GSE122927_P_p21_2E2_k0.1_r10', 'Sharma_21_TPA_k0.1_r10',
+       'min_18_GSE122927_CDK46i_3B6_k0.1_r10',
+       'min_18_GSE122927_ContactIn_2E2_k0.1_r10', 'Sharma_21_P_EGF_k0.1_r10',
+       'min_18_GSE122927_p21_3B6_k0.1_r10',
+       'min_18_GSE122927_ContactIn_3B6_k0.1_r10', 'Sharma_21_H89-EGF_k0.1_r10',
+       'min_18_GSE122927_P_Meki_2E2_k0.1_r10',
+       'min_18_GSE122927_P_SerumStarvation_2E2_k0.1_r10',
+       'min_18_GSE122927_P_ContactIn_3B6_k0.1_r10',
+       'min_18_GSE122927_SerumStarvation_3B6_k0.1_r10',
+       'min_18_GSE122927_P_ContactIn_2E2_k0.1_r10',
+       'Sharma_21_H89-TPA_k0.1_r10', 'Sharma_21_P_TPA_k0.1_r10',
+       'min_18_GSE122927_Meki_3B6_k0.1_r10',
+       'min_18_GSE122927_P_CDK46i_3B6_k0.1_r10',
+       'johnson_18_GSE117444_P_k0.1_r10'],
+      dtype='object')
+                                          cellNames  Distances      cellTypes
+0            min_18_GSE122927_P_CDK46i_2E2_k0.1_r10   1.036843  Proliferation
+1                      Sharma_21_P_H89-TPA_k0.1_r10   1.029865  Proliferation
+2   min_18_GSE122927_P_SerumStarvation_3B6_k0.1_r10   1.060065  Proliferation
+3                      Sharma_21_P_H89-EGF_k0.1_r10   1.052388  Proliferation
+4              min_18_GSE122927_CDK46i_2E2_k0.1_r10   1.090859     Quiescence
+5                     johnson_18_GSE117444_k0.1_r10   1.042194     Quiescence
+6              min_18_GSE122927_P_Meki_3B6_k0.1_r10   1.041503  Proliferation
+7     min_18_GSE122927_SerumStarvation_2E2_k0.1_r10   1.141287     Quiescence
+8               min_18_GSE122927_P_p21_3B6_k0.1_r10   1.015741  Proliferation
+9                 min_18_GSE122927_p21_2E2_k0.1_r10   1.040050     Quiescence
+10                           Sharma_21_EGF_k0.1_r10   1.206689     Quiescence
+11              min_18_GSE122927_P_p21_2E2_k0.1_r10   1.064903  Proliferation
+12                           Sharma_21_TPA_k0.1_r10   1.199449     Quiescence
+13             min_18_GSE122927_CDK46i_3B6_k0.1_r10   1.087656     Quiescence
+14          min_18_GSE122927_ContactIn_2E2_k0.1_r10   1.052383     Quiescence
+15                         Sharma_21_P_EGF_k0.1_r10   1.054095  Proliferation
+16                min_18_GSE122927_p21_3B6_k0.1_r10   1.080012     Quiescence
+17          min_18_GSE122927_ContactIn_3B6_k0.1_r10   1.038964     Quiescence
+18                       Sharma_21_H89-EGF_k0.1_r10   1.174043     Quiescence
+19             min_18_GSE122927_P_Meki_2E2_k0.1_r10   1.046056  Proliferation
+20  min_18_GSE122927_P_SerumStarvation_2E2_k0.1_r10   1.039358  Proliferation
+21        min_18_GSE122927_P_ContactIn_3B6_k0.1_r10   1.228259  Proliferation
+22    min_18_GSE122927_SerumStarvation_3B6_k0.1_r10   1.105717     Quiescence
+23        min_18_GSE122927_P_ContactIn_2E2_k0.1_r10   1.080239  Proliferation
+24                       Sharma_21_H89-TPA_k0.1_r10   1.096129     Quiescence
+25                         Sharma_21_P_TPA_k0.1_r10   1.093507  Proliferation
+26               min_18_GSE122927_Meki_3B6_k0.1_r10   1.048427     Quiescence
+27           min_18_GSE122927_P_CDK46i_3B6_k0.1_r10   1.057002  Proliferation
+28                  johnson_18_GSE117444_P_k0.1_r10   1.064482  Proliferation
+[Text(0, 0, 'Proliferation'), Text(0, 1, 'Quiescence')]
+leu-L
+h2o
+gln-L
+amet
+gthrd
+ser-L
+tyr-L
+nadh
+chsterol
+arg-L
+dcmp
+nadph
+nmn
+asp-L
+glu-L
+pro-L
+lpchol_hs
+gly
+gmp
+ala-L
