@@ -10,6 +10,9 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
   %end
   % Normalize gene IDs to uppercase without flooding console
   model.genes = upper(model.genes);
+  % Ensure rxn and gene containers are cell arrays of char (avoid string type issues)
+  if ~iscell(model.rxns); model.rxns = cellstr(string(model.rxns)); end
+  if isfield(model, 'genes') && ~iscell(model.genes); model.genes = cellstr(string(model.genes)); end
   initial_model = model;
 
 
@@ -49,9 +52,10 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
                   if sum(strfind(obj, '[')),
                       %disp('Create a new demand reaction')
                       demand_rxn = obj;
-                      rname = sprintf('%s_demand', obj);
-                      rsym = sprintf('%s -> ', obj);
-                      model = addReaction(model, rname, 'reactionFormula', rsym);
+                      rname = char(sprintf('%s_demand', obj));
+                      rsym = char(sprintf('%s -> ', obj));
+                      % Explicit empty gene rule to avoid changeGeneAssociation type issues
+                      model = addReaction(model, rname, 'reactionFormula', rsym, 'geneRule', '');
                       % Change objective reaction if needed
                       obj_ind = find(contains(model.rxns, rname));
                       model.c(obj_ind) = coef;
@@ -71,9 +75,9 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
                       obj_mets = obj_mets(find(inmodel));
                       % Add all demand reactions
                       for ii=1:sum(inmodel),
-                          rsym = sprintf('%s -> ', obj_mets{ii});
-                          rname = sprintf('%s_demand', obj_mets{ii});
-                          model = addReaction(model, rname, 'reactionFormula', rsym);
+                          rsym = char(sprintf('%s -> ', obj_mets{ii}));
+                          rname = char(sprintf('%s_demand', obj_mets{ii}));
+                          model = addReaction(model, rname, 'reactionFormula', rsym, 'geneRule', '');
                           % Change objective reaction if needed
                           obj_ind = findRxnIDs(model, rname);
                           model.c(obj_ind) = coef;
