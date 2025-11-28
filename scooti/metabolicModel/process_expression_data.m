@@ -56,23 +56,40 @@ function M = local_load_mapping(p)
   fid = fopen(p, 'r');
   if fid < 0, error('Cannot open mapping JSON: %s', p); end
   raw = fread(fid, inf, '*char')'; fclose(fid);
-  data = jsondecode(raw);
-  if isstruct(data) && isfield(data, 'results')
-    names = {data.results.name};
-    ids   = {data.results.bigg_id};
-  elseif isstruct(data) && isfield(data, 'symbol') && isfield(data, 'hgnc')
-    names = data.symbol;
-    ids   = data.hgnc;
-  else
-    error('Unsupported mapping schema in %s', p);
+  % Try structured JSON first
+  try
+    data = jsondecode(raw);
+  catch
+    data = [];
+  end
+  names = [];
+  ids = [];
+  if ~isempty(data)
+    if isstruct(data) && isfield(data, 'results')
+      names = {data.results.name};
+      ids   = {data.results.bigg_id};
+    elseif isstruct(data) && isfield(data, 'symbol') && isfield(data, 'hgnc')
+      names = data.symbol;
+      ids   = data.hgnc;
+    end
+  end
+  if isempty(names) || isempty(ids)
+    % Fallback: parse flat object mapping {"BiGG_id":"SYMBOL", ...}
+    toks = regexp(raw, '"([^"\\]+)"\s*:\s*"([^"\\]*)"', 'tokens');
+    if isempty(toks)
+      error('Unsupported mapping schema in %s', p);
+    end
+    % Invert: symbol -> BiGG_id
+    ids = cellfun(@(t) t{1}, toks, 'UniformOutput', false);      % keys (BiGG ids)
+    names = cellfun(@(t) t{2}, toks, 'UniformOutput', false);    % values (symbols)
   end
   names = upper(string(names(:)));
   ids   = string(ids(:));
   M = containers.Map('KeyType','char','ValueType','char');
   for i=1:numel(names)
     k = char(names(i)); v = char(ids(i));
-    if ~isempty(k) && ~isempty(v)
-      if ~isKey(M, k); M(k) = v; end
+    if ~isempty(k) && ~isempty(v) && ~isKey(M, k)
+      M(k) = v;
     end
   end
 end

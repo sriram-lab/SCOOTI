@@ -53,6 +53,23 @@ function CFRinterface(config)
       disp(head_safe(ups, 10));
       fprintf('[CFRinterface] Preview of downregulated genes (first 10 rows):\n');
       disp(head_safe(dws, 10));
+      % Also report matched genes vs model.genes (case-insensitive)
+      try
+        mg = string(upper(string(model.genes(:))));
+        upg = string(upper(string(ups.Gene(:))));
+        dwg = string(upper(string(dws.Gene(:))));
+        up_match = intersect(mg, upg);
+        dw_match = intersect(mg, dwg);
+        fprintf('[CFRinterface] Matched UP genes: %d\n', numel(up_match));
+        if ~isempty(up_match)
+          k = min(5, numel(up_match)); disp(up_match(1:k));
+        end
+        fprintf('[CFRinterface] Matched DW genes: %d\n', numel(dw_match));
+        if ~isempty(dw_match)
+          k = min(5, numel(dw_match)); disp(dw_match(1:k));
+        end
+      catch
+      end
     catch
       % Fallback: print sizes only
       try
