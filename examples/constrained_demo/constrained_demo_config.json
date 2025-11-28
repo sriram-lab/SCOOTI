@@ -1,7 +1,7 @@
 {
   "jj": 1,
   "COBRA_path": "~/cobratoolbox",
-  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "GEM_path": "/nfs/turbo/umms-csriram/daweilin/data/models/Shen2019.mat",
   "model_name": "Recon1",
   "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
   "input_obj_tb": "",
