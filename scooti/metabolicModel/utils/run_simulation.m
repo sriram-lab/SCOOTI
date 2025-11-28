@@ -50,32 +50,7 @@ function run_simulation(model, excelname, algorithm, ups, dws, ...
       end
     catch
       % ignore diagnostics errors
-end
-
-
-function genes = local_extract_genes(gene_table)
-  % Extract an uppercase gene list from a table/cell/array without intersecting with model
-  genes = strings(0,1);
-  try
-    if istable(gene_table)
-      w = width(gene_table);
-      if w >= 2
-        genes = upper(string(gene_table{:,2}));
-      elseif w >= 1
-        genes = upper(string(gene_table{:,1}));
-      else
-        genes = strings(0,1);
-      end
-    elseif iscell(gene_table)
-      genes = upper(string(gene_table(:)));
-    else
-      genes = upper(string(gene_table));
     end
-  catch
-    genes = strings(0,1);
-  end
-  genes = genes(:);
-end
 
     % Convert uplist safely
     if isstring(uplist)
@@ -117,4 +92,28 @@ end
                   kappa, rho, genekoflag, rxnkoflag, ...
                   recon_model, extra_weight);
   end
+end
+
+function genes = local_extract_genes(gene_table)
+  % Extract an uppercase gene list from a table/cell/array without intersecting with model
+  genes = strings(0,1);
+  try
+    if istable(gene_table)
+      w = width(gene_table);
+      if w >= 2
+        genes = upper(string(gene_table{:,2}));
+      elseif w >= 1
+        genes = upper(string(gene_table{:,1}));
+      else
+        genes = strings(0,1);
+      end
+    elseif iscell(gene_table)
+      genes = upper(string(gene_table(:)));
+    else
+      genes = upper(string(gene_table));
+    end
+  catch
+    genes = strings(0,1);
+  end
+  genes = genes(:);
 end
