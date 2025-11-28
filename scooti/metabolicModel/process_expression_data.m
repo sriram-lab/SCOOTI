@@ -44,10 +44,8 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
   dw_genes = cellstr(dw_genes);
 
   % Wrap back into tables
-  ups_table = array2table([(1:length(up_genes))', up_genes], ...
-      'VariableNames', {'Index', 'Gene'});
-  dws_table = array2table([(1:length(dw_genes))', dw_genes], ...
-      'VariableNames', {'Index', 'Gene'});
+  ups_table = table((1:numel(up_genes))', up_genes, 'VariableNames', {'Index','Gene'});
+  dws_table = table((1:numel(dw_genes))', dw_genes, 'VariableNames', {'Index','Gene'});
 
 end
 
