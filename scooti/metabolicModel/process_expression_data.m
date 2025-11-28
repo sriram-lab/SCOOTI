@@ -6,10 +6,13 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
     case 'Recon2.2'
       map_path = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon2.2_symbol_to_hgnc.json';
     case 'Recon1'
-      % Optional mapping for Recon1 if available; otherwise fall back to uppercase only
-      cand = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon1_symbol_to_hgnc.json';
-      if exist(cand, 'file')
-        map_path = cand;
+      % Prefer user-provided Recon1 genes JSON (Recon3D-style) if present
+      cand_genes = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon1_genes.json';
+      cand_map   = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon1_symbol_to_hgnc.json';
+      if exist(cand_genes, 'file')
+        map_path = cand_genes;
+      elseif exist(cand_map, 'file')
+        map_path = cand_map;
       else
         warning('Recon1 mapping JSON not found; using uppercase gene symbols without conversion.');
         ups_table = ups; dws_table = dws; return;
