@@ -10,6 +10,24 @@ function CFRinterface(config)
 
   %% Load and configure metabolic network model
   model = load_config_model(config.GEM_path, config.model_name, config.medium);
+  % Preview a few model genes for debugging (case-insensitive matching context)
+  try
+    mg = model.genes;
+    if ischar(mg)
+      mg = {mg};
+    end
+    if ~iscell(mg)
+      mg = cellstr(string(mg));
+    end
+    mg = upper(string(mg(:)));
+    k = min(10, numel(mg));
+    if k > 0
+      fprintf('[CFRinterface] Preview of model genes (first %d):\n', k);
+      disp(mg(1:k));
+    end
+  catch
+    % ignore preview errors
+  end
 
   %% Manage file names
   file_prefix = string(datetime('now','TimeZone','local','Format','MMMdyHHmm'));
