@@ -21,6 +21,21 @@ function run_simulation(model, excelname, algorithm, ups, dws, ...
     % Extract raw gene lists (uppercase) for diagnostics
     raw_up = local_extract_genes(ups);
     raw_dw = local_extract_genes(dws);
+    % Optional previews of input and model genes (first 10)
+    try
+      ku = min(10, numel(raw_up)); kd = min(10, numel(raw_dw)); km = min(10, numel(uk));
+      if ku>0
+        fprintf('[CFR] Preview UP genes (file, first %d):\n', ku); disp(raw_up(1:ku));
+      end
+      if kd>0
+        fprintf('[CFR] Preview DW genes (file, first %d):\n', kd); disp(raw_dw(1:kd));
+      end
+      if km>0
+        fprintf('[CFR] Preview model genes (Shen2019, first %d):\n', km); disp(uk(1:km));
+      end
+    catch
+    end
+
     % Filter against model genes (already uppercased upstream)
     uplist = filter_gene_list(ups, uk);
     dwlist = filter_gene_list(dws, uk);
