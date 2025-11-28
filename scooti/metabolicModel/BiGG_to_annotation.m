@@ -22,11 +22,9 @@ function geneConverted = BiGG_to_annotation(geneList, gene_info_path, mode),
       gene_names = {data.results.name};
       gene_BiGGID = {data.results.bigg_id};
     catch
-      % Fallback if results layout differs
       error('Unexpected JSON schema in results for %s', fileName);
     end
   else
-    % Expect parallel arrays: symbol (names), hgnc (BiGG IDs)
     if isfield(data, 'symbol') && isfield(data, 'hgnc')
       gene_names = data.symbol;
       gene_BiGGID = data.hgnc;
@@ -35,6 +33,12 @@ function geneConverted = BiGG_to_annotation(geneList, gene_info_path, mode),
     end
   end
 
+  % Normalize to strings and uppercase for robust matching (return original strings)
+  gene_names = string(gene_names(:));
+  gene_BiGGID = string(gene_BiGGID(:));
+  names_upper = upper(strtrim(gene_names));
+  ids_upper   = upper(strtrim(gene_BiGGID));
+
   % Initiating conversion...
   geneAnnotations = [];
   geneBiGGs = [];
@@ -42,21 +46,23 @@ function geneConverted = BiGG_to_annotation(geneList, gene_info_path, mode),
   sg = size(geneList);
   sg = sg(1);
   for i=1:sg,
+    q = upper(string(geneList(i,1)));
     if strcmp(mode, 'to_annot'),
-      ind = find(strcmp(geneList(i,1), gene_BiGGID));
-      if length(ind)>0,
-        geneConverted = [geneConverted, gene_names(ind)];
+      % map BiGG ID -> symbol
+      ind = find(strcmp(q, ids_upper));
+      if ~isempty(ind)
+        geneConverted = [geneConverted, cellstr(gene_names(ind))];
       end
-    else,
-      ind = find(strcmp(geneList(i,1), gene_names));
-      if length(ind)>0,
-        geneConverted = [geneConverted, gene_BiGGID(ind)];
+    else
+      % map symbol -> BiGG ID
+      ind = find(strcmp(q, names_upper));
+      if ~isempty(ind)
+        geneConverted = [geneConverted, cellstr(gene_BiGGID(ind))];
       end
     end
   end
   % transpose
   geneConverted = transpose(geneConverted);
 end
-
 
 

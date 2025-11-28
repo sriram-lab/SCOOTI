@@ -164,5 +164,18 @@ function model=objective_setting_function(model, obj, obj_c, obj_type, model_nam
   %  model2 = deleteModelGenes(model,unqgenes(1));
   %  disp('Successfully delete a gene 33333')
   %end
-
+  % Ensure objective vector has correct shape and type for downstream Gurobi
+  try
+    nrxns = length(model.rxns);
+    cvec = model.c;
+    cvec = full(double(cvec(:))); % force column vector, double
+    if length(cvec) < nrxns
+      cvec(end+1:nrxns,1) = 0;
+    elseif length(cvec) > nrxns
+      cvec = cvec(1:nrxns);
+    end
+    model.c = cvec;
+  catch
+    % best-effort; leave as-is if any issue
+  end
 end
