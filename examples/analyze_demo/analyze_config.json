@@ -16,10 +16,13 @@
   "prefix": "analyze_demo",
   "medium": "KSOM",
   "labels": {
-    "mode": "contains",
-    "contains_pattern": "_P_",
-    "true_label": "Proliferation",
-    "false_label": "Quiescence"
+    "mode": "regex",
+    "regex": "(1C_to_2cell|2C_to_32cell)",
+    "regex_group": 1,
+    "group_map": {
+      "1C_to_2cell": "1C2C",
+      "2C_to_32cell": "2CBC"
+    }
   },
   "get_coef": {
     "metType_cluster": false
