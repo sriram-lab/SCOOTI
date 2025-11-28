@@ -27,10 +27,6 @@ setup(
         "cobra==0.26.3",
         "scanpy==1.9.5",
         "seaborn==0.12.2",
-        "phate==1.0.11",
-        "adjustText==0.8",
-        "hdbscan",
-        "openpyxl"
     ],
 
     extras_require={
@@ -39,6 +35,17 @@ setup(
         # CPU only:        pip install -e ".[cpu]"
         "gpu": ["torch==2.0.1+cu118"],
         "cpu": ["torch==2.0.1"],
+        # Optional visualization + embedding deps
+        # Install with: pip install -e .[viz]
+        "viz": [
+            "phate==1.0.11",
+            "adjustText==0.8",
+            "hdbscan",
+            "openpyxl",
+        ],
+        "oa": [
+            "OApackage<2.7",
+        ],
     },    python_requires=">=3.8, <3.12",
     entry_points={
         "console_scripts": [

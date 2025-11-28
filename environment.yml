@@ -16,9 +16,4 @@ dependencies:
   - ittapi
   - intel-openmp
   - pip
-  - pip:
-      - phate==1.0.11
-      - adjustText==0.8
-      - hdbscan
-      - openpyxl
-      - OApackage<2.7
+  # No pip subpackages here; optional extras go in requirements.txt

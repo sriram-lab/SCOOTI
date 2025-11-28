@@ -22,6 +22,7 @@ set -euo pipefail
 #
 # Special:
 #   quickstart           Run the quickstart reproduction script
+#   quickstart-scembryo  Run scEmbryo quickstart (inference + analysis) using archived models
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -47,6 +48,7 @@ usage() {
   cat <<EOF
 Usage:
   scooti quickstart
+  scooti quickstart-scembryo
   scooti [OPTIONS]
 
 Options (each expects a JSON config; executed in given order):
@@ -61,6 +63,7 @@ Examples:
   scooti -U ./examples/unconstrained_demo/unconstrained_demo_config.json
   scooti -U uncon.json -C con.json -I infer.json -A analyze.json
   scooti -T ./examples/tradeoff_demo/tradeoff_config.legacy.json
+  scooti quickstart-scembryo
 EOF
 }
 
@@ -79,6 +82,94 @@ if [[ ${1:-} == "quickstart" ]]; then
     exit 1
   fi
   bash "$QS_SCRIPT"
+  exit 0
+fi
+
+if [[ ${1:-} == "quickstart-scembryo" ]]; then
+  shift
+  print_banner
+  LOG_DIR="${SCOOTI_LOG_DIR:-$REPO_ROOT/logs}"
+  mkdir -p "$LOG_DIR"
+  LOG_FILE="$LOG_DIR/scooti-$(date +%Y%m%d-%H%M%S)-$$.log"
+  echo "[scooti] Logging to: $LOG_FILE"
+  exec > >(tee -a "$LOG_FILE") 2>&1
+
+  QSDIR="$REPO_ROOT/examples/quickstart/_archive_scEmbryo"
+  UDIR="$QSDIR/unconstrained_models"
+  CDIR="$QSDIR/constrained_models"
+  OUTI="$QSDIR/out/regression_models"
+  OUTA="$QSDIR/out/analyze"
+  mkdir -p "$OUTI" "$OUTA"
+
+  INF_CFG="$QSDIR/quickstart_scembryo_infer.json"
+  AN_CFG="$QSDIR/quickstart_scembryo_analyze.json"
+
+  echo "[scooti] Preparing scEmbryo quickstart configs under $QSDIR"
+  cat > "$INF_CFG" <<EOF
+{
+  "unconModel": "$UDIR/",
+  "conModel": "$CDIR/",
+  "savePath": "$OUTI/",
+  "kappaArr": "0.1",
+  "rhoArr": "0.01",
+  "dkappaArr": "0.1",
+  "expName": "scembryo_quickstart",
+  "unconNorm": "T",
+  "conNorm": "F",
+  "medium": "KSOM",
+  "method": "cfr",
+  "model": "recon1",
+  "inputType": "flux",
+  "clusterPath": "",
+  "objListPath": "",
+  "rank": "F",
+  "stackModel": "F",
+  "sampling": "F",
+  "learner": "L",
+  "geneKO": "F",
+  "geneListPath": "",
+  "learningRate": 0.001,
+  "epo": 5000,
+  "fileSuffix": "_fluxes.csv.gz"
+}
+EOF
+
+  cat > "$AN_CFG" <<EOF
+{
+  "flux_paths": { "exp": "$CDIR/" },
+  "coef_paths": { "exp": "$OUTI/" },
+  "save_root_path": "$OUTA/",
+  "engine": "legacy",
+  "reduction": "auto",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "uncon_model_path": "$UDIR/",
+  "col_map": {},
+  "samplingFlux_path": "",
+  "sel_para": "k0.1_r0.01",
+  "prefix": "scembryo_quickstart",
+  "medium": "KSOM",
+  "labels": {
+    "mode": "column"
+  },
+  "get_coef": { "metType_cluster": false },
+  "coef_analysis": {
+    "unknown_clustering": true,
+    "clustering": true,
+    "entropy": true,
+    "distance": true,
+    "compare": true,
+    "umap_para": [5, 50],
+    "method": "average",
+    "ref_col": null
+  }
+}
+EOF
+
+  echo "[scooti] 1/2 Inference (scEmbryo)"
+  bash "$SCRIPT_DIR/run_trainer.sh" "$INF_CFG"
+  echo "[scooti] 2/2 Analysis (scEmbryo)"
+  bash "$SCRIPT_DIR/run_analyze.sh" "$AN_CFG"
+  echo "[scooti] scEmbryo quickstart completed. Outputs under $QSDIR/out/"
   exit 0
 fi
 

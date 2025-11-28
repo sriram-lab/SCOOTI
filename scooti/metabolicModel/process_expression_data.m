@@ -5,14 +5,18 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
       map_path = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon3D_genes.json';
     case 'Recon2.2'
       map_path = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon2.2_symbol_to_hgnc.json';
+    case 'Recon1'
+      % Optional mapping for Recon1 if available; otherwise fall back to uppercase only
+      cand = './SCOOTI/SCOOTI/metabolicModel/GEMs/Recon1_symbol_to_hgnc.json';
+      if exist(cand, 'file')
+        map_path = cand;
+      else
+        warning('Recon1 mapping JSON not found; using uppercase gene symbols without conversion.');
+        ups_table = ups; dws_table = dws; return;
+      end
     otherwise
       warning('Model name not recognized for BiGG mapping. Skipping annotation.');
-      ups_table = ups;
-      dws_table = dws;
-      %ups_table = table2cell(ups);
-      %dws_table = table2cell(dws);
-      %disp(ups_table)
-      return;
+      ups_table = ups; dws_table = dws; return;
   end
 
   % Ensure gene names are uppercase
@@ -30,4 +34,3 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
       'VariableNames', {'Index', 'Gene'});
 
 end
-

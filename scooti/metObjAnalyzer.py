@@ -400,6 +400,16 @@ class metObjAnalyzer:
         print(self.labels)
 
         self.flux_df = flux_df
+        # Warn if fluxes are empty or all zeros
+        try:
+            if not isinstance(self.flux_df, pd.DataFrame) or self.flux_df.shape[1] == 0 or self.flux_df.shape[0] == 0:
+                print("[warning] Flux matrix is empty after loading/filtering. Check flux_paths and parameters.")
+            else:
+                nz = np.count_nonzero(self.flux_df.to_numpy())
+                if nz == 0:
+                    print("[warning] All flux values are zero across all reactions and samples.")
+        except Exception:
+            pass
 
     def fluxAnalysis(
             self,
@@ -581,6 +591,16 @@ class metObjAnalyzer:
                 )
         coef_sel = coef_sel[keep_cols]
         coef_sel = coef_sel[coef_sel.abs()>1E-16].fillna(0) # remove metabolites with extremely low coef
+        # Warn if coefficients are empty or all zeros
+        try:
+            if not isinstance(coef_sel, pd.DataFrame) or coef_sel.shape[1] == 0 or coef_sel.shape[0] == 0:
+                print("[warning] Coefficient matrix is empty after loading/filtering. Check coef_paths and file names.")
+            else:
+                nz = np.count_nonzero(coef_sel.to_numpy())
+                if nz == 0:
+                    print("[warning] All coefficient values are zero across all metabolites and samples.")
+        except Exception:
+            pass
         # get labels: default to group key per column unless a custom label_func is provided
         if self.label_func is None:
             col_to_group = {}
@@ -591,6 +611,13 @@ class metObjAnalyzer:
         else:
             labels = self.label_setup(coef_sel, self.label_func)
         print(labels)
+        # Optionally warn if labels collapsed to a single group
+        try:
+            uniq = pd.unique(labels)
+            if len(uniq) <= 1:
+                print(f"[warning] Labels resolve to {len(uniq)} group(s): {list(map(str, uniq))}. Clustering and ANOVA may fail.")
+        except Exception:
+            pass
 
         self.coef_df = coef_sel
         self.labels = labels
