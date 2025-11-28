@@ -10,62 +10,7 @@ function CFRinterface(config)
 
   %% Load and configure metabolic network model
   model = load_config_model(config.GEM_path, config.model_name, config.medium);
-  % Normalize reaction and gene containers for COBRA compatibility
-  % Ensure model.rxns is a column cell array of char
-  try
-    if isfield(model, 'rxns')
-      if isstring(model.rxns)
-        model.rxns = cellstr(model.rxns);
-      end
-      if ~iscell(model.rxns)
-        model.rxns = cellstr(string(model.rxns(:)));
-      end
-      % If rxns has multiple columns, prefer the first; then flatten to a column
-      if size(model.rxns,2) > 1
-        model.rxns = model.rxns(:,1);
-      end
-      model.rxns = model.rxns(:);
-      % Coerce any non-char entries to char
-      bad = ~cellfun(@ischar, model.rxns);
-      if any(bad)
-        model.rxns(bad) = cellfun(@(x) char(string(x)), model.rxns(bad), 'UniformOutput', false);
-      end
-    end
-    % Ensure model.genes is a column cell array of char
-    if isfield(model, 'genes')
-      if isstring(model.genes)
-        model.genes = cellstr(model.genes);
-      end
-      if ~iscell(model.genes)
-        model.genes = cellstr(string(model.genes(:)));
-      end
-      model.genes = model.genes(:);
-      badg = ~cellfun(@ischar, model.genes);
-      if any(badg)
-        model.genes(badg) = cellfun(@(x) char(string(x)), model.genes(badg), 'UniformOutput', false);
-      end
-    end
-  catch
-    % best-effort normalization
-  end
-  % Preview a few model genes for debugging (case-insensitive matching context)
-  try
-    mg = model.genes;
-    if ischar(mg)
-      mg = {mg};
-    end
-    if ~iscell(mg)
-      mg = cellstr(string(mg));
-    end
-    mg = upper(string(mg(:)));
-    k = min(10, numel(mg));
-    if k > 0
-      fprintf('[CFRinterface] Preview of model genes (first %d):\n', k);
-      disp(mg(1:k));
-    end
-  catch
-    % ignore preview errors
-  end
+  % (Reverted additions: avoid altering model containers or printing model genes here)
 
   %% Manage file names
   file_prefix = string(datetime('now','TimeZone','local','Format','MMMdyHHmm'));

@@ -29,8 +29,19 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
   dws_syms = local_extract_symbols(dws);
 
   % Convert using mapping (symbol -> BiGG ID used by model)
-  up_genes = BiGG_to_annotation(ups_syms, map_path, 'to_BiGG');
-  dw_genes = BiGG_to_annotation(dws_syms, map_path, 'to_BiGG');
+  M = local_load_mapping(map_path);
+  up_genes = strings(numel(ups_syms),1);
+  dw_genes = strings(numel(dws_syms),1);
+  for i=1:numel(ups_syms)
+    key = upper(strtrim(ups_syms(i)));
+    if isKey(M, key); up_genes(i) = string(M(key)); else; up_genes(i) = string(ups_syms(i)); end
+  end
+  for i=1:numel(dws_syms)
+    key = upper(strtrim(dws_syms(i)));
+    if isKey(M, key); dw_genes(i) = string(M(key)); else; dw_genes(i) = string(dws_syms(i)); end
+  end
+  up_genes = cellstr(up_genes);
+  dw_genes = cellstr(dw_genes);
 
   % Wrap back into tables
   ups_table = array2table([(1:length(up_genes))', up_genes], ...
@@ -38,6 +49,32 @@ function [ups_table, dws_table] = process_expression_data(ups, dws, model_name)
   dws_table = array2table([(1:length(dw_genes))', dw_genes], ...
       'VariableNames', {'Index', 'Gene'});
 
+end
+
+function M = local_load_mapping(p)
+  % Return containers.Map mapping SYMBOL (upper) -> ID (as-is)
+  fid = fopen(p, 'r');
+  if fid < 0, error('Cannot open mapping JSON: %s', p); end
+  raw = fread(fid, inf, '*char')'; fclose(fid);
+  data = jsondecode(raw);
+  if isstruct(data) && isfield(data, 'results')
+    names = {data.results.name};
+    ids   = {data.results.bigg_id};
+  elseif isstruct(data) && isfield(data, 'symbol') && isfield(data, 'hgnc')
+    names = data.symbol;
+    ids   = data.hgnc;
+  else
+    error('Unsupported mapping schema in %s', p);
+  end
+  names = upper(string(names(:)));
+  ids   = string(ids(:));
+  M = containers.Map('KeyType','char','ValueType','char');
+  for i=1:numel(names)
+    k = char(names(i)); v = char(ids(i));
+    if ~isempty(k) && ~isempty(v)
+      if ~isKey(M, k); M(k) = v; end
+    end
+  end
 end
 
 function syms = local_extract_symbols(T)
