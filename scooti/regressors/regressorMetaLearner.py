@@ -55,18 +55,23 @@ from tqdm import tqdm
 warnings.simplefilter('ignore', ConvergenceWarning)
 sns.set_style("whitegrid")
 
+# Global seed for inference regressors
+SEED = 42
+
 
 class Adaline:
-    def __init__(self, learning_rate=0.001, epo=10000, binary=False, nonneg=True):
+    def __init__(self, learning_rate=0.001, epo=10000, binary=False, nonneg=True, random_state=SEED):
         self.learning_rate = float(learning_rate)
         self.epo = int(epo)
         self.binary = binary
         self.nonneg = nonneg
+        self.random_state = int(random_state)
 
     def fit(self, X, y):
         if self.binary:
             y = np.where(np.abs(y)==0, -1, 1)
-        # inittiate the weights with random array
+        # initialize the weights with a reproducible random array
+        np.random.seed(self.random_state)
         self.weights = np.random.random(X.shape[1]+1)
 
         stop = 0.001
@@ -232,12 +237,12 @@ class regression_methods:
         if model_select=='LassoCV':
             # LASSO
             model = LassoCV(
-                cv=5, positive=True, fit_intercept=False, random_state=8
+                cv=5, positive=True, fit_intercept=False, random_state=SEED
             ).fit(X, y)
         elif model_select=='ElasticNetCV':
             # ElasticNet
             model = ElasticNetCV(
-                    cv=5, positive=True, fit_intercept=False, random_state=8
+                    cv=5, positive=True, fit_intercept=False, random_state=SEED
                     ).fit(X, y)
         elif model_select=='LassoLarsIC':
             # LASSO-Lars
@@ -278,7 +283,7 @@ class regression_methods:
     def get_out_of_fold_predictions(self, X, y):
         meta_X, meta_y = list(), list()
         # define split of data
-        kfold = KFold(n_splits=5, shuffle=True, random_state=8)
+        kfold = KFold(n_splits=5, shuffle=True, random_state=SEED)
         # enumerate splits
         for train_ix, test_ix in kfold.split(X):
             fold_yhats = list()
@@ -425,7 +430,7 @@ class regression_methods:
             # empty lists
             meta_X, meta_y = list(), list()
             # define split of data
-            kfold = KFold(n_splits=5, shuffle=True, random_state=8)
+            kfold = KFold(n_splits=5, shuffle=True, random_state=SEED)
             # data
             X, y = self.df_var.copy(), self.df_res.iloc[:, i].copy()
             # enumerate splits
