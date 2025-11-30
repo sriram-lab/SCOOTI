@@ -17,6 +17,6 @@
       "exp_regex": "^32cell"
     }
   ],
-  "sc_xlsx_dir": "/home/daweilin/sriram-lab/SCOOTI/examples/example_sigGenes/scEmbryo/",
+  "sc_xlsx_dir": "./examples/example_sigGenes/scEmbryo/",
   "sc_correction": false
 }

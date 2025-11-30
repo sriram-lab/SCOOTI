@@ -9,7 +9,7 @@ set -euo pipefail
 #   scooti -C ./examples/constrained_demo/constrained_demo_config.json
 #   scooti -I ./examples/inference_demo/infer_config.json
 #   scooti -A ./examples/analyze_demo/analyze_config.json
-#   scooti -T ./examples/tradeoff_demo/tradeoff_config.legacy.json
+#   scooti -T ./examples/tradeoff_demo/tradeoff_config.json
 #   scooti -U uncon.json -C con.json -I infer.json -A analyze.json
 #
 # Flags (order determines execution):
@@ -62,7 +62,7 @@ Options (each expects a JSON config; executed in given order):
 Examples:
   scooti -U ./examples/unconstrained_demo/unconstrained_demo_config.json
   scooti -U uncon.json -C con.json -I infer.json -A analyze.json
-  scooti -T ./examples/tradeoff_demo/tradeoff_config.legacy.json
+  scooti -T ./examples/tradeoff_demo/tradeoff_config.json
   scooti quickstart-scembryo
 EOF
 }
@@ -149,11 +149,17 @@ EOF
   "prefix": "scembryo_quickstart",
   "medium": "KSOM",
   "labels": {
-    "mode": "column"
+    "mode": "regex",
+    "regex": "(1C_to_2cell|2C_to_32cell)",
+    "regex_group": 1,
+    "group_map": {
+      "1C_to_2cell": "1C2C",
+      "2C_to_32cell": "2CBC"
+    }
   },
   "get_coef": { "metType_cluster": false },
   "coef_analysis": {
-    "unknown_clustering": true,
+    "unknown_clustering": false,
     "clustering": true,
     "entropy": true,
     "distance": true,

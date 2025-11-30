@@ -1518,10 +1518,11 @@ def coef_distance_to_biomassObj(
         g = sns.stripplot(y='cellTypes', x='Distances', s=10, palette=pal,
                 data=corrs, hue='cellTypes', alpha=.5, ax=ax_box, zorder=1,
                 hue_order=boxplot_order or cats, order=boxplot_order or cats)
+        # Use the same palette mapping for the mean "X" markers to keep colors consistent
         gp = sns.pointplot(y="cellTypes", x='Distances',
-                      data=corrs, dodge=False,#.8 - .8 / 3,
-                      join=False, hue='cellTypes',palette="Dark2",
-                      markers="x", scale=1.8, ci=None, ax=ax_box,
+                      data=corrs, dodge=False,
+                      join=False, hue='cellTypes', palette=pal,
+                      markers="X", scale=1.8, ci=None, ax=ax_box,
                       hue_order=boxplot_order or cats, order=boxplot_order or cats)
         ax_box.get_legend().remove()
         # Remove x axis name for the boxplot
@@ -1548,10 +1549,11 @@ def coef_distance_to_biomassObj(
             fig, ax = plt.subplots(1,1,figsize=(4+len(dfs['cellTypes'].unique()), 8))
             g = sns.stripplot(y='cellTypes', x='Distances', s=10, palette="Pastel2",
                     data=corrs, hue='cellTypes', alpha=.5, ax=ax, zorder=1)
+            # Match the point (mean) colors to the strip/hist palette for consistency
             g = sns.pointplot(y="cellTypes", x='Distances',
-                          data=corrs, dodge=False,#.8 - .8 / 3,
-                          join=False, hue='cellTypes',palette="Dark2",
-                          markers="x", scale=1.8, ci=None, ax=ax)
+                          data=corrs, dodge=False,
+                          join=False, hue='cellTypes', palette="Pastel2",
+                          markers="X", scale=1.8, ci=None, ax=ax)
 
             # plot zero lines
             ax.axvline(x=0, linestyle='--', color='grey')
@@ -1660,10 +1662,11 @@ def metabolites_dist_to_biomassObj(
         # plot each data point
         g = sns.stripplot(y='cellTypes', x='Distances', s=10, palette=pal,
                 data=corrs, hue='cellTypes', alpha=.5, ax=ax_box, zorder=1)
+        # Use the same palette mapping for the mean "X" markers to keep colors consistent
         gp = sns.pointplot(y="cellTypes", x='Distances',
-                      data=corrs, dodge=False,#.8 - .8 / 3,
-                      join=False, hue='cellTypes',palette="Dark2",
-                      markers="x", scale=1.8, ci=None, ax=ax_box)
+                      data=corrs, dodge=False,
+                      join=False, hue='cellTypes', palette=pal,
+                      markers="X", scale=1.8, ci=None, ax=ax_box)
         ax_box.get_legend().remove()
         # Remove x axis name for the boxplot
         ylabel_colors = []
@@ -1694,10 +1697,11 @@ def metabolites_dist_to_biomassObj(
             fig, ax = plt.subplots(1,1,figsize=(4+len(dfs['cellTypes'].unique()), 8))
             g = sns.stripplot(y='cellTypes', x='Distances', s=10, palette="Pastel2",
                     data=corrs, hue='cellTypes', alpha=.5, ax=ax, zorder=1)
+            # Match the point (mean) colors to the strip/hist palette for consistency
             g = sns.pointplot(y="cellTypes", x='Distances',
-                          data=corrs, dodge=False,#.8 - .8 / 3,
-                          join=False, hue='cellTypes',palette="Dark2",
-                          markers="x", scale=1.8, ci=None, ax=ax)
+                          data=corrs, dodge=False,
+                          join=False, hue='cellTypes', palette="Pastel2",
+                          markers="X", scale=1.8, ci=None, ax=ax)
 
             # plot zero lines
             ax.axvline(x=0, linestyle='--', color='grey')

@@ -1,0 +1,519 @@
+[scooti] Preparing scEmbryo quickstart configs under /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/_archive_scEmbryo
+[scooti] 1/2 Inference (scEmbryo)
+testing bug...
+[device] torch not available or failed to import: No module named 'torch'. Using CPU
+Start processing the unconstrained models...
+Start processing the unconstrained models...
+Returning reaction fluxes...
+Finishing up the data loading of unconstrained models...
+Start processing the constrained models...
+False
+Ordinary constrained models
+Start processing the data of constrained models...
+Start collecting filenames...
+  0%|          | 0/242 [00:00<?, ?it/s]100%|██████████| 242/242 [00:00<00:00, 42015.96it/s]
+Start merging tables
+  0%|          | 0/121 [00:00<?, ?it/s] 26%|██▌       | 31/121 [00:00<00:00, 302.49it/s] 51%|█████     | 62/121 [00:00<00:00, 300.20it/s] 77%|███████▋  | 93/121 [00:00<00:00, 299.84it/s]100%|██████████| 121/121 [00:00<00:00, 300.41it/s]
+debug 175.09891726069444
+              2C_to_32cell_embryo4_5_k0.1_r0.01  ...  2C_to_32cell_embryoMixed_17_k0.1_r0.01
+rxns                                             ...                                        
+10FTHF5GLUtl                                0.0  ...                                     0.0
+10FTHF5GLUtm                                0.0  ...                                     0.0
+10FTHF6GLUtl                                0.0  ...                                     0.0
+10FTHF6GLUtm                                0.0  ...                                     0.0
+10FTHF7GLUtl                                0.0  ...                                     0.0
+...                                         ...  ...                                     ...
+EX_KAC                                      0.0  ...                                     0.0
+EX_KACcoa                                   0.0  ...                                     0.0
+acl_n                                       0.0  ...                                     0.0
+oaa_nt                                      0.0  ...                                     0.0
+cit_nt                                     -0.0  ...                                    -0.0
+
+[3757 rows x 121 columns]
+Finishing up loading the constrained models...
+Start loading models...
+(3757, 52) (3757, 121)
+Check the size of the models: (1480, 52) (1480, 121)
+(1480, 52) (1480, 121)
+/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/_archive_scEmbryo/out/regression_models//flux_rfelm_scembryo_quickstart_cfr_True_False_recon1_KSOM_k[0.1]_rho[0.01].csv
+Start training regression models...
+Mapping...
+  0%|          | 0/121 [00:00<?, ?it/s]100%|██████████| 121/121 [00:00<00:00, 523206.99it/s]
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+fitting linear meta model...
+(5, 1)
+(52, 1)
+[scooti] 2/2 Analysis (scEmbryo)
+Traceback (most recent call last):
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/analysis_runner.py", line 319, in <module>
+    main()
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/analysis_runner.py", line 236, in main
+    moa.coefAnalysis(
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/metObjAnalyzer.py", line 889, in coefAnalysis
+    overlap_allocation_plot(
+  File "/home/daweilin/sriram-lab/SCOOTI/scooti/regressionAnalyzer.py", line 2529, in overlap_allocation_plot
+    plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_groupbar_allocations.png')
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/pyplot.py", line 1250, in savefig
+    res = fig.savefig(*args, **kwargs)  # type: ignore[func-returns-value]
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/figure.py", line 3490, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backend_bases.py", line 2186, in print_figure
+    result = print_method(
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backend_bases.py", line 2042, in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backends/backend_agg.py", line 481, in print_png
+    self._print_pil(filename_or_obj, "png", pil_kwargs, metadata)
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/backends/backend_agg.py", line 430, in _print_pil
+    mpl.image.imsave(
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/matplotlib/image.py", line 1657, in imsave
+    image.save(fname, **pil_kwargs)
+  File "/home/daweilin/miniconda3/envs/scooti/lib/python3.10/site-packages/PIL/Image.py", line 2566, in save
+    fp = builtins.open(filename, "w+b")
+FileNotFoundError: [Errno 2] No such file or directory: '/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/scembryo_quickstart_1C2C_2CBC_groupbar_allocations.png'
+[analysis] coef_paths[exp] -> /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/_archive_scEmbryo/out/regression_models/flux_sl_scembryo_quickstart_cfr_True_False_recon1_KSOM_k[0.1]_rho[0.01].csv
+[analysis] init: save_root_path=/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/_archive_scEmbryo/out/analyze/ medium=KSOM prefix=scembryo_quickstart
+[analysis] get_coef
+Columns with zero coefficients: Index([], dtype='object')
+2C_to_32cell_embryo4_5_k0.1_r0.01           2CBC
+1C_to_2cell_embryo11_1_split1_k0.1_r0.01    1C2C
+2C_to_32cell_embryo2_7_split2_k0.1_r0.01    2CBC
+1C_to_2cell_embryo12_2_split2_k0.1_r0.01    1C2C
+1C_to_2cell_embryo5_1_split2_k0.1_r0.01     1C2C
+                                            ... 
+1C_to_2cell_embryo7_2_split2_k0.1_r0.01     1C2C
+2C_to_32cell_embryoMixed_14_k0.1_r0.01      2CBC
+1C_to_2cell_embryo12_1_split2_k0.1_r0.01    1C2C
+2C_to_32cell_embryoMixed_19_k0.1_r0.01      2CBC
+2C_to_32cell_embryoMixed_17_k0.1_r0.01      2CBC
+Length: 121, dtype: object
+[analysis] labels (unique): ['2CBC', '1C2C']
+[analysis] coefAnalysis
+Correlation size
+(121, 121)
+                                          Entropy of Objective cellType
+2C_to_32cell_embryo4_5_k0.1_r0.01                     0.005247     2CBC
+1C_to_2cell_embryo11_1_split1_k0.1_r0.01              0.012789     1C2C
+2C_to_32cell_embryo2_7_split2_k0.1_r0.01              0.011047     2CBC
+1C_to_2cell_embryo12_2_split2_k0.1_r0.01              0.029599     1C2C
+1C_to_2cell_embryo5_1_split2_k0.1_r0.01               0.018569     1C2C
+...                                                        ...      ...
+1C_to_2cell_embryo7_2_split2_k0.1_r0.01               0.007432     1C2C
+2C_to_32cell_embryoMixed_14_k0.1_r0.01                0.017707     2CBC
+1C_to_2cell_embryo12_1_split2_k0.1_r0.01              0.016559     1C2C
+2C_to_32cell_embryoMixed_19_k0.1_r0.01                0.009796     2CBC
+2C_to_32cell_embryoMixed_17_k0.1_r0.01                0.005487     2CBC
+
+[121 rows x 2 columns]
+Loading the model...
+Successfully record the coefficients of biomass objectives...
+Index(['coefficient', '2C_to_32cell_embryo4_5_k0.1_r0.01',
+       '1C_to_2cell_embryo11_1_split1_k0.1_r0.01',
+       '2C_to_32cell_embryo2_7_split2_k0.1_r0.01',
+       '1C_to_2cell_embryo12_2_split2_k0.1_r0.01',
+       '1C_to_2cell_embryo5_1_split2_k0.1_r0.01',
+       '1C_to_2cell_embryo3_1_split1_k0.1_r0.01',
+       '2C_to_32cell_embryo2_4_split2_k0.1_r0.01',
+       '2C_to_32cell_embryo1_4_split1_k0.1_r0.01',
+       '2C_to_32cell_embryo2_5_split1_k0.1_r0.01',
+       ...
+       '1C_to_2cell_embryo5_2_split2_k0.1_r0.01',
+       '1C_to_2cell_embryo9_2_split2_k0.1_r0.01',
+       '1C_to_2cell_embryo5_1_split1_k0.1_r0.01',
+       '2C_to_32cell_embryoMixed_23_k0.1_r0.01',
+       '2C_to_32cell_embryoMixed_3_k0.1_r0.01',
+       '1C_to_2cell_embryo7_2_split2_k0.1_r0.01',
+       '2C_to_32cell_embryoMixed_14_k0.1_r0.01',
+       '1C_to_2cell_embryo12_1_split2_k0.1_r0.01',
+       '2C_to_32cell_embryoMixed_19_k0.1_r0.01',
+       '2C_to_32cell_embryoMixed_17_k0.1_r0.01'],
+      dtype='object', length=122)
+                                    cellNames  Distances cellTypes
+0           2C_to_32cell_embryo4_5_k0.1_r0.01   0.965616      2CBC
+1    1C_to_2cell_embryo11_1_split1_k0.1_r0.01   1.107763      1C2C
+2    2C_to_32cell_embryo2_7_split2_k0.1_r0.01   0.919191      2CBC
+3    1C_to_2cell_embryo12_2_split2_k0.1_r0.01   1.069154      1C2C
+4     1C_to_2cell_embryo5_1_split2_k0.1_r0.01   1.075137      1C2C
+..                                        ...        ...       ...
+116   1C_to_2cell_embryo7_2_split2_k0.1_r0.01   1.093451      1C2C
+117    2C_to_32cell_embryoMixed_14_k0.1_r0.01   0.876727      2CBC
+118  1C_to_2cell_embryo12_1_split2_k0.1_r0.01   0.858031      1C2C
+119    2C_to_32cell_embryoMixed_19_k0.1_r0.01   0.630324      2CBC
+120    2C_to_32cell_embryoMixed_17_k0.1_r0.01   0.565909      2CBC
+
+[121 rows x 3 columns]
+[Text(0, 0, '1C2C'), Text(0, 1, '2CBC')]
+chsterol
+accoa
+gthrd
+ala-L
+cys-L
+nmn
+gthox
+glu-L
+mag_hs
+h2o
+gln-L
+tyr-L

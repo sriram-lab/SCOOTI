@@ -1,7 +1,7 @@
 {
   "jj": 1,
   "COBRA_path": "~/cobratoolbox",
-  "GEM_path": "/home/daweilin/sriram-lab/SCOOTI/scooti/metabolicModel/GEMs/Shen2019.mat",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
   "model_name": "Recon1",
   "obj_candidate_list_file": "./scooti/metabolicModel/GEMs/obj52_metabolites_shen2019.csv",
   "input_obj_tb": "",
@@ -13,7 +13,7 @@
   "FSflag": 0,
   "pfba": 1,
   "medium_perturbation": 0,
-  "data_dir": "/home/daweilin/sriram-lab/SCOOTI/examples/example_sigGenes/scEmbryo/",
+  "data_dir": "./examples/example_sigGenes/scEmbryo/",
   "prefix_name": "example",
   "medium": "KSOM",
   "uplabel": "upgenes",

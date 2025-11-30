@@ -13,7 +13,7 @@
   "FSflag": 0,
   "pfba": 1,
   "medium_perturbation": 0,
-  "data_dir": "/home/daweilin/sriram-lab/SCOOTI/examples/example_sigGenes/scEmbryo/",
+  "data_dir": "./examples/example_sigGenes/scEmbryo/",
   "prefix_name": "ProQui",
   "medium": "DMEMF12",
   "uplabel": "upgenes",

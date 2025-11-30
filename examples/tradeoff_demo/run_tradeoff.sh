@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Archived: moved under examples/_archive_runs/. Use `scooti -T ./examples/tradeoff_demo/tradeoff_config.legacy.json` instead.
+# Archived: moved under examples/_archive_runs/. Use `scooti -T ./examples/tradeoff_demo/tradeoff_config.json` instead.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
@@ -10,4 +10,3 @@ else
   echo "Archived script not found: $ARCH" >&2
   exit 1
 fi
-

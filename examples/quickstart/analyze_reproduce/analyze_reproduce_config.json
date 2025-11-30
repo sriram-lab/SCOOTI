@@ -1,6 +1,6 @@
 {
   "flux_paths": {
-    "exp": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/"
+    "exp": "./examples/quickstart/cell_quiescence/constrained_models/"
   },
   "coef_paths": {
     "exp": "./examples/quickstart/inference_reproduce/out/regression_models/"
@@ -9,7 +9,7 @@
   "engine": "legacy",
   "reduction": "auto",
   "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
-  "uncon_model_path": "/home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/",
+  "uncon_model_path": "./examples/quickstart/cell_quiescence/unconstrained_models/",
   "col_map": {},
   "samplingFlux_path": "",
   "sel_para": "k0.1_r10",

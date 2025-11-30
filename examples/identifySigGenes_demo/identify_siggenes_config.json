@@ -2,9 +2,9 @@
   "out_dir": "./examples/identifySigGenes_demo/out/",
   "fdr_alpha": 0.05,
   "fc_threshold": 1.0,
-  "sharma_csv": "/home/daweilin/sriram-lab/SCOOTI/examples/example_omics/cell_quiescence/sharma_21_prolif_pmid_34274479.csv",
-  "min_csv": "/home/daweilin/sriram-lab/SCOOTI/examples/example_omics/cell_quiescence/min_18_GSE122927_ReadCount.csv",
-  "qp_csv": "/home/daweilin/sriram-lab/SCOOTI/examples/example_omics/cell_quiescence/johnson_18_GSE117444_prolif_qui_count.csv",
+  "sharma_csv": "./examples/example_omics/cell_quiescence/sharma_21_prolif_pmid_34274479.csv",
+  "min_csv": "./examples/example_omics/cell_quiescence/min_18_GSE122927_ReadCount.csv",
+  "qp_csv": "./examples/example_omics/cell_quiescence/johnson_18_GSE117444_prolif_qui_count.csv",
   "sharma_groups": {
     "EGF":  {"exp": [2,6,10],  "ctrl": [1,5,9,15]},
     "TPA":  {"exp": [8,12],    "ctrl": [1,5,9,15]},
