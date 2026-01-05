@@ -27,7 +27,7 @@ to different feasible flux distributions that reach the same objective
 value. Consequently, inferred objective coefficients may differ numerically
 across environments, while qualitative trends should remain similar.
 
-This will install all required packages, including `numpy`, `pandas`, `scanpy`, `cobra`, and others. PyTorch is optional and only needed for GPU‑based learners (e.g., LassoTorch/MLP).
+This will install all required packages, including `numpy`, `pandas`, `scanpy`, `cobra`, and others.
 
 Note (Ubuntu 22.04): If `conda env create -f environment.yml` fails due to phate/adjustText, use pip instead (Option 2): `pip install -r requirements.txt` or `pip install .`.
 
@@ -35,40 +35,16 @@ Note (Ubuntu 24.04+): If environment initialization fails, the following steps h
 ```
 conda env create -f environment.yml
 conda activate scooti
-python -m pip install --no-build-isolation --no-deps -r requirements.txt
-python -m pip install --no-deps graphtools deprecated wrapt pygsp tasklogger scprep decorator s_gd2
+python -m pip install --no-build-isolation -r requirements.txt
 python -c "from scooti._version import version; print(version)"
 ```
 
-### Optional: Install PyTorch (GPU or CPU)
-
-If you plan to use the GPU‑based learners, install the official PyTorch wheel after creating the env. We recommend the cu118 build (bundles CUDA/cuDNN):
-
-```
-# Install PyTorch 2.0.1 with CUDA 11.8 wheel (bundles CUDA/cuDNN)
-pip install --force-reinstall --no-deps --index-url https://download.pytorch.org/whl/cu118 torch==2.0.1+cu118
-
-# Verify
-python - <<'PY'
-import torch
-print('torch', torch.__version__, 'cuda', torch.version.cuda, 'avail', torch.cuda.is_available())
-import torch.backends.cudnn as cudnn
-print('cudnn', cudnn.version())
-PY
-```
-
-
 ## Option 2: Install via pip
 
-If you prefer pip, you can install manually (PyTorch remains optional):
+If you prefer pip, you can install manually:
 
 ```
 pip install -r requirements.txt
-# Then (optionally) install PyTorch (choose ONE of the following):
-# CPU-only wheel
-# pip install --index-url https://download.pytorch.org/whl/cpu torch==2.0.1
-# GPU wheel (CUDA 11.8)
-# pip install --index-url https://download.pytorch.org/whl/cu118 torch==2.0.1+cu118
 ```
 Or if installing SCOOTI as a local Python package:
 ```
