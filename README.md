@@ -35,8 +35,7 @@ Note (Ubuntu 24.04+): If environment initialization fails, the following steps h
 ```
 conda env create -f environment.yml
 conda activate scooti
-python -m pip install --no-build-isolation --no-deps -r requirements.txt
-python -m pip install --no-deps graphtools deprecated wrapt pygsp tasklogger scprep decorator s_gd2
+python -m pip install --no-build-isolation -r requirements.txt
 python -c "from scooti._version import version; print(version)"
 ```
 

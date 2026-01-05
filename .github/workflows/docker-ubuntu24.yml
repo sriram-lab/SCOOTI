@@ -1,4 +1,4 @@
-name: Docker Ubuntu 24.04 install test
+name: Docker Linux install tests
 
 on:
   push:
@@ -8,18 +8,28 @@ on:
 jobs:
   docker-test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu24
+            dockerfile: docker/Dockerfile
+          - name: ubuntu22
+            dockerfile: docker/Dockerfile.ubuntu22
+          - name: rhel8
+            dockerfile: docker/Dockerfile.rhel8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Build image
-        run: docker build -f docker/Dockerfile -t scooti-test:ubuntu24 .
+        run: docker build -f ${{ matrix.dockerfile }} -t scooti-test:${{ matrix.name }} .
 
       - name: CLI help
-        run: docker run --rm scooti-test:ubuntu24 /bin/bash -lc "conda run -n scooti scooti -h"
+        run: docker run --rm scooti-test:${{ matrix.name }} /bin/bash -lc "conda run -n scooti scooti -h"
 
       - name: Scanpy import
-        run: docker run --rm scooti-test:ubuntu24 /bin/bash -lc "NUMBA_CACHE_DIR=/tmp/numba_cache conda run -n scooti python -c \"import scanpy as sc; print(sc.__version__)\""
+        run: docker run --rm scooti-test:${{ matrix.name }} /bin/bash -lc "NUMBA_CACHE_DIR=/tmp/numba_cache conda run -n scooti python -c \"import scanpy as sc; print(sc.__version__)\""
 
       - name: SCOOTI import
-        run: docker run --rm scooti-test:ubuntu24 /bin/bash -lc "NUMBA_CACHE_DIR=/tmp/numba_cache conda run -n scooti python -c \"import scooti; scooti.load(); print('scooti load ok')\""
+        run: docker run --rm scooti-test:${{ matrix.name }} /bin/bash -lc "NUMBA_CACHE_DIR=/tmp/numba_cache conda run -n scooti python -c \"import scooti; scooti.load(); print('scooti load ok')\""
