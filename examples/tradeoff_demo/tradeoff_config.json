@@ -1,0 +1,43 @@
+{
+  "coef_paths": {
+    "exp": "./examples/inference_demo/out/regression_models/"
+  },
+  "save_root_path": "./examples/tradeoff_demo/out/",
+  "engine": "legacy",
+  "prefix": "tradeoff_demo",
+  "medium": "KSOM",
+  "coef_analysis": {
+    "clustering": false,
+    "entropy": true,
+    "distance": false,
+    "umap_para": [
+      10,
+      50
+    ],
+    "compare": false
+  },
+  "get_coef": {},
+  "tradeoff_analysis": {
+    "pareto_mets": [
+      "gh",
+      "chsterol",
+      "glutathione"
+    ],
+    "pareto3D": false,
+    "pareto2DAnalysis": false,
+    "traitAnalysis": false,
+    "normalize": true,
+    "corr_heatmap": true,
+    "corr_th": 0
+  },
+  "labels": {
+    "mode": "regex",
+    "regex": "(1C_to_2cell|2C_to_32cell)",
+    "regex_group": 1,
+    "group_map": {
+      "1C_to_2cell": "1C2C",
+      "2C_to_32cell": "2CBC"
+    }
+  },
+  "sel_para": "k0.1_r0.01"
+}

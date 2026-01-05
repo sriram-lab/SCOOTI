@@ -1,0 +1,35 @@
+FROM ubuntu:24.04
+
+ARG CONDA_VERSION=25.7.0
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PATH=/opt/conda/bin:$PATH
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    bzip2 \
+    ca-certificates \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN wget -qO /tmp/miniconda.sh \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/conda \
+    && rm /tmp/miniconda.sh
+
+SHELL ["/bin/bash", "-lc"]
+
+RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main \
+    && conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+
+RUN conda install -y -n base -c defaults conda=${CONDA_VERSION}
+
+WORKDIR /opt/SCOOTI
+COPY . /opt/SCOOTI
+
+RUN conda env create -f environment.yml
+RUN conda run -n scooti pip install --no-build-isolation -r requirements.txt
+RUN conda run -n scooti pip install -e .
+
+ENV NUMBA_CACHE_DIR=/tmp/numba_cache
+
+CMD ["/bin/bash", "-lc", "conda run -n scooti scooti -h"]

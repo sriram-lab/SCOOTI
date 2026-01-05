@@ -1,0 +1,43 @@
+{
+  "flux_paths": {
+    "exp": "./examples/constrained_demo/out/constrained_models/"
+  },
+  "coef_paths": {
+    "exp": "./examples/inference_demo/out/regression_models/"
+  },
+  "save_root_path": "./examples/analyze_demo/out/",
+  "engine": "legacy",
+  "reduction": "auto",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "uncon_model_path": "./examples/unconstrained_demo/out/unconstrained_models/",
+  "col_map": {},
+  "samplingFlux_path": "",
+  "sel_para": "k0.1_r0.01",
+  "prefix": "analyze_demo",
+  "medium": "KSOM",
+  "labels": {
+    "mode": "regex",
+    "regex": "(1C_to_2cell|2C_to_32cell)",
+    "regex_group": 1,
+    "group_map": {
+      "1C_to_2cell": "1C2C",
+      "2C_to_32cell": "2CBC"
+    }
+  },
+  "get_coef": {
+    "metType_cluster": false
+  },
+  "coef_analysis": {
+    "unknown_clustering": false,
+    "clustering": true,
+    "entropy": true,
+    "distance": true,
+    "compare": true,
+    "umap_para": [
+      5,
+      50
+    ],
+    "method": "average",
+    "ref_col": null
+  }
+}

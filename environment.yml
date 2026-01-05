@@ -6,16 +6,21 @@ dependencies:
   - python=3.10
   - numpy=1.23.5
   - pandas=1.5.3
-  - scikit-learn=1.1.3
+  - scikit-learn=1.4.2
   - numba=0.56.4
   - tqdm
   - cobra=0.26.3
   - scanpy=1.9.5
   - seaborn=0.12.2
-  - phate=1.0.11
-  - adjusttext=0.8
-  - pytorch=2.0.1
+  - adjustText
+  - hdbscan
+  - openpyxl
+  - swig=4.0.2
+  - cython<3
+  - compilers
+  - make
+  - cmake
+  - eigen
+  - zlib
   - pip
-  - pip:
-      - torch
-
+  # No pip subpackages here; optional extras go in requirements.txt

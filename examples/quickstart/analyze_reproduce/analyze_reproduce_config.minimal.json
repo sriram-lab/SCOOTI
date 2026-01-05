@@ -1,0 +1,52 @@
+{
+  "flux_paths": {
+    "exp": "./examples/quickstart/cell_quiescence/constrained_models/"
+  },
+  "coef_paths": {
+    "exp": "./examples/quickstart/inference_reproduce/out/regression_models/"
+  },
+  "save_root_path": "./examples/quickstart/analyze_reproduce/out/",
+  "engine": "minimal",
+  "reduction": "umap",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "uncon_model_path": "./examples/quickstart/cell_quiescence/unconstrained_models/",
+  "col_map": {},
+  "samplingFlux_path": "",
+  "sel_para": "k0.1_r10",
+  "prefix": "analyze_reproduce",
+  "medium": "DMEMF12",
+  "clustering": true,
+  "clustergram_allocation": true,
+  "entropy": true,
+  "distance": true,
+  "cluster_umap": true,
+  "umap_para": [
+    5,
+    50
+  ],
+  "plots": {
+    "coef_strip": true,
+    "coef_strip_norm": true,
+    "proportional": true,
+    "distance_plot": true,
+    "allocation_heatmap": true,
+    "proportion_lollipop": true,
+    "allocation_bar_distribution": true,
+    "top_k": 12
+  },
+  "labels": {
+    "mode": "contains",
+    "contains_pattern": "_P_",
+    "true_label": "Proliferation",
+    "false_label": "Quiescence"
+  },
+  "coef_analysis": {
+    "ref_col": null,
+    "tgt_col": null
+  },
+  "metType_cluster": false,
+  "metType_map": null,
+  "tradeoff": false,
+  "tradeoff_top_k": 100,
+  "tradeoff_corr_threshold": -0.5
+}

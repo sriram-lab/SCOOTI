@@ -1,0 +1,25 @@
+name: Docker Ubuntu 24.04 install test
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -f docker/Dockerfile -t scooti-test:ubuntu24 .
+
+      - name: CLI help
+        run: docker run --rm scooti-test:ubuntu24 /bin/bash -lc "conda run -n scooti scooti -h"
+
+      - name: Scanpy import
+        run: docker run --rm scooti-test:ubuntu24 /bin/bash -lc "NUMBA_CACHE_DIR=/tmp/numba_cache conda run -n scooti python -c \"import scanpy as sc; print(sc.__version__)\""
+
+      - name: SCOOTI import
+        run: docker run --rm scooti-test:ubuntu24 /bin/bash -lc "NUMBA_CACHE_DIR=/tmp/numba_cache conda run -n scooti python -c \"import scooti; scooti.load(); print('scooti load ok')\""

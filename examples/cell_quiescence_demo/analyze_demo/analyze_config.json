@@ -1,0 +1,40 @@
+{
+  "flux_paths": {
+    "exp": "./examples/constrained_demo/out/constrained_models/"
+  },
+  "coef_paths": {
+    "exp": "./examples/inference_demo/out/regression_models/"
+  },
+  "save_root_path": "./examples/analyze_demo/out/",
+  "engine": "legacy",
+  "reduction": "auto",
+  "GEM_path": "./scooti/metabolicModel/GEMs/Shen2019.mat",
+  "uncon_model_path": "./examples/unconstrained_demo/out/unconstrained_models/",
+  "col_map": {},
+  "samplingFlux_path": "",
+  "sel_para": "k0.1_r10",
+  "prefix": "analyze_demo",
+  "medium": "DMEMF12",
+  "labels": {
+    "mode": "contains",
+    "contains_pattern": "_P_",
+    "true_label": "Proliferation",
+    "false_label": "Quiescence"
+  },
+  "get_coef": {
+    "metType_cluster": false
+  },
+  "coef_analysis": {
+    "unknown_clustering": false,
+    "clustering": true,
+    "entropy": true,
+    "distance": true,
+    "compare": true,
+    "umap_para": [
+      5,
+      50
+    ],
+    "method": "average",
+    "ref_col": null
+  }
+}
