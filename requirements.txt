@@ -21,6 +21,15 @@ phate==1.0.11
 adjustText==0.8
 hdbscan
 openpyxl
+# Extra pip deps that can be missed by transitive installs on some platforms
+graphtools
+deprecated
+wrapt
+pygsp
+tasklogger
+scprep
+decorator
+s_gd2
 ## Build tool for OApackage (pin for compatibility)
 Cython<3
 ## OApackage build (requires swig<4.1 present in the environment)

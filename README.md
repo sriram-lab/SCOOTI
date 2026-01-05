@@ -3,6 +3,11 @@
 Welcome to `SCOOTI: Single-Cell Optimization Objective and Tradeoff Inference`.
 This guide walks you through setting up the environment and running SCOOTI's MATLAB and Python modules smoothly.
 
+Example outputs:
+
+![Compared distribution](docs/assets/ComparedDistribution.png)
+![Transition genes](docs/assets/TransitionGenes.png)
+
 # Python Environment Setup
 
 ## Option 1: Install via conda (Recommended)
@@ -12,7 +17,10 @@ We provide an environment.yml file.
 ```
 conda env create -f environment.yml
 conda activate scooti
+pip install -r requirements.txt  # optional; ensures pip-only deps are present
+pip install -e .
 ```
+Run the commands above from the repo root (`SCOOTI/`).
 
 Note: Different versions of Gurobi and MATLAB (and solver settings) can lead
 to different feasible flux distributions that reach the same objective
@@ -22,6 +30,15 @@ across environments, while qualitative trends should remain similar.
 This will install all required packages, including `numpy`, `pandas`, `scanpy`, `cobra`, and others. PyTorch is optional and only needed for GPU‑based learners (e.g., LassoTorch/MLP).
 
 Note (Ubuntu 22.04): If `conda env create -f environment.yml` fails due to phate/adjustText, use pip instead (Option 2): `pip install -r requirements.txt` or `pip install .`.
+
+Note (Ubuntu 24.04+): If environment initialization fails, the following steps have been reported to work:
+```
+conda env create -f environment.yml
+conda activate scooti
+python -m pip install --no-build-isolation --no-deps -r requirements.txt
+python -m pip install --no-deps graphtools deprecated wrapt pygsp tasklogger scprep decorator s_gd2
+python -c "from scooti._version import version; print(version)"
+```
 
 ### Optional: Install PyTorch (GPU or CPU)
 
@@ -241,7 +258,7 @@ Demo run (uses the Johnson dataset under `examples/example_omics`):
 
 ```
 conda activate scooti
-bash examples/siggenes_demo/run_siggenes.sh examples/siggenes_demo/siggenes_config.json
+bash examples/identifySigGenes_demo/run_identify_siggenes.sh examples/identifySigGenes_demo/identify_siggenes_config.json
 ```
 
 This writes four CSVs into `examples/example_sigGenes/`:

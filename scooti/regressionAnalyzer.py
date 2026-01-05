@@ -2418,7 +2418,10 @@ def CVscore_plot(coef_df, labels):
         )
         plt.xticks(rotation=90)
         CanvasStyle(ax, lw=8, ticks_lw=3)
-        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_groupbar_allocations.png')
+        try:
+            plt.savefig(f'{prefix}_groupbar_allocations.png')
+        except Exception:
+            pass
 
     else:
         fig, ax = plt.subplots(1,1,figsize=(width,6))
@@ -2443,9 +2446,12 @@ def CVscore_plot(coef_df, labels):
 
         # standard format
         CanvasStyle(ax, lw=8, ticks_lw=3)
-        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_overlapped_allocations.png')
+        try:
+            plt.savefig(f'{prefix}_overlapped_allocations.png')
+        except Exception:
+            pass
 # importance plot
-def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cutoff=0.0, groupbar=True, special_labels=[]):
+def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cutoff=0.0, groupbar=True, special_labels=[], save_root_path='./'):
     """The allocation of each metabolite in objectives that are shown with overlapped barplots.
 
     The allocation of coefficients will be represented by
@@ -2526,7 +2532,13 @@ def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cuto
         #    tick_label.set_color(extra_c[i])
         plt.xticks(rotation=90)
         CanvasStyle(ax, lw=8, ticks_lw=3)
-        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_groupbar_allocations.png')
+        # safe output path
+        out_dir = save_root_path if isinstance(save_root_path, str) and len(save_root_path) > 0 else '.'
+        try:
+            os.makedirs(out_dir, exist_ok=True)
+        except Exception:
+            out_dir = '.'
+        plt.savefig(os.path.join(out_dir, f'{prefix}_groupbar_allocations.png'))
 
     else:
         fig, ax = plt.subplots(1,1,figsize=(width,6))
@@ -2557,7 +2569,12 @@ def overlap_allocation_plot(coef_df, labels, ref_col, prefix='', norm=True, cuto
 
         # standard format
         CanvasStyle(ax, lw=8, ticks_lw=3)
-        plt.savefig(f'/nfs/turbo/umms-csriram/daweilin/result_files/embryoProject/{prefix}_overlapped_allocations.png')
+        out_dir = save_root_path if isinstance(save_root_path, str) and len(save_root_path) > 0 else '.'
+        try:
+            os.makedirs(out_dir, exist_ok=True)
+        except Exception:
+            out_dir = '.'
+        plt.savefig(os.path.join(out_dir, f'{prefix}_overlapped_allocations.png'))
 
 
 

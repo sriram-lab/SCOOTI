@@ -354,20 +354,24 @@ class metObjAnalyzer:
         return label_func(df)
 
     def get_flux(self, kappa=1, rho=1, rank=False, stack_model=False):
-        """Load inferred metabolic objectives.
+        """Load constrained-model fluxes for given parameters.
 
-        The coefficients of metabolic objectives were obtained by
-        the unconstrained models with single objectives regressiing on
-        the condition/cell-specific constrained models
+        Loads fluxes from multi-objective constrained models filtered by CFR parameters
+        and medium, merges them across provided `flux_paths`, and prepares labels.
 
         Parameters
         ----------
-        kappa_arr : {array-like} of shape (n_parameters,), default=[10, 1, 0.1, 0.01, 0.001]
-            parameter of interest.
+        kappa : {float or list}, default=1
+            CFR kappa parameter(s). Accepts a single number or a list of numbers.
 
-        rho_arr : {array-like} of shape (n_parameters,), default=[10, 1, 0.1, 0.01, 0.001]
-            parameter of interest.
+        rho : {float or list}, default=1
+            CFR rho parameter(s). Accepts a single number or a list of numbers.
 
+        rank : {bool}, default=False
+            Rank-transform flux values within each column.
+
+        stack_model : {bool}, default=False
+            If True, include source model name in column labels during loading.
 
         Returns
         -------
@@ -375,30 +379,50 @@ class metObjAnalyzer:
             Returns self.
         """
 
+        # Normalize parameter inputs to lists (avoid nested lists)
+        def _to_list(x):
+            if isinstance(x, (list, tuple, np.ndarray)):
+                return list(x)
+            try:
+                return [float(x)]
+            except Exception:
+                return [x]
+
+        k_list = _to_list(kappa)
+        r_list = _to_list(rho)
+
         # collect models
         fdfs = {}
         for k in self.flux_paths.keys():
             print(k)
             res = load_multiObj_models(
-                    self.flux_paths[k], medium=self.medium,
-                    return_variables=True, norm=False, stack_model=stack_model,
-                    CFR_paraScan=True, CFR_k=[kappa], CFR_r=[rho],
-                    file_suffix='_fluxes.csv.gz'
-                    )
+                self.flux_paths[k], medium=self.medium,
+                return_variables=True, norm=False, stack_model=stack_model,
+                CFR_paraScan=True, CFR_k=k_list, CFR_r=r_list,
+                file_suffix='_fluxes.csv.gz'
+            )
             fdfs[k] = res
         
         # get fluxes of constrained models without objectives
         flux_df = pd.concat((fdfs[k] for k in fdfs.keys()), axis=1)
         flux_df = flux_df[flux_df.columns[flux_df.any(axis=0)]].replace(
-                [np.inf, -np.inf], [0, 0]
-                )
+            [np.inf, -np.inf], [0, 0]
+        )
         if rank:
             flux_df = flux_df.rank()
 
-        # get labels
-        self.labels = self.label_setup(flux_df, self.label_func)
-        print(self.labels)
+        # Build labels: use provided label_func if present, otherwise default to group by input key
+        if self.label_func is None:
+            col_to_group = {}
+            for k, dfk in fdfs.items():
+                for c in dfk.columns:
+                    col_to_group[c] = k
+            labels = pd.Series([col_to_group.get(c, '') for c in flux_df.columns], index=flux_df.columns)
+        else:
+            labels = self.label_setup(flux_df, self.label_func)
+        print(labels)
 
+        self.labels = labels
         self.flux_df = flux_df
         # Warn if fluxes are empty or all zeros
         try:
@@ -893,7 +917,8 @@ class metObjAnalyzer:
                     prefix=self.prefix+f'_{col1}_{col2}',
                     norm=True,
                     cutoff=cutoff,#.0001
-                    groupbar=True
+                    groupbar=True,
+                    save_root_path=self.save_root_path
                     )
             
             ## rank of coefficients
@@ -965,7 +990,8 @@ class metObjAnalyzer:
                     norm=True,
                     cutoff=cutoff,#.0001
                     groupbar=True,
-                    special_labels=special_labels
+                    special_labels=special_labels,
+                    save_root_path=self.save_root_path
                     )
             if compare==True:
 

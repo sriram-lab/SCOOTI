@@ -1,7 +1,0 @@
-[reproduce-all] 1/2 Inference ...
-[inference-reproduce] Running meta-regression with: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/inference_reproduce/reproduce_inference_config.json
-[inference-reproduce] unconstrained dir: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/
-[inference-reproduce] constrained   dir: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/constrained_models/
-[inference-reproduce] medium='DMEMF12' fileSuffix='_fluxes.csv.gz'
-[inference-reproduce] Scanning unconstrained metadata in: /home/daweilin/sriram-lab/SCOOTI/examples/quickstart/cell_quiescence/unconstrained_models/
-[inference-reproduce] Found medium tags in unconstrained:      53 DMEMF12
