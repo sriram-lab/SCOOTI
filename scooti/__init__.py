@@ -1,6 +1,6 @@
 """SCOOTI package init."""
 
-from ._version import version  # noqa: F401
+from ._version import __version__, version  # noqa: F401
 
 
 def load():
