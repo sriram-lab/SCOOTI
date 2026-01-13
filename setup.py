@@ -21,7 +21,7 @@ setup(
         "numpy==1.23.5",
         "pandas==1.5.3",
         # Allow newer scikit-learn from environment.yml (e.g., 1.4.x)
-        "scikit-learn>=1.1,<1.5",
+        "scikit-learn>=1.1,<1.6",
         "numba==0.56.4",
         "tqdm",
         "cobra==0.26.3",
