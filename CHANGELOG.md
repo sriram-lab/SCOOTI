@@ -1,5 +1,14 @@
 # Development Log
 
+## [2026-04-27]
+
+### Fixed
+- Fixed all-metabolite objective candidate scans in `scooti/metabolicModel/CFRinterface.m` by skipping demand-objective candidates that do not create any valid objective reaction in the selected GEM. This allows broad candidate lists such as all-metabolite lists to continue through valid metabolites instead of failing on absent metabolites.
+- Updated `scooti/run_flux.sh` so MATLAB exceptions return a non-zero shell exit code and print the MATLAB error report, making SCOOTI CLI failures visible to scripts and batch jobs.
+
+### Notes
+- All-metabolite flux scans still require a working MATLAB solver setup. On Great Lakes, load MATLAB and Gurobi before running flux modeling, for example: `module load matlab/R2024b gurobi/10.0.2`.
+
 ## [2025-05-12]
 
 ### Fixed

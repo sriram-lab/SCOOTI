@@ -175,6 +175,13 @@ This will:
 - Load a config .json
 - Launch CFRinterface(config) to infer fluxes.
 
+All-metabolite objective candidate lists are supported for demand-objective
+scans. If a candidate metabolite is absent from the selected GEM compartments,
+SCOOTI skips that candidate and continues with the remaining valid metabolites
+instead of stopping on an all-zero objective. MATLAB errors now propagate as
+non-zero CLI exits, which helps batch jobs and wrapper scripts detect failed
+flux runs.
+
 # Run Regression Training (Python)
 
 Example:
