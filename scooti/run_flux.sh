@@ -32,13 +32,13 @@ COBRA_DEFAULT="${COBRA_DEFAULT:-$HOME/cobratoolbox}"
 
 run_matlab_with_config() {
   local cfg_abs="$1"
-  matlab -nodisplay -nosplash -r "addpath(genpath(fullfile('$REPO_ROOT','scooti','metabolicModel'))); \
+  matlab -nodisplay -nosplash -r "try; addpath(genpath(fullfile('$REPO_ROOT','scooti','metabolicModel'))); \
     config = jsondecode(fileread('$cfg_abs')); \
     if ~isfield(config,'COBRA_path') || isempty(config.COBRA_path), config.COBRA_path = '$COBRA_DEFAULT'; end; \
     if contains(config.COBRA_path, '~'), config.COBRA_path = strrep(config.COBRA_path, '~', getenv('HOME')); end; \
     validate_config(config); \
     multiObj_CBM(config); \
-    exit;"
+    exit(0); catch ME; disp(getReport(ME,'extended','hyperlinks','off')); exit(1); end;"
 }
 
 # Auto-batch: if jj is absent and parameter lists/logspace scanning are detected, run jj=1..N

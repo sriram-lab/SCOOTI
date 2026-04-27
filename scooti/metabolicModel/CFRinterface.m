@@ -25,6 +25,17 @@ function CFRinterface(config)
 
   %% Set objectives
   model = objective_setting_function(model, config.obj, config.obj_c, config.obj_type, config.model_name, config.algorithm);
+
+  % Some broad objective candidate lists (for example allMets) include
+  % metabolites that are absent from the selected GEM compartments. In that
+  % case objective_setting_function cannot create any demand reaction and the
+  % simulation would fail with an all-zero objective. Skip that candidate so
+  % full all-metabolite scans can continue through valid metabolites.
+  if ~any(model.c) && strcmp(config.obj_type, 'Demand') && any(config.obj_c)
+    warning('[CFRinterface] Skipping %s: no valid objective reaction was created.', config.out_name);
+    return;
+  end
+
   config.metadata = save_metadata_json(excelname, model, config);
   %config.obj, config.obj_type, config.obj_c, ...
   %  config.save_root_path, config.data_path, config.out_name, config.ctrl, config.kappa, config.rho, config.medium, ...
